@@ -5,9 +5,10 @@
 
 #include "types.h"
 
-typedef struct {
+typedef struct
+{
     type::Value type;
-    union{
+    union {
         i32 i;
         i64 I;
         f32 f;
@@ -15,8 +16,8 @@ typedef struct {
     };
 } Value;
 
-bool operator==(const Value&, const Value&);
-std::ostream& operator<<(std::ostream& , const Value& );
+bool operator==(const Value &, const Value &);
+std::ostream &operator<<(std::ostream &, const Value &);
 
 Value from_i32(i32);
 Value from_i64(i64);
