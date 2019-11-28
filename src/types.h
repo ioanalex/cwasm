@@ -4,11 +4,19 @@
 
 #include <vector>
 #include <cstdint>
+#include <string>
 
 typedef uint32_t u32;
 
 typedef int32_t i32;
 typedef int64_t i64;
+
+template<typename T>
+using vec = std::vector<T>;
+
+typedef unsigned char byte;
+
+typedef std::string string;
 
 // TODO: check this definitions
 typedef float f32;
@@ -18,6 +26,8 @@ static u32 empty_u32 = u32(-1);
 
 namespace type
 {
+
+typedef std::string Name;
 
 enum Value
 {
@@ -34,8 +44,8 @@ enum Elem
 
 typedef struct
 {
-    std::vector<Value> args;
-    std::vector<Value> result;
+    vec<Value> args;
+    vec<Value> result;
 } Func;
 
 typedef struct
