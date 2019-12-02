@@ -1,6 +1,6 @@
-CC=g++
+CXX=c++
 
-CFLAGS=-Werror
+CXXFLAGS=-std=c++11 -Wall
 LDFLAGS=
 
 SRCDIR=src
@@ -17,12 +17,15 @@ RM=rm -rf
 all: $(EXEC)
 
 $(EXEC): $(OBJS)
-	$(CC) $(CFLAGS) -o $(EXEC) $(OBJS) $(LDFLAGS)
-	@echo Compilation compelte. Run the thing named cwasm...
+	$(CXX) $(CXXFLAGS) -o $(EXEC) $(OBJS) $(LDFLAGS)
+	@echo Compilation complete. Run the thing named "$@"...
 
 $(OBJDIR)/%.o: $(SRCDIR)/%.cpp
-	$(CC) $(CFLAGS) -c $< -o $@
+	$(CXX) $(CXXFLAGS) -c $< -o $@
 # @echo "Compiled "$<" succesfully!"
 
-clean: 
+clean:
 	$(RM) $(OBJDIR)/* $(EXEC)
+
+distclean: clean
+	$(RM) $(EXEC)
