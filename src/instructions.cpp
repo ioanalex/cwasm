@@ -1,27 +1,27 @@
-#include "types.h"
-#include "instructions.h"
+#include "types.hpp"
+#include "instructions.hpp"
 
 
 
 
 Instr::Instr(byte opcode) {
     bool error = false;
-    
+
     switch (opcode){
-        case 0x01:  
+        case 0x01:
             name = "unreachable";
-            type::Value types[2] = {type::Value::any, type::Value::I32};
-            args = vec<type::Value> (types, types+2);
-            ret  = type::Value::any;
+            args = vec<type::Value>(0);
+            args.push_back(type::Value::i32);
+            ret  = type::Value::i32;
             break;
         default :
             error = true;
     }
-    
+
     if(!error){
         has_args = (args.size() > 0);
     }
-    
+
 }
 
 string Instr::get_name(){ return name;}
@@ -34,11 +34,10 @@ string get_type(const Instr &instr){
 
     for(unsigned int i = 0; i < instr.args.size(); i++){
         switch(instr.args.at(i)){
-            case type::Value::I32: ret += "i32"; break;
-            case type::Value::I64: ret += "i64"; break;
-            case type::Value::F32: ret += "f32"; break;
-            case type::Value::F64: ret += "f64"; break;
-            case type::Value::any: ret += " t "; break;
+            case type::Value::i32: ret += "i32"; break;
+            case type::Value::i64: ret += "i64"; break;
+            case type::Value::f32: ret += "f32"; break;
+            case type::Value::f64: ret += "f64"; break;
         }
         ret += " ";
     }
@@ -46,11 +45,10 @@ string get_type(const Instr &instr){
     ret += "] -> [";
 
     switch(instr.ret){
-        case type::Value::I32: ret += "i32"; break;
-        case type::Value::I64: ret += "i64"; break;
-        case type::Value::F32: ret += "f32"; break;
-        case type::Value::F64: ret += "f64"; break;
-        case type::Value::any: ret += " t "; break;
+        case type::Value::i32: ret += "i32"; break;
+        case type::Value::i64: ret += "i64"; break;
+        case type::Value::f32: ret += "f32"; break;
+        case type::Value::f64: ret += "f64"; break;
     };
 
     ret += "]";
