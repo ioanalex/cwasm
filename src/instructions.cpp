@@ -1,31 +1,24 @@
-#include <cassert>
-
-
 #include "types.h"
 #include "instructions.h"
 
 Instr::Instr(byte opcode) {
-    pname res = code_to_name(opcode);
-    assert(!res.has_args);
-    code = opcode;
-    name = res.name;
-    args = vec<Value>();
-}
-
-Instr::Instr(byte opcode, vec<Value> params){
-    pname res = code_to_name(opcode);
-    assert(res.has_args);
-    code = opcode;
-    name = res.name;
-    args = vec<Value> (params);
+    bool error = false;
+    
+    switch (opcode){
+        case 0x01:  
+            name = "unreachable";
+            args = vec<type::Value>(type::Value::any);
+            ret  = type::Value::any;
+            break;
+        default :
+            error = true;
+    }
+    
+    if(!error){
+        has_args = (args.size > 0);
+    }
+    
 }
 
 string Instr::get_name(){ return name;}
 byte Instr::get_code(){return code;}
-
-pname Instr::code_to_name(byte opcode){
-    switch (opcode){
-        case 0x00: return {"unreachable", false};
-        default : return {"nop", false}; 
-    }
-}

@@ -4,25 +4,17 @@
 #include "types.h"
 #include "values.h"
 
-// this helps when constracting a new Instr object
-typedef struct{
-    string name;
-    bool has_args;
-} pname;
-
 class Instr{
     public:
         Instr(byte);
-        Instr(byte, vec<Value>);
         string get_name();
         byte get_code();
     protected:
-        string name;
         byte code;
-        vec<Value> args;
-    private:
-        pname code_to_name(byte);
-        
+        string name;
+        bool has_args;
+        vec<type::Value> args;
+        type::Value ret;        
 };
 
 
