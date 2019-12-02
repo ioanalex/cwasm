@@ -1,4 +1,3 @@
-
 #ifndef TYPES_H
 #define TYPES_H
 
@@ -18,11 +17,11 @@ typedef unsigned char byte;
 
 typedef std::string string;
 
-// TODO: check this definitions
+// TODO: check these definitions
 typedef float f32;
 typedef double f64;
 
-static u32 empty_u32 = u32(-1);
+constexpr u32 empty_u32 = u32(-1);
 
 namespace type
 {
@@ -43,36 +42,36 @@ enum Elem
     FuncRef
 };
 
-typedef struct
+struct Func
 {
     vec<Value> args;
     vec<Value> result;
-} Func;
+};
 
-typedef struct
+struct Limits
 {
     u32 min;
     u32 max = empty_u32;
-} Limits;
+};
 
-typedef struct
+struct Memory
 {
     Limits limits;
-} Memory;
+};
 
-typedef struct
+struct Table
 {
     Limits limits;
     Elem elem;
-} Table;
+};
 
-typedef struct
+struct Global
 {
     bool mut;
     Value value;
-} Global;
+};
 
-typedef struct
+struct Extern
 {
     enum
     {
@@ -84,10 +83,10 @@ typedef struct
     union {
         Func func;
         Table table;
-        Memory memory;
+        Memory mem;
         Global global;
     };
-} Extern;
+};
 
 }; // namespace type
 

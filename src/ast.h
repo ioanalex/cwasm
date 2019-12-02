@@ -21,61 +21,60 @@ typedef u32 labelidx;
 /*
     Functions
 */
-typedef struct {
+struct Func {
     typeidx type;
     vec<type::Value> locals;
     Expr body;
-} Func;
+};
 
 /*
     Tables
 */
-typedef struct {
+struct Table {
     type::Table type;
-} Table;
+};
 
-/* 
+/*
     Memories
 */
-typedef struct {
+struct Memory {
     type::Memory type;
-} Memory;
+};
 
 /*
     Globals
 */
-typedef struct {
+struct Global {
     type::Global type;
     Expr init;
-} Global;
+};
 
-typedef struct {
+struct Elem {
     tableidx table; // Currently only one table is allowed so tableidx must me 0
     Expr offset; // The offset is given by a constant expression
     vec<funcidx> init;
-} Elem;
+};
 
 /*
     Data Segments
 */
-typedef struct {
+struct Data {
     memidx data;
     Expr offset;
-    
-} Data;
+};
 
 /*
     Start Function
 */
-typedef struct {
+struct Start {
     bool defined = false;
     funcidx func;
-} Start;
+};
 
 /*
     Exports
 */
-typedef struct {
+struct exportdesc {
     enum {FUNC, TABLE, MEM, GLOBAL} tag;
     union {
         funcidx func;
@@ -83,17 +82,17 @@ typedef struct {
         memidx mem;
         globalidx global;
     };
-} exportdesc;
+};
 
-typedef struct {
+struct Export {
     type::Name name;
     exportdesc desc;
-} Export;
+};
 
 /*
     Imports
 */
-typedef struct {
+struct importdesc {
     enum {FUNC, TABLE, MEM, GLOBAL} tag;
     union {
         typeidx func;
@@ -101,18 +100,18 @@ typedef struct {
         type::Memory mem;
         type::Global global;
     };
-} importdesc;
+};
 
-typedef struct {
-    type::Name module; // Each import is labeled by a two-level name space, consisting 
+struct Import {
+    type::Name module; // Each import is labeled by a two-level name space, consisting
     type::Name name;   // of amodule name and a name for an entity within that module.
     importdesc desc;
-} Import;
+};
 
-/* 
+/*
     Module
 */
-typedef struct {
+struct Module {
     vec<type::Func> types;
     vec<Func> funcs;
     vec<Table> tables;
@@ -123,6 +122,6 @@ typedef struct {
     Start start;
     vec<Import> imports;
     vec<Export> exports;
-} Module;
+};
 
 #endif

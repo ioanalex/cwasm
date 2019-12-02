@@ -4,7 +4,7 @@
 #include "types.h"
 #include "values.h"
 
-class Instr{
+class Instr {
     public:
         Instr(byte);
         string get_name();
@@ -15,10 +15,11 @@ class Instr{
         bool has_args;
         vec<type::Value> args;
         type::Value ret;        
+        vec<Value> args;
 };
 
 
-// ignore this 
+// ignore this
 /*
     Number instructions:
         * Unop   = iunop  | funop
@@ -31,7 +32,7 @@ class Instr{
 //     public:
 //         string get_name();
 //         byte get_code();
-//     protected: 
+//     protected:
 //         enum {i, f} type; //integer or float
 //         enum {x32, x64} size; // 32 or 64 bit operation
 //         enum {u, s, n} sign      // signed or unsigned or doesn't matter
@@ -50,7 +51,7 @@ class Instr{
 // };
 
 // class ControlInstr: public Instr{
-    
+
 // };
 
 typedef vec<Instr> Expr;
