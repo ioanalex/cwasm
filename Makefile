@@ -1,11 +1,7 @@
-# Add .d to Make's recognized suffixes.
-SUFFIXES += .d
-#We don't need to clean up when we're making these targets
-NODEPS:=clean distclean
+.PHONY: default all clean distclean
 
 CXX=c++
-
-CXXFLAGS=-std=c++11 -Wall -fpermissive
+CXXFLAGS=-std=c++17 -Wall
 LDFLAGS=
 
 SRCDIR=src
@@ -13,28 +9,39 @@ OBJDIR=obj
 BINDIR=.
 
 SRCS=$(wildcard $(SRCDIR)/*.cpp)
+OBJS=$(patsubst $(SRCDIR)/%.cpp,$(OBJDIR)/%.o,$(SRCS))
 DEPS=$(patsubst %.cpp,%.d,$(SRCS))
-OBJS=$(SRCS:$(SRCDIR)/%.cpp=$(OBJDIR)/%.o)
 
 EXEC=$(BINDIR)/cwasm
 
-RM=rm -rf
-
-all: $(EXEC)
+default: $(EXEC)
+all: default
 
 $(EXEC): $(OBJS)
-	$(CXX) $(CXXFLAGS) -o $(EXEC) $(OBJS) $(LDFLAGS)
+	@echo "LINK  "$@
+	@$(CXX) $(CXXFLAGS) -o $(EXEC) $(OBJS) $(LDFLAGS)
 	@echo Compilation complete. Run the thing named "$@"...
 
-$(OBJDIR)/%.o: $(SRCDIR)/%.cpp $(SRCDIR)/%.d
-	$(CXX) $(CXXFLAGS) -c $< -o $@
-# @echo "Compiled "$<" succesfully!"
+$(OBJS): | $(OBJDIR)
+
+$(OBJDIR):
+	@echo "MKDIR "$@
+	@mkdir $(OBJDIR)
+
+$(OBJDIR)/%.o: $(SRCDIR)/%.cpp
+	@echo "C++   "$@
+	@$(CXX) $(CXXFLAGS) -c $< -o $@
 
 clean:
-	$(RM) $(OBJDIR)/* $(EXEC)
+	$(RM) -r $(OBJDIR)
+	$(RM) $(DEPS)
+	$(RM) *~
 
 distclean: clean
 	$(RM) $(EXEC)
+
+#We don't need to clean up when we're making these targets
+NODEPS:=clean distclean
 
 #Don't create dependencies when we're cleaning, for instance
 ifeq (0, $(words $(findstring $(MAKECMDGOALS), $(NODEPS))))
@@ -45,4 +52,8 @@ endif
 
 #This is the rule for creating the dependency files
 $(SRCDIR)/%.d: $(SRCDIR)/%.cpp
-	$(CXX) $(CXXFLAGS) -MM -MT '$(patsubst $(SRCDIR)/%.cpp,$(OBJDIR)/%.o,$<)' $< -MF $@
+	@echo "DEP   "$@
+	@$(CXX) $(CXXFLAGS) -MM \
+		-MT '$(patsubst $(SRCDIR)/%.cpp,$(OBJDIR)/%.o,$<)' \
+		-MT '$(patsubst $(SRCDIR)/%.cpp,$(SRCDIR)/%.d,$<)' $< \
+		-MF $@
