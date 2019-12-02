@@ -5,7 +5,7 @@ NODEPS:=clean distclean
 
 CXX=c++
 
-CXXFLAGS=-std=c++11 -Wall
+CXXFLAGS=-std=c++11 -Wall -fpermissive
 LDFLAGS=
 
 SRCDIR=src

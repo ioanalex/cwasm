@@ -15,6 +15,5 @@ int main()
 
     Instr i(0x01);
 
-    std::cout << "Name: " << i.get_name() << " Opcode: 0x"
-              << std::hex << (int) (i.get_code()) << std::endl;
+    std::cout << i << std::endl;
 }

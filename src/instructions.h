@@ -1,6 +1,8 @@
 #ifndef INSTR_H
 #define INSTR_H
 
+#include <iostream>
+
 #include "types.h"
 #include "values.h"
 
@@ -9,13 +11,15 @@ class Instr {
         Instr(byte);
         string get_name();
         byte get_code();
+
+        friend string get_type(const Instr&);
+        friend std::ostream &operator<<(std::ostream &, const Instr &);       
     protected:
         byte code;
         string name;
         bool has_args;
         vec<type::Value> args;
-        type::Value ret;        
-        vec<Value> args;
+        type::Value ret;   
 };
 
 
