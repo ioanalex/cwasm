@@ -11,7 +11,8 @@ int main() {
   std::cout << v1 << std::endl;
   std::cout << v2 << std::endl;
 
-  Instr i(0x01);
-
-  std::cout << i << std::endl;
+  
+  for (int i = 0x00; i < 0xbf; i++){
+    std::cout << Instr(i) << std::endl;
+  }
 }
