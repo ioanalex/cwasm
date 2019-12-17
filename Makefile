@@ -43,6 +43,12 @@ distclean: clean
 #We don't need to clean up when we're making these targets
 NODEPS:=clean distclean
 
+# Autogeneated switch in instructions.cpp
+# src/instructions.cpp: opcode_switch.inc
+
+# opcode_switch.inc: instrs.py
+# 	$(./instrs.py > opcode_switch.inc)
+
 #Don't create dependencies when we're cleaning, for instance
 ifeq (0, $(words $(findstring $(MAKECMDGOALS), $(NODEPS))))
 	#Chances are, these files don't exist.  GMake will create them and
