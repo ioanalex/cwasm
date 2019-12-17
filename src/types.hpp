@@ -34,6 +34,7 @@ inline std::ostream &operator<<(std::ostream &os, const Value &v) {
     case Value::i64: return os << "i64";
     case Value::f32: return os << "f32";
     case Value::f64: return os << "f64";
+    default: return os << "illegal type value"; 
   }
 }
 
