@@ -1,10 +1,10 @@
-#ifndef INSTR_H
-#define INSTR_H
+#ifndef __INSTRUCTIONS_HPP__
+#define __INSTRUCTIONS_HPP__
 
 #include <iostream>
 
-#include "types.h"
-#include "values.h"
+#include "types.hpp"
+#include "values.hpp"
 
 class Instr {
     public:
@@ -13,13 +13,13 @@ class Instr {
         byte get_code();
 
         friend string get_type(const Instr&);
-        friend std::ostream &operator<<(std::ostream &, const Instr &);       
+        friend std::ostream &operator<<(std::ostream &, const Instr &);
     protected:
         byte code;
         string name;
         bool has_args;
         vec<type::Value> args;
-        type::Value ret;   
+        type::Value ret;
 };
 
 

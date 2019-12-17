@@ -1,7 +1,7 @@
 #include <string>
 
-#include "../types.h"
-#include "../instructions.h"
+#include "../types.hpp"
+#include "../instructions.hpp"
 
 string NumInstr::get_name(){
     string i_f = (type == i) ? "i" : "f";
