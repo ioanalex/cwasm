@@ -25,8 +25,14 @@ type.ret.push_back(ptype(0, true, false));
 break;
 case 0x05:
 name = "else";
+
+
+break;
 case 0x0B:
 name = "end";
+
+
+break;
 case 0x0C:
 name = "br l";
 type.args.push_back(ptype(1, true, false));
