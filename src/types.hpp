@@ -44,6 +44,18 @@ struct Func {
   vec<Value> args;
   vec<Value> result;
 };
+inline std::ostream &operator<<(std::ostream &os, const Func &v){
+  os << "[";
+  for (int i = 0; i < v.args.size(); i++){
+    os << " " << v.args[i] ;
+  }
+  os << " ] -> [";
+  for (int i = 0; i < v.result.size(); i++){
+    os << " " << v.result[i] ;
+  }
+  os << " ]";
+  return os;
+}
 
 struct Limits {
   u32 min;

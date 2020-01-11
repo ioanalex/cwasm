@@ -3,8 +3,8 @@
 
 #include "named.hpp"
 #include "types.hpp"
-// #include "instructions.hpp"
-typedef i32 Expr;
+
+typedef vec<byte> Expr;
 
 // Following the spec (Structure -> Modules)
 
@@ -126,5 +126,8 @@ struct Module {
   vec<Import> imports;
   vec<Export> exports;
 };
+
+Module * load_module(byte*, u32);
+
 
 #endif

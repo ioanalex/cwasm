@@ -93,7 +93,4 @@ class Instr {
 
 // };
 
-typedef vec<Instr> Expr;
-
-
 #endif

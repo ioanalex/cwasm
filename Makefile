@@ -1,4 +1,4 @@
-.PHONY: default all clean distclean
+.PHONY: default all autogen clean distclean
 
 CXX=c++
 CXXFLAGS=-std=c++17 -Wall
@@ -22,6 +22,10 @@ $(EXEC): $(OBJS)
 	@$(CXX) $(CXXFLAGS) -o $(EXEC) $(OBJS) $(LDFLAGS)
 	@echo Compilation complete. Run the thing named "$@"...
 
+autogen:
+	@echo "AUTOGEN"
+	./instrs.py > opcode_switch.inc
+
 $(OBJS): | $(OBJDIR)
 
 $(OBJDIR):
@@ -41,7 +45,7 @@ distclean: clean
 	$(RM) $(EXEC)
 
 #We don't need to clean up when we're making these targets
-NODEPS:=clean distclean
+NODEPS:=clean distclean autogen
 
 # Autogeneated switch in instructions.cpp
 # src/instructions.cpp: opcode_switch.inc
@@ -58,7 +62,7 @@ endif
 
 #This is the rule for creating the dependency files
 $(SRCDIR)/%.d: $(SRCDIR)/%.cpp
-	@echo "DEP   "$@
+	@echo "DEP   "$@ $
 	@$(CXX) $(CXXFLAGS) -MM \
 		-MT '$(patsubst $(SRCDIR)/%.cpp,$(OBJDIR)/%.o,$<)' \
 		-MT '$(patsubst $(SRCDIR)/%.cpp,$(SRCDIR)/%.d,$<)' $< \
