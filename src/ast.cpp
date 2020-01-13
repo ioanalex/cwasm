@@ -51,9 +51,7 @@ Module * load_module(byte* bytes, u32 byte_count){
             case 1:
             {
                 // parse the list of types (m -> types) and return it
-                u32 type_count = read_LEB(bytes, &pos, 32); std::cout<<"pas kala?" << std::endl; 
-                                                            std::cout<<m->types.size() << std::endl;
-                // m->types = vec<type::Func>(type_count);     std::cout<<"pas kala?" << std::endl;
+                std::cout<<"size of m->types " << m->types.size() << std::endl;
                 std::cout << "about to parse types" << std::endl;
                 parse_types(bytes, &pos, &(m -> types));
                 std::cout<<"parsing complete"<<std::endl;
@@ -84,20 +82,20 @@ inline type::Value decode_type(u32 v){
 }
 
 void parse_types(byte *bytes, u32 *pos , vec<type::Func> *types){   
-    u32 type_count = types->size();
+    u32 type_count = read_LEB(bytes, pos, 7);
+    
     for (u32 t = 0; t < type_count; t++){
+        types->push_back(type::Func());
         read_LEB(bytes, pos, 7);
         u32 arg_count = read_LEB(bytes, pos, 32); 
         for (u32 a = 0; a < arg_count; a++){
             u32 encoded_type = read_LEB(bytes, pos, 32);
-            std::cout << "arg type:" << decode_type(encoded_type) << std::endl; 
-            // types[t].args.push_back(decode_type(encoded_type));
+            (*types)[t].args.push_back(decode_type(encoded_type));
         }
         u32 res_count = read_LEB(bytes, pos, 32); 
         for (u32 r = 0; r < res_count; r++){
             u32 encoded_type =  read_LEB(bytes, pos, 32); 
-            std::cout << "res type:" << decode_type(encoded_type) << std::endl; 
-            // types[t].result.push_back(decode_type(encoded_type));
+            (*types)[t].result.push_back(decode_type(encoded_type));
         }
         // std::cout << types[t] << std::endl;
     }
