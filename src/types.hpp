@@ -88,4 +88,15 @@ struct Extern {
 
 }; // namespace type
 
+// get type::Value from the 32 bit binary code
+inline type::Value decode_type(u32 v){
+    switch(v){
+        case 0x7F: return type::Value::i32;
+        case 0x7E: return type::Value::i64;
+        case 0x7D: return type::Value::f32;
+        case 0x7FC: return type::Value::f64;
+        default: std::cout<<"invalid value " << v << "not a valtype" << std::endl;
+    }
+}
+
 #endif

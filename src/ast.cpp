@@ -71,15 +71,7 @@ Module * load_module(byte* bytes, u32 byte_count){
     return m;
 }
 
-inline type::Value decode_type(u32 v){
-    switch(v){
-        case 0x7F: return type::Value::i32;
-        case 0x7E: return type::Value::i64;
-        case 0x7D: return type::Value::f32;
-        case 0x7FC: return type::Value::f64;
-        default: std::cout<<"invalid value " << v << "not a valtype" << std::endl;
-    }
-}
+
 
 void parse_types(byte *bytes, u32 *pos , vec<type::Func> *types){   
     u32 type_count = read_LEB(bytes, pos, 7);
