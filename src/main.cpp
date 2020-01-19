@@ -23,7 +23,7 @@ int main() {
   byte *buffer;
   long filelen;
 
-  fileptr = fopen("hello.wasm", "rb");
+  fileptr = fopen("program.wasm", "rb");
   fseek(fileptr, 0, SEEK_END);
   filelen = ftell(fileptr);
   rewind(fileptr);

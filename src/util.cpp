@@ -1,5 +1,6 @@
 #include "types.hpp"
 #include <iostream>
+#include <cstring>
 
 // taken from https://github.com/kanaka/wac/blob/master/util.c
 
@@ -38,4 +39,13 @@ u64 read_LEB(byte *bytes, u32 *pos, u32 maxbits) {
 u64 read_LEB_signed(byte *bytes, u32 *pos, u32 maxbits) {
     return read_LEB_(bytes, pos, maxbits, true);
 }
+
+type::Name read_name(byte *bytes, u32 *pos){
+    u32 namelen = read_LEB(bytes, pos, 32);
+    char * name_c = (char *)malloc(sizeof(char) * namelen);
+    std::memcpy(name_c, bytes + *pos, namelen);
+    type::Name name(name_c);
+    return name;
+}
+
 // --------------------------------------------------------------------------------------

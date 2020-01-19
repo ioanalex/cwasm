@@ -2,7 +2,7 @@
 #include "types.hpp"
 #include "util.hpp"
 
-void parse_types  (byte *, u32 * , vec<type::Func> * );
+void parse_types (byte *, u32 * , vec<type::Func> * );
 // vec<Func>       parse_funcs  (byte *, u32 & );
 // vec<Table>      parse_tables (byte *, u32 & );
 // vec<Memory>     parse_mems   (byte *, u32 & );
@@ -11,7 +11,7 @@ void parse_types  (byte *, u32 * , vec<type::Func> * );
 // vec<Data>       parse_data   (byte *, u32 & );
 // Start           parse_start  (byte *, u32 & );
 // vec<Import>     parse_imports(byte *, u32 & );
-// vec<Export>     parse_exports(byte *, u32 & );
+void parse_exports(byte *, u32 * , vec<Export> *);
 
 const char* section_names [] = {"custom",   // 0
                                 "type",     // 1 
@@ -60,6 +60,17 @@ Module * load_module(byte* bytes, u32 byte_count){
                 }
                 break;
             }
+            // case 7:
+            // {
+            //     // parse list of exports (m -> exports)
+            //     // std::cout << "about to parse exports" << std::endl;
+            //     // parse_exports(bytes, &pos, &(m->exports));
+            //     // std::cout << "parsing complete" << std::endl;
+            //     // // for (int i = 0; i < m -> exports.size(); i++){
+            //     //     std::cout << m -> exports[i] << std::endl;
+            //     // }
+            //     break;
+            // }
             default: //unimplemented cases
                 pos += slen;
                 break;            
@@ -74,7 +85,7 @@ Module * load_module(byte* bytes, u32 byte_count){
 
 
 void parse_types(byte *bytes, u32 *pos , vec<type::Func> *types){   
-    u32 type_count = read_LEB(bytes, pos, 7);
+    u32 type_count = read_LEB(bytes, pos, 32);
     
     for (u32 t = 0; t < type_count; t++){
         types->push_back(type::Func());
@@ -91,4 +102,17 @@ void parse_types(byte *bytes, u32 *pos , vec<type::Func> *types){
         }
         // std::cout << types[t] << std::endl;
     }
+}
+
+void parse_exports(byte *bytes, u32 *pos , vec<Export> *exports){
+    // u32 export_count = read_LEB(bytes, pos, 32);
+    
+    // for (u32 t = 0; t < export_count; t++){
+    //     exports->push_back( Export() );
+    //     type::Name name = read_name(bytes, pos);
+    //     (*exports)[t].name = name;
+    //     u32 kind  = read_LEB(bytes, pos, 32);
+    //     u32 index = read_LEB(bytes, pos, 32);
+    //     std::cout << name << " " << kind << " " << index << std::endl;
+    // }
 }

@@ -11,4 +11,5 @@ inline u32 read_u32(byte *bytes, u32 &pos){
 u64 read_LEB(byte* , u32* , u32 );
 u64 read_LEB_signed(byte* , u32* , u32 );
 
+type::Name read_name(byte *, u32 *);
 #endif
