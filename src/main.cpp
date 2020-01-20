@@ -5,25 +5,19 @@
 #include "ast.hpp"
 #include <iostream>
 
-int main() {
-  // Value v1 = from_i32(42);
-  // Value v2 = from_i64(42);
-
-  // std::cout << (v1 == v2 ? "v1 == v2" : "v1 != v2") << std::endl;
-  // std::cout << v1 << std::endl;
-  // std::cout << v2 << std::endl;
-
-  
-  // for (int i = 0x00; i < 0xbf; i++){
-  //   std::cout << Instr(i) << std::endl;
-  // }
-
+int main(int argc, char *argv[]) {
   // get the module as bytes in an array
   FILE *fileptr;
   byte *buffer;
   long filelen;
 
-  fileptr = fopen("hello.wasm", "rb");
+  if(argc != 2) {
+    FATAL("give me a file\n");
+  }
+
+  char *filename = argv[1];
+
+  fileptr = fopen(filename, "rb");
   fseek(fileptr, 0, SEEK_END);
   filelen = ftell(fileptr);
   rewind(fileptr);
@@ -39,5 +33,6 @@ int main() {
   // }
   // printf("\n");
   // printf("%s\n", buffer);
-  load_module(buffer, filelen);
+  Module * m = load_module(buffer, filelen);
+  delete m;
 }

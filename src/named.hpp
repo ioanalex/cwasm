@@ -11,6 +11,7 @@ public:
   explicit Named(T &&value) : value_(std::move(value)) {}
   operator T& () { return value_; }
   operator const T& () const { return value_; }
+  T to_value() {return value_; }
 
 private:
   T value_;

@@ -1,6 +1,7 @@
 /obj/
 /cwasm
 /.vscode
+*.wat
 
 # Backup files etc.
 

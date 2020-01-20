@@ -96,8 +96,8 @@ inline type::Value decode_type(u32 v){
         case 0x7F: return type::Value::i32;
         case 0x7E: return type::Value::i64;
         case 0x7D: return type::Value::f32;
-        case 0x7FC: return type::Value::f64;
-        default: FATAL("invalid value 0x%x not a valtype", v);
+        case 0x7C: return type::Value::f64;
+        default: FATAL("invalid value 0x%x not a valtype\n", v);
     }
 }
 

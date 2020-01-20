@@ -1,7 +1,8 @@
-#include "types.hpp"
 #include <iostream>
 #include <cstring>
 
+#include "types.hpp"
+#include "util.hpp"
 // taken from https://github.com/kanaka/wac/blob/master/util.c
 
 u64 read_LEB_(byte *bytes, u32 *pos, u32 maxbits, bool sign) {
@@ -41,9 +42,10 @@ u64 read_LEB_signed(byte *bytes, u32 *pos, u32 maxbits) {
 }
 
 type::Name read_name(byte *bytes, u32 *pos){
-    u32 namelen = read_LEB(bytes, pos, 32);
-    char * name_c = (char *)malloc(sizeof(char) * namelen);
-    std::memcpy(name_c, bytes + *pos, namelen);
+    u32 namelen = read_LEB(bytes, pos, 32); debug("namelen = %d\n", namelen );
+    char * name_c = (char *)malloc(namelen + 1);
+    std::memcpy(name_c, bytes + *pos, namelen); *pos += namelen;
+    name_c[namelen] = '\0';
     type::Name name(name_c);
     return name;
 }

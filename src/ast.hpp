@@ -70,6 +70,7 @@ struct Data {
 struct Start {
   bool defined = false;
   funcidx func;
+  Start(u32 &f): func(f){}
 };
 
 /*
@@ -101,12 +102,17 @@ struct importdesc {
     type::Memory mem;
     type::Global global;
   };
+  importdesc(typeidx);
+  importdesc(type::Table);
+  importdesc(type::Memory);
+  importdesc(type::Global);
 };
 
 struct Import {
   type::Name module; // Each import is labeled by a two-level name space, consisting
   type::Name name; // of amodule name and a name for an entity within that module.
   importdesc desc;
+  Import(type::Name, type::Name, importdesc);
 };
 
 /*
@@ -123,9 +129,13 @@ struct Module {
   Start start;
   vec<Import> imports;
   vec<Export> exports;
+
+  Module(vec<type::Func> &, vec<Func> &, vec<Table> &,
+         vec<Memory> &, vec<Global> &, vec<Elem> &,
+         vec<Data> &, Start &, vec<Import> &, vec<Export> &
+         );
 };
 
 Module * load_module(byte*, u32);
-
 
 #endif
