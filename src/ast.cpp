@@ -1,6 +1,7 @@
 #include "ast.hpp"
 #include "types.hpp"
 #include "util.hpp"
+#include "binary.hpp"
 
 void parse_types (byte *, u32 * , vec<type::Func> * );
 // vec<Func>       parse_funcs  (byte *, u32 & );
@@ -41,7 +42,7 @@ Module * load_module(byte* bytes, u32 byte_count){
         u32 id = read_LEB(bytes, &pos, 7);
         u32 slen = read_LEB(bytes, &pos, 32);
         
-        printf("Reading %s section at 0x%x, length %d\n", section_names[id], pos, slen);
+        debug("Reading %s section at 0x%x, length %d\n", section_names[id], pos, slen);
         // pos += slen;
         switch(id){
             case 0:
@@ -51,15 +52,16 @@ Module * load_module(byte* bytes, u32 byte_count){
             case 1:
             {
                 // parse the list of types (m -> types) and return it
-                std::cout<<"size of m->types " << m->types.size() << std::endl;
-                std::cout << "about to parse types" << std::endl;
+                // std::cout<<"size of m->types " << m->types.size() << std::endl;
+                warn("Parsing Type(1) section (length: 0x%x)\n", slen);
                 parse_types(bytes, &pos, &(m -> types));
-                std::cout<<"parsing complete"<<std::endl;
+                warn("Parsing complete\n");
                 for (int i = 0; i< m -> types.size(); i++){
                     std::cout << m -> types[i] << std::endl;
                 }
                 break;
             }
+            case 2:
             // case 7:
             // {
             //     // parse list of exports (m -> exports)

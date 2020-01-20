@@ -23,7 +23,7 @@ int main() {
   byte *buffer;
   long filelen;
 
-  fileptr = fopen("program.wasm", "rb");
+  fileptr = fopen("hello.wasm", "rb");
   fseek(fileptr, 0, SEEK_END);
   filelen = ftell(fileptr);
   rewind(fileptr);
@@ -39,6 +39,5 @@ int main() {
   // }
   // printf("\n");
   // printf("%s\n", buffer);
-
   load_module(buffer, filelen);
 }

@@ -104,10 +104,8 @@ struct importdesc {
 };
 
 struct Import {
-  type::Name
-      module; // Each import is labeled by a two-level name space, consisting
-  type::Name
-      name; // of amodule name and a name for an entity within that module.
+  type::Name module; // Each import is labeled by a two-level name space, consisting
+  type::Name name; // of amodule name and a name for an entity within that module.
   importdesc desc;
 };
 

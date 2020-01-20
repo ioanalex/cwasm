@@ -6,6 +6,8 @@
 #include <string>
 #include <vector>
 
+#include "util.hpp"
+
 using i32 = int32_t;
 using u32 = uint32_t;
 using i64 = int64_t;
@@ -95,7 +97,7 @@ inline type::Value decode_type(u32 v){
         case 0x7E: return type::Value::i64;
         case 0x7D: return type::Value::f32;
         case 0x7FC: return type::Value::f64;
-        default: std::cout<<"invalid value " << v << "not a valtype" << std::endl;
+        default: FATAL("invalid value 0x%x not a valtype", v);
     }
 }
 

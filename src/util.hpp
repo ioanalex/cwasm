@@ -1,15 +1,52 @@
 #ifndef __UTIL_HPP__
 #define __UTIL_HPP__
 
-#include "types.hpp"
+#include <cstdio>
 
-inline u32 read_u32(byte *bytes, u32 &pos){
-    pos+=4;
-    return ((u32 *) (bytes + pos - 4) )[0];
+#define DEBUG 1
+#define INFO  1
+#define WARN  1
+
+#define FATAL(...) { \
+    fprintf(stderr, "Fatal Error(%s:%d): ", __FILE__, __LINE__); \
+    fprintf(stderr, __VA_ARGS__); exit(1); \
 }
-// u64 read_LEB_(byte , u32 , u32 , bool );
-u64 read_LEB(byte* , u32* , u32 );
-u64 read_LEB_signed(byte* , u32* , u32 );
 
-type::Name read_name(byte *, u32 *);
+#define ASSERT(exp, ...) { \
+    if (! (exp)) { \
+        fprintf(stderr, "Assert Failed (%s:%d): ", __FILE__, __LINE__); \
+        fprintf(stderr, __VA_ARGS__); exit(1); \
+    } \
+}
+
+/*
+ * macros for printing 
+ */
+
+#if DEBUG
+#define debug(...) { fprintf(stderr, "DEBUG (%s:%d): ", __FILE__, __LINE__); \
+                     fprintf(stderr, __VA_ARGS__);}
+#else
+#define debug(...) ;
+#endif
+
+#if INFO
+#define info(...) { fprintf(stderr, "INFO  (%s:%d): ", __FILE__, __LINE__); \
+                    fprintf(stderr, __VA_ARGS__);}
+#else
+#define info(...) ;
+#endif
+
+#if WARN
+#define warn(...) { fprintf(stderr, "WARN  (%s:%d): ", __FILE__, __LINE__); \
+                    fprintf(stderr, __VA_ARGS__);}
+#else
+#define warn(...) ;
+#endif
+
+/*****************************************************************************/
+
+
+
+
 #endif

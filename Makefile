@@ -1,7 +1,7 @@
 .PHONY: default all autogen clean distclean
 
 CXX=c++
-CXXFLAGS=-std=c++17 -Wall
+CXXFLAGS=-std=c++17 -Wall -Wno-sign-compare
 LDFLAGS=
 
 SRCDIR=src
