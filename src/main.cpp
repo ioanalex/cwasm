@@ -22,17 +22,12 @@ int main(int argc, char *argv[]) {
   filelen = ftell(fileptr);
   rewind(fileptr);
 
-  buffer = (byte *)malloc( (filelen+1) * sizeof(byte));
+  buffer = new byte[filelen+1];
   fread(buffer, filelen, 1, fileptr);
   buffer[filelen] = '\0';
   fclose(fileptr);
 
-  // print the module
-  // for (long i = 0; i < filelen; i++){
-  //   printf("%hhx", buffer[i]);
-  // }
-  // printf("\n");
-  // printf("%s\n", buffer);
   Module * m = load_module(buffer, filelen);
   delete m;
+  delete[] buffer;
 }

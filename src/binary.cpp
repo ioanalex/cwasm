@@ -42,7 +42,7 @@ u64 read_LEB_signed(byte *bytes, u32 *pos, u32 maxbits) {
 }
 
 type::Name read_name(byte *bytes, u32 *pos){
-    u32 namelen = read_LEB(bytes, pos, 32); debug("namelen = %d\n", namelen );
+    u32 namelen = read_LEB(bytes, pos, 32);
     char * name_c = (char *)malloc(namelen + 1);
     std::memcpy(name_c, bytes + *pos, namelen); *pos += namelen;
     name_c[namelen] = '\0';

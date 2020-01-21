@@ -26,6 +26,7 @@ struct Func {
   typeidx type;
   vec<type::Value> locals;
   Expr body;
+  Func(typeidx type):type(type) {}
 };
 
 /*
