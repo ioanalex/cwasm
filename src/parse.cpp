@@ -134,6 +134,28 @@ void parse_tables (byte *bytes, u32 *pos, vec<Table> *tables){
         tables -> push_back(table);
     }
 }
+
+void parse_mems   (byte *bytes, u32 *pos, vec<Memory> *mems){
+    u32 table_count = read_LEB(bytes, pos, 32);
+    for (unsigned int i = 0; i < table_count; i++){
+        type::Memory memtype = parse_memtype(bytes, pos);
+        Memory mem(memtype);
+        mems -> push_back(mem);
+    }
+}
+
+void parse_globals(byte *bytes, u32 *pos, vec<Global> *globals){
+    u32 global_count = read_LEB(bytes, pos, 32);
+    for (unsigned int i = 0; i < global_count; i++){
+        type::Global globaltype = parse_globaltype(bytes, pos);
+        Expr e = parse_expr(bytes, pos); // TODO: should I const eval the expr, 
+                                         // or just keep a pointer to the bytecode 
+                                         // for later? How should we define Expr? 
+        Global global(globaltype, e);
+        globals -> push_back(global);
+    }
+}
+
 void parse_exports(byte *bytes, u32 *pos , vec<Export> *exports){
     // u32 export_count = read_LEB(bytes, pos, 32);
     

@@ -4,18 +4,18 @@
 #include "binary.hpp"
 #include "parse.hpp"
 
-const char* section_names [] = {"custom",   // 0
-                                "type",     // 1 
-                                "import",   // 2
-                                "function", // 3
-                                "table",    // 4
-                                "memory",   // 5
-                                "global",   // 6 
-                                "export",   // 7
-                                "start",    // 8
-                                "element",  // 9
-                                "code",     // 10
-                                "data"      // 11
+const char* section_names [] = {"Custom",   // 0
+                                "Type",     // 1 
+                                "Import",   // 2
+                                "Function", // 3
+                                "Table",    // 4
+                                "Memory",   // 5
+                                "Global",   // 6 
+                                "Export",   // 7
+                                "Start",    // 8
+                                "Element",  // 9
+                                "Code",     // 10
+                                "Data"      // 11
                                 };
 
 Module * load_module(byte* bytes, u32 byte_count){
@@ -119,6 +119,38 @@ Module * load_module(byte* bytes, u32 byte_count){
                 std::cout << "----- ------ -----\n";
                 #endif
                 break;   
+            }
+            case 5:
+            {
+                warn("Parsing Memory(5) section (length: 0x%x)\n", slen);
+                parse_mems(bytes, &pos, &mems);
+                warn("Parsing Memories complete\n");
+                #if DEBUG
+                std::cout << "----- MEMORIES -----\n";
+                for (unsigned int i = 0; i < mems.size(); i++){
+                    std::cout << "MEM :: from " << mems[i].type.limits.min \
+                              << " to "         << mems[i].type.limits.max \
+                              << std::endl;
+                }
+                std::cout << "----- -------- -----\n";
+                #endif
+                break;
+            }
+            case 6:
+            {
+                warn("Parsing Global(6) section (length: 0x%x)\n", slen);
+                parse_globals(bytes, &pos, &globals);
+                warn("Parsing Globals complete\n");
+                #if DEBUG
+                std::cout << "----- GLOBALS -----\n";
+                for (unsigned int i = 0; i < mems.size(); i++){
+                    std::cout << "GLOBAL ::  " << globals[i].type.value << ((globals[i].type.mut) ? " (mut)" : "" ) \
+                            /*   << " init to "   << globals[i].init \ */
+                              << std::endl;
+                }
+                std::cout << "----- ------- -----\n";
+                #endif
+                break;
             }
             // case 7:
             // {

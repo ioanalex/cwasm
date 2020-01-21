@@ -4,7 +4,7 @@
 #include "named.hpp"
 #include "types.hpp"
 
-typedef vec<byte> Expr;
+using Expr = u32; // just an index in the bytecode
 
 // Following the spec (Structure -> Modules)
 
@@ -42,6 +42,7 @@ struct Table {
 */
 struct Memory {
   type::Memory type;
+  Memory(type::Memory type): type(type) {}
 };
 
 /*
@@ -50,6 +51,7 @@ struct Memory {
 struct Global {
   type::Global type;
   Expr init;
+  Global(type::Global type, Expr init): type(type), init(init) {}
 };
 
 struct Elem {
