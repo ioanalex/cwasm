@@ -126,6 +126,14 @@ void parse_funcs(byte *bytes, u32 *pos, vec<Func> *funcs){
     }
 }
 
+void parse_tables (byte *bytes, u32 *pos, vec<Table> *tables){
+    u32 table_count = read_LEB(bytes, pos, 32);
+    for (unsigned int i = 0; i < table_count; i++){
+        type::Table tt = parse_tabletype(bytes, pos);
+        Table table(tt);
+        tables -> push_back(table);
+    }
+}
 void parse_exports(byte *bytes, u32 *pos , vec<Export> *exports){
     // u32 export_count = read_LEB(bytes, pos, 32);
     

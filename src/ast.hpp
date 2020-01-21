@@ -34,6 +34,7 @@ struct Func {
 */
 struct Table {
   type::Table type;
+  Table(type::Table type): type(type) {}
 };
 
 /*

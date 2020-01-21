@@ -22,6 +22,7 @@ Module * load_module(byte* bytes, u32 byte_count){
 
     // Module m;
     vec<type::Func> types;
+    vec<Import> imports;
     vec<Func> funcs;
     vec<Table> tables;
     vec<Memory> mems;
@@ -29,7 +30,6 @@ Module * load_module(byte* bytes, u32 byte_count){
     vec<Elem> elem;
     vec<Data> data;
     u32 startidx = 0; // TODO: this should be changed
-    vec<Import> imports;
     vec<Export> exports;
 
     u32 pos = 0;
@@ -73,11 +73,11 @@ Module * load_module(byte* bytes, u32 byte_count){
                         case importdesc::FUNC   : std::cout << "FUNC :: " << types[imports[i].desc.func] << std::endl; 
                                                   break;
                         case importdesc::TABLE  : std::cout << "TABLE :: from "  << imports[i].desc.table.limits.min \
-                                                            << " to "            << imports[i].desc.table.limits.min \
+                                                            << " to "            << imports[i].desc.table.limits.max \
                                                             << std::endl; 
                                                   break;
                         case importdesc::MEM    : std::cout << "MEM :: from " << imports[i].desc.mem.limits.min \
-                                                            << " to "         << imports[i].desc.mem.limits.min \
+                                                            << " to "         << imports[i].desc.mem.limits.max \
                                                             << std::endl; 
                                                   break;
                         case importdesc::GLOBAL : std::cout << "GLOBAL :: " << imports[i].desc.global.value \
@@ -103,6 +103,22 @@ Module * load_module(byte* bytes, u32 byte_count){
                 std::cout << "----- --------- -----\n";
                 #endif
                 break;
+            }
+            case 4:
+            {
+                warn("Parsing Table(4) section (length: 0x%x)\n", slen);
+                parse_tables(bytes, &pos, &tables);
+                warn("Parsing Tables complete\n");
+                #if DEBUG
+                std::cout << "----- TABLES -----\n";
+                for (unsigned int i = 0; i < tables.size(); i++){
+                    std::cout << "TABLE :: from "  << tables[i].type.limits.min \
+                              << " to "            << tables[i].type.limits.max \
+                              << std::endl;
+                }
+                std::cout << "----- ------ -----\n";
+                #endif
+                break;   
             }
             // case 7:
             // {
