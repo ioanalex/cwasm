@@ -53,8 +53,10 @@ Value const_eval(byte *bytes, u32 *pos, vec<Global> &globals){
         {
             warn("[global.get is unimplemented] setting to 0\n");
             globalidx gidx(parse_idx(bytes, pos));
+            debug("gidx %d\n",gidx);
+            ASSERT(gidx.to_value() < globals.size(), "gidx is larger that globals.size\n");
             // keep the types correct
-            switch(globals[gidx].type.value){
+            switch(globals.at(gidx).type.value){
                 case type::Value::i32:
                     v = from_i32(0);
                     break;
@@ -68,7 +70,6 @@ Value const_eval(byte *bytes, u32 *pos, vec<Global> &globals){
                     v = from_f64(0);
                     break;
             }
-            v = from_i32(i32(0));
         }
     }   
     opcode = parse_byte(bytes, pos); //debug("next opcode is %x at addr: %x \n", opcode, *pos - 1);

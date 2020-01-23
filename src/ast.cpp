@@ -64,6 +64,35 @@ Module * load_module(byte* bytes, u32 byte_count){
             {
                 warn("Parsing Import(2) section (length: 0x%x)\n", slen);
                 parse_imports(bytes, &pos, &imports);
+                for(auto im: imports){
+                    switch(im.desc.tag){
+                        case importdesc::FUNC:
+                        {
+                            Func f(im.desc.func);
+                            funcs.push_back(f);
+                            break;
+
+                        }
+                        case importdesc::TABLE:
+                        {
+                            Table t(im.desc.table);
+                            tables.push_back(t);
+                            break;
+                        }
+                        case importdesc::MEM:
+                        {
+                            Memory m(im.desc.mem);
+                            mems.push_back(m);
+                            break;
+                        }   
+                        case importdesc::GLOBAL:
+                        {
+                            Global g(im.desc.global);
+                            globals.push_back(g);
+                            break;
+                        }
+                    }
+                }
                 warn("Parsing Imports complete\n");
                 #if DEBUG
                 std::cout << "----- IMPORTS -----\n";

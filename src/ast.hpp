@@ -56,7 +56,8 @@ struct Memarg {
 struct Global {
   type::Global type;
   Value init;
-  Global(type::Global &type, Value &init): type(type), init(init) {}
+  Global(type::Global &type): type(type) {}
+  Global(type::Global &type, Value init): type(type), init(init) {}
 };
 
 struct Elem {
