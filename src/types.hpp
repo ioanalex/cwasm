@@ -30,6 +30,13 @@ using Name = std::string;
 
 enum class Value { i32, i64, f32, f64 };
 
+struct Result {
+  bool has_type = false;
+  Value type;
+};
+
+using Block = Result;
+
 inline std::ostream &operator<<(std::ostream &os, const Value &v) {
   switch (v) {
     case Value::i32: return os << "i32";
@@ -46,6 +53,7 @@ struct Func {
   vec<Value> args;
   vec<Value> result;
 };
+
 inline std::ostream &operator<<(std::ostream &os, const Func &v){
   os << "[";
   for (int i = 0; i < v.args.size(); i++){

@@ -3,6 +3,7 @@
 
 #include "named.hpp"
 #include "types.hpp"
+#include "values.hpp"
 
 using Expr = u32; // just an index in the bytecode
 
@@ -26,7 +27,7 @@ struct Func {
   typeidx type;
   vec<type::Value> locals;
   Expr body;
-  Func(typeidx type):type(type) {}
+  Func(typeidx &type):type(type) {}
 };
 
 /*
@@ -34,7 +35,7 @@ struct Func {
 */
 struct Table {
   type::Table type;
-  Table(type::Table type): type(type) {}
+  Table(type::Table &type): type(type) {}
 };
 
 /*
@@ -42,22 +43,27 @@ struct Table {
 */
 struct Memory {
   type::Memory type;
-  Memory(type::Memory type): type(type) {}
+  Memory(type::Memory &type): type(type) {}
 };
 
+struct Memarg {
+  u32 align;
+  u32 offset;
+};
 /*
     Globals
 */
 struct Global {
   type::Global type;
-  Expr init;
-  Global(type::Global type, Expr init): type(type), init(init) {}
+  Value init;
+  Global(type::Global &type, Value &init): type(type), init(init) {}
 };
 
 struct Elem {
   tableidx table; // Currently only one table is allowed so tableidx must me 0
-  Expr offset;    // The offset is given by a constant expression
+  Value offset;    // The offset is given by a constant expression that is evaluated to a value
   vec<funcidx> init;
+  Elem(tableidx &table, Value &offset, vec<funcidx> &init): table(table), offset(offset), init(init) {}
 };
 
 /*
@@ -65,7 +71,9 @@ struct Elem {
 */
 struct Data {
   memidx data;
-  Expr offset;
+  Value offset;
+  vec<byte> init;
+  Data(memidx &data, Value &offset, vec<byte> &init): data(data), offset(offset), init(init) {}
 };
 
 /*
@@ -88,11 +96,17 @@ struct exportdesc {
     memidx mem;
     globalidx global;
   };
+  exportdesc(funcidx &);
+  exportdesc(tableidx &);
+  exportdesc(memidx &);
+  exportdesc(globalidx &);
+
 };
 
 struct Export {
   type::Name name;
   exportdesc desc;
+  Export(type::Name &, exportdesc &);
 };
 
 /*
@@ -106,17 +120,17 @@ struct importdesc {
     type::Memory mem;
     type::Global global;
   };
-  importdesc(typeidx);
-  importdesc(type::Table);
-  importdesc(type::Memory);
-  importdesc(type::Global);
+  importdesc(typeidx  &);
+  importdesc(type::Table  &);
+  importdesc(type::Memory  &);
+  importdesc(type::Global  &);
 };
 
 struct Import {
   type::Name module; // Each import is labeled by a two-level name space, consisting
   type::Name name; // of amodule name and a name for an entity within that module.
   importdesc desc;
-  Import(type::Name, type::Name, importdesc);
+  Import(type::Name &, type::Name &, importdesc &);
 };
 
 /*
