@@ -1,7 +1,7 @@
 #include "types.hpp"
-#include "instructions.hpp"
+#include "InstrProfile.hpp"
 
-Instr::Instr(byte opcode) {
+InstrProfile::InstrProfile(byte opcode) {
     code = opcode;
     bool error = false;
     type.args = vec<itype>(0);
@@ -21,11 +21,11 @@ Instr::Instr(byte opcode) {
 }
 
 // Getters
-instr_type Instr::get_type(){ return type;}
-string Instr::get_name(){ return name;}
-byte   Instr::get_code(){ return code;}
+instr_type InstrProfile::get_type(){ return type;}
+string InstrProfile::get_name(){ return name;}
+byte   InstrProfile::get_code(){ return code;}
 
-std::ostream &operator<<(std::ostream &os, const Instr &i){
+std::ostream &operator<<(std::ostream &os, const InstrProfile &i){
     std::cout << i.name \
               << "(0x" << std::hex << (int) (i.code) << ")" \
               << " :: " << i.type;
@@ -38,18 +38,18 @@ ptype::ptype(u32 id, bool star, bool maybe): id(id), star(star), maybe(maybe) {}
 
 std::ostream &operator<<(std::ostream &os, const instr_type &type){
     //print the [
-    os << "[";
+    os << "[ ";
     //print the args types
     for (auto const& type : type.args){
         std::visit([&os](auto t) { os << t << " "; }, type);
     }
     // print the ] - > [
-    os << "] → [";
+    os << "] → [ ";
     //print the ret
     for (auto const& type : type.ret){
         std::visit([&os](auto t) { os << t; }, type);
     }
     // print the  ]
-    os << "]";
+    os << " ]";
     return os;
 }

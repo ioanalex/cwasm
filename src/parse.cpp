@@ -53,7 +53,6 @@ Value const_eval(byte *bytes, u32 *pos, vec<Global> &globals){
         {
             warn("[global.get is unimplemented] setting to 0\n");
             globalidx gidx(parse_idx(bytes, pos));
-            debug("gidx %d\n",gidx);
             ASSERT(gidx.to_value() < globals.size(), "gidx is larger that globals.size\n");
             // keep the types correct
             switch(globals.at(gidx).type.value){

@@ -1,4 +1,4 @@
-#include "instructions.hpp"
+#include "InstrProfile.hpp"
 #include "types.hpp"
 #include "values.hpp"
 #include "util.hpp"
@@ -6,6 +6,19 @@
 #include <iostream>
 
 int main(int argc, char *argv[]) {
+
+  // create all instruction profiles
+  vec<InstrProfile> profiles; 
+  for(byte i = 0; i < (0xBF + 0x01); i++){
+    InstrProfile instr(i);
+    profiles.push_back(instr);
+  }
+
+  for(auto instr : profiles){
+    std::cout << instr << std::endl;
+  }
+
+
   // get the module as bytes in an array
   FILE *fileptr;
   byte *buffer;
@@ -30,4 +43,6 @@ int main(int argc, char *argv[]) {
   Module * m = load_module(buffer, filelen);
   delete m;
   delete[] buffer;
+
+  
 }

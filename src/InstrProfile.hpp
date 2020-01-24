@@ -1,5 +1,5 @@
-#ifndef __INSTRUCTIONS_HPP__
-#define __INSTRUCTIONS_HPP__
+#ifndef __INSTRPROFILE_HPP__
+#define __INSTRPROFILE_HPP__
 
 #include <iostream>
 
@@ -42,14 +42,14 @@ struct instr_type {
 
 std::ostream &operator<<(std::ostream &os, const instr_type &type);
 
-class Instr {
+class InstrProfile {
     public:
-        Instr(byte);
+        InstrProfile(byte);
         string get_name();
         byte get_code();
         instr_type get_type();
 
-        friend std::ostream &operator<<(std::ostream &, const Instr &);
+        friend std::ostream &operator<<(std::ostream &, const InstrProfile &);
     protected:
         byte code;
         string name;
@@ -57,40 +57,5 @@ class Instr {
         instr_type type;
 };
 
-
-// ignore this
-/*
-    Number instructions:
-        * Unop   = iunop  | funop
-        * binop  = ibinop | fbinop
-        * testop = itestop
-        * relop  = irelop | frelop
-        * cvtop = wrap | extend | trunc | convert | demote | promote | reinterpret
-*/
-// class NumInstr: public Instr{
-//     public:
-//         string get_name();
-//         byte get_code();
-//     protected:
-//         enum {i, f} type; //integer or float
-//         enum {x32, x64} size; // 32 or 64 bit operation
-//         enum {u, s, n} sign      // signed or unsigned or doesn't matter
-// };
-
-// class ParamInstr: public Instr{
-
-// };
-
-// class VarInstr: public Instr{
-
-// };
-
-// class MemInstr: public Instr{
-
-// };
-
-// class ControlInstr: public Instr{
-
-// };
 
 #endif

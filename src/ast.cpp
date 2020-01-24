@@ -202,10 +202,10 @@ Module * load_module(byte* bytes, u32 byte_count){
                                                   break;
                         case importdesc::GLOBAL : 
                         // TODO: uncomment when globals are parsed (seg fault here)
-                        // std::cout << "GLOBAL :: " << globals[exports[i].desc.global].type.value \
-                        //                                     << ((globals[exports[i].desc.global].type.mut) ? "(mut)" : "" ) \
-                        //                                     << globals[exports[i].desc.global].init \
-                        //                                     << std::endl; 
+                                                  std::cout << "GLOBAL :: " << globals[exports[i].desc.global].type.value \
+                                                            << ((globals[exports[i].desc.global].type.mut) ? "(mut)" : "" ) \
+                                                            << globals[exports[i].desc.global].init \
+                                                            << std::endl; 
                                                   break;
                     }
                 }
