@@ -4,35 +4,50 @@
 #include "InstrProfile.hpp"
 #include "types.hpp"
 
+// This is the abstract class for all different types of instructions.
 class InstrImpl {
-private:
-  byte opcode;
-  u32 pos;  // Index in bytecode
-  // this is the abstract class for all different types of instructions
 public:
-  virtual void run(/* takes a Store   */) = 0;
-  virtual void verify(/* takes a Context */) = 0;
+  explicit InstrImpl(u32 pos) : pos_(pos) {}
+  virtual ~InstrImpl() {}
+
+  u32 pos() const { return pos_; }
+
+  // TODO: takes a Store.
+  virtual void run() = 0;
+  // TODO: takes a Context.
+  virtual void verify() = 0;
+
+private:
+  u32 pos_;  // Index in bytecode
 };
 
-class Instruction {
+class Instr {
 public:
-  InstrImpl *impl;
-  // Constructor
-  Instruction(InstrProfile *, InstrImpl *, u32);
+  Instr() { this->impl = nullptr; }
+  explicit Instr(InstrImpl *i) : impl(i) {}
+  Instr(const Instr &i) = delete;
+  Instr(Instr &&i) = default;
+  ~Instr() { delete impl; }
 
   // static factory method
   // checks byte[*pos]
   // desides which sub-class to use as an InstrImpl
   // initializes the impl onject
   // initializes the instr object using basic constructor
-  static Instruction createInstr(byte *, u32 *);  // called when parsing
+  static Instr create(byte *, u32 *);  // called when parsing
 
-  void run(/* takes a Store   */);     // calls impl -> run()
-  void verify(/* takes a Context */);  // calls impl -> verify()
+  // TODO: takes a Store.
+  void run() { impl->run(); }
+  // TODO: takes a Context.
+  void verify() { impl->verify(); }
+
+private:
+  InstrImpl *impl;
 };
 
-template <class t>
+template <typename T>
 class ImmediateImpl : public InstrImpl {
+private:
   T imm;
 };
 

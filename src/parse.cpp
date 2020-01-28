@@ -6,11 +6,7 @@
 #include "util.hpp"
 #include "values.hpp"
 
-inline u32 parse_byte(byte *bytes, u32 *pos) {
-  u32 b = bytes[*pos];
-  *pos = *pos + 1;
-  return b;
-}
+inline u32 parse_byte(byte *bytes, u32 *pos) { return bytes[(*pos)++]; }
 
 u32 parse_idx(byte *bytes, u32 *pos) { return read_LEB(bytes, pos, 32); }
 
@@ -47,7 +43,7 @@ Value const_eval(byte *bytes, u32 *pos, vec<Global> &globals) {
     case 0x23: {
       warn("[global.get is unimplemented] setting to 0\n");
       globalidx gidx(parse_idx(bytes, pos));
-      ASSERT(gidx.to_value() < globals.size(),
+      ASSERT(gidx.value() < globals.size(),
              "gidx is larger that globals.size\n");
       // keep the types correct
       switch (globals.at(gidx).type.value) {
@@ -143,9 +139,12 @@ Memarg parse_memarg(byte *bytes, u32 *pos) {
   return memarg;
 }
 
-Expr parse_expr(byte *bytes, u32 *pos) {
-  Expr ex;
-  return ex;
+void parse_expr(Expr &e, byte *bytes, u32 *pos) {
+  u32 instr_count = read_LEB(bytes, pos, 32);
+  for (unsigned i = 0; i < instr_count; ++i)
+    e.emplace_back(Instr::create(bytes, pos));
+  ASSERT(read_LEB(bytes, pos, 7) == 0x1b,
+         "Expressions end with the 0x1b code\n");
 }
 
 void parse_types(byte *bytes, u32 *pos, vec<type::Func> *types) {
@@ -155,15 +154,11 @@ void parse_types(byte *bytes, u32 *pos, vec<type::Func> *types) {
     ASSERT(read_LEB(bytes, pos, 7) == 0x60,
            "Functions are encoded with the 0x60 code\n");
     u32 arg_count = read_LEB(bytes, pos, 32);
-    for (u32 a = 0; a < arg_count; a++) {
-      type::Value type = parse_valtype(bytes, pos);
-      newtype.args.push_back(type);
-    }
+    for (u32 a = 0; a < arg_count; a++)
+      newtype.args.emplace_back(parse_valtype(bytes, pos));
     u32 res_count = read_LEB(bytes, pos, 32);
-    for (u32 r = 0; r < res_count; r++) {
-      type::Value type = parse_valtype(bytes, pos);
-      newtype.result.push_back(type);
-    }
+    for (u32 r = 0; r < res_count; r++)
+      newtype.result.emplace_back(parse_valtype(bytes, pos));
     // std::cout << types[t] << std::endl;
     types->push_back(newtype);
   }
@@ -210,7 +205,7 @@ void parse_imports(byte *bytes, u32 *pos, vec<Import> *imports) {
         FATAL("You imported something with kind %d, that I cannot understand\n",
               kind);
     }
-    imports->push_back(Import(import_name, import_module, *desc));
+    imports->emplace_back(Import(import_name, import_module, *desc));
   }
 }
 
@@ -218,27 +213,20 @@ void parse_funcs(byte *bytes, u32 *pos, vec<Func> *funcs) {
   u32 func_count = read_LEB(bytes, pos, 32);
   for (unsigned int i = 0; i < func_count; i++) {
     typeidx tid(parse_idx(bytes, pos));
-    Func func(tid);
-    funcs->push_back(func);
+    funcs->emplace_back(Func(tid));
   }
 }
 
 void parse_tables(byte *bytes, u32 *pos, vec<Table> *tables) {
   u32 table_count = read_LEB(bytes, pos, 32);
-  for (unsigned int i = 0; i < table_count; i++) {
-    type::Table tt = parse_tabletype(bytes, pos);
-    Table table(tt);
-    tables->push_back(table);
-  }
+  for (unsigned int i = 0; i < table_count; i++)
+    tables->emplace_back(parse_tabletype(bytes, pos));
 }
 
 void parse_mems(byte *bytes, u32 *pos, vec<Memory> *mems) {
   u32 table_count = read_LEB(bytes, pos, 32);
-  for (unsigned int i = 0; i < table_count; i++) {
-    type::Memory memtype = parse_memtype(bytes, pos);
-    Memory mem(memtype);
-    mems->push_back(mem);
-  }
+  for (unsigned int i = 0; i < table_count; i++)
+    mems->emplace_back(parse_memtype(bytes, pos));
 }
 
 void parse_globals(byte *bytes, u32 *pos, vec<Global> *globals) {
@@ -249,8 +237,7 @@ void parse_globals(byte *bytes, u32 *pos, vec<Global> *globals) {
     // or just keep a pointer to the bytecode
     // for later? How should we define Expr?
     Value v = const_eval(bytes, pos, *globals);
-    Global global(globaltype, v);
-    globals->push_back(global);
+    globals->emplace_back(Global(globaltype, v));
   }
 }
 
@@ -292,7 +279,7 @@ void parse_exports(byte *bytes, u32 *pos, vec<Export> *exports) {
             "understand\n",
             kind);
     }
-    exports->push_back(Export(export_name, *desc));
+    exports->emplace_back(Export(export_name, *desc));
   }
 }
 
@@ -304,12 +291,26 @@ void parse_elems(byte *bytes, u32 *pos, vec<Elem> *elems,
     Value v = const_eval(bytes, pos, globals);
     u32 func_count = read_LEB(bytes, pos, 32);
     vec<funcidx> funcs;
-    for (unsigned int j = 0; j < func_count; j++) {
-      funcidx f(parse_idx(bytes, pos));
-      funcs.push_back(f);
+    for (unsigned int j = 0; j < func_count; j++)
+      funcs.emplace_back(funcidx(parse_idx(bytes, pos)));
+    elems->emplace_back(Elem(x, v, funcs));
+  }
+}
+
+void parse_codes(byte *bytes, u32 *pos, vec<Func> &funcs) {
+  u32 code_count = read_LEB(bytes, pos, 32);
+  ASSERT(code_count <= funcs.size(), "Mismatch in number of codes: %lu vs %u\n",
+         funcs.size(), code_count);
+  for (unsigned int i = 0; i < code_count; i++) {
+    u32 size = read_LEB(bytes, pos, 32);
+    USE(size);  // TODO: verification
+    u32 locals_count = read_LEB(bytes, pos, 32);
+    for (unsigned int j = 0; j < locals_count; j++) {
+      u32 n = read_LEB(bytes, pos, 32);
+      type::Value t(parse_valtype(bytes, pos));
+      for (unsigned int k = 0; k < n; k++) funcs[i].locals.push_back(t);
     }
-    Elem elem(x, v, funcs);
-    elems->push_back(elem);
+    parse_expr(funcs[i].body, bytes, pos);
   }
 }
 
@@ -322,7 +323,6 @@ void parse_datas(byte *bytes, u32 *pos, vec<Data> *datas,
     u32 byte_count = read_LEB(bytes, pos, 32);
     vec<byte> bs(bytes + *pos, bytes + *pos + byte_count);
     *pos += byte_count;
-    Data data(x, v, bs);
-    datas->push_back(data);
+    datas->emplace_back(Data(x, v, bs));
   }
 }

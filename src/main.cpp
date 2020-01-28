@@ -39,7 +39,7 @@ int main(int argc, char *argv[]) {
   buffer[filelen] = '\0';
   fclose(fileptr);
 
-  Module *m = load_module(buffer, filelen);
-  delete m;
+  Module m;
+  load_module(m, buffer, filelen);
   delete[] buffer;
 }
