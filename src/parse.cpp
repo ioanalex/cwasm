@@ -321,7 +321,7 @@ void parse_datas(byte *bytes, u32 *pos, vec<Data> *datas,
     Value v = const_eval(bytes, pos, globals);
     u32 byte_count = read_LEB(bytes, pos, 32);
     vec<byte> bs(bytes + *pos, bytes + *pos + byte_count);
-    *pos = *pos + byte_count;
+    *pos += byte_count;
     Data data(x, v, bs);
     datas->push_back(data);
   }
