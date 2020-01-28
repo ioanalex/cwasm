@@ -8,6 +8,7 @@
 template <typename T, typename Phantom>
 class Named {
 public:
+  Named() {}
   explicit Named(const T& value) : value_(value) {}
   explicit Named(T&& value) : value_(std::move(value)) {}
   operator T&() { return value_; }

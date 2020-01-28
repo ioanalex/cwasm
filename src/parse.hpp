@@ -1,3 +1,4 @@
+#include "ast.hpp"
 #include "types.hpp"
 
 void parse_types(byte *, u32 *, vec<type::Func> *);
