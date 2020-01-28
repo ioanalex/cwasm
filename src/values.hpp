@@ -1,9 +1,10 @@
 #ifndef __VALUES_HPP__
 #define __VALUES_HPP__
 
-#include "types.hpp"
 #include <iostream>
 #include <variant>
+
+#include "types.hpp"
 
 // Variants are in the same order as in enum type::Value.
 using Value = std::variant<i32, i64, f32, f64>;

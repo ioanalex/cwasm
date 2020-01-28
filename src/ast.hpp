@@ -5,7 +5,7 @@
 #include "types.hpp"
 #include "values.hpp"
 
-using Expr = u32; // just an index in the bytecode
+using Expr = u32;  // just an index in the bytecode
 
 // Following the spec (Structure -> Modules)
 
@@ -27,7 +27,7 @@ struct Func {
   typeidx type;
   vec<type::Value> locals;
   Expr body;
-  Func(typeidx &type):type(type) {}
+  Func(typeidx &type) : type(type) {}
 };
 
 /*
@@ -35,7 +35,7 @@ struct Func {
 */
 struct Table {
   type::Table type;
-  Table(type::Table &type): type(type) {}
+  Table(type::Table &type) : type(type) {}
 };
 
 /*
@@ -43,7 +43,7 @@ struct Table {
 */
 struct Memory {
   type::Memory type;
-  Memory(type::Memory &type): type(type) {}
+  Memory(type::Memory &type) : type(type) {}
 };
 
 struct Memarg {
@@ -56,15 +56,17 @@ struct Memarg {
 struct Global {
   type::Global type;
   Value init;
-  Global(type::Global &type): type(type) {}
-  Global(type::Global &type, Value init): type(type), init(init) {}
+  Global(type::Global &type) : type(type) {}
+  Global(type::Global &type, Value init) : type(type), init(init) {}
 };
 
 struct Elem {
-  tableidx table; // Currently only one table is allowed so tableidx must me 0
-  Value offset;    // The offset is given by a constant expression that is evaluated to a value
+  tableidx table;  // Currently only one table is allowed so tableidx must me 0
+  Value offset;    // The offset is given by a constant expression that is
+                   // evaluated to a value
   vec<funcidx> init;
-  Elem(tableidx &table, Value &offset, vec<funcidx> &init): table(table), offset(offset), init(init) {}
+  Elem(tableidx &table, Value &offset, vec<funcidx> &init)
+      : table(table), offset(offset), init(init) {}
 };
 
 /*
@@ -74,7 +76,8 @@ struct Data {
   memidx data;
   Value offset;
   vec<byte> init;
-  Data(memidx &data, Value &offset, vec<byte> &init): data(data), offset(offset), init(init) {}
+  Data(memidx &data, Value &offset, vec<byte> &init)
+      : data(data), offset(offset), init(init) {}
 };
 
 /*
@@ -83,7 +86,7 @@ struct Data {
 struct Start {
   bool defined = false;
   funcidx func;
-  Start(u32 &f): func(f){}
+  Start(u32 &f) : func(f) {}
 };
 
 /*
@@ -101,7 +104,6 @@ struct exportdesc {
   exportdesc(tableidx &);
   exportdesc(memidx &);
   exportdesc(globalidx &);
-
 };
 
 struct Export {
@@ -121,15 +123,17 @@ struct importdesc {
     type::Memory mem;
     type::Global global;
   };
-  importdesc(typeidx  &);
-  importdesc(type::Table  &);
-  importdesc(type::Memory  &);
-  importdesc(type::Global  &);
+  importdesc(typeidx &);
+  importdesc(type::Table &);
+  importdesc(type::Memory &);
+  importdesc(type::Global &);
 };
 
 struct Import {
-  type::Name module; // Each import is labeled by a two-level name space, consisting
-  type::Name name; // of amodule name and a name for an entity within that module.
+  type::Name
+      module;  // Each import is labeled by a two-level name space, consisting
+  type::Name
+      name;  // of amodule name and a name for an entity within that module.
   importdesc desc;
   Import(type::Name &, type::Name &, importdesc &);
 };
@@ -149,12 +153,11 @@ struct Module {
   vec<Import> imports;
   vec<Export> exports;
 
-  Module(vec<type::Func> &, vec<Func> &, vec<Table> &,
-         vec<Memory> &, vec<Global> &, vec<Elem> &,
-         vec<Data> &, Start &, vec<Import> &, vec<Export> &
-         );
+  Module(vec<type::Func> &, vec<Func> &, vec<Table> &, vec<Memory> &,
+         vec<Global> &, vec<Elem> &, vec<Data> &, Start &, vec<Import> &,
+         vec<Export> &);
 };
 
-Module * load_module(byte*, u32);
+Module *load_module(byte *, u32);
 
 #endif
