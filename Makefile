@@ -44,7 +44,7 @@ clean:
 distclean: clean
 	$(RM) $(EXEC)
 
-#We don't need to clean up when we're making these targets
+# We don't need to clean up when we're making these targets
 NODEPS:=clean distclean autogen
 
 # Autogeneated switch in instructions.cpp
@@ -53,17 +53,35 @@ NODEPS:=clean distclean autogen
 # opcode_switch.inc: instrs.py
 # 	$(./instrs.py > opcode_switch.inc)
 
-#Don't create dependencies when we're cleaning, for instance
+# Don't create dependencies when we're cleaning, for instance
 ifeq (0, $(words $(findstring $(MAKECMDGOALS), $(NODEPS))))
-	#Chances are, these files don't exist.  GMake will create them and
-	#clean up automatically afterwards
+	# Chances are, these files don't exist.  GMake will create them and
+	# clean up automatically afterwards
 	-include $(DEPS)
 endif
 
-#This is the rule for creating the dependency files
+# This is the rule for creating the dependency files
 $(SRCDIR)/%.d: $(SRCDIR)/%.cpp
 	@echo "DEP   "$@ $
 	@$(CXX) $(CXXFLAGS) -MM \
 		-MT '$(patsubst $(SRCDIR)/%.cpp,$(OBJDIR)/%.o,$<)' \
 		-MT '$(patsubst $(SRCDIR)/%.cpp,$(SRCDIR)/%.d,$<)' $< \
 		-MF $@
+
+# Formatting --- assumes a working clang-format installation
+SOURCES=$(SRCS) $(wildcard $(SRCDIR)/*.hpp)
+
+check-format:
+	@for src in $(SOURCES) ; do \
+		var=`clang-format "$$src" | diff "$$src" - | wc -l` ; \
+		if [ $$var -ne 0 ] ; then \
+			echo "$$src does not respect the coding style (diff: $$var lines)" ; \
+		fi ; \
+	done
+
+format:
+	@for src in $(SOURCES) ; do \
+		echo "Formatting $$src..." ; \
+		clang-format -i "$$src" ; \
+	done
+	@echo "Done"

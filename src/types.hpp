@@ -13,7 +13,8 @@ using u32 = uint32_t;
 using i64 = int64_t;
 using u64 = uint64_t;
 
-template <typename T> using vec = std::vector<T>;
+template <typename T>
+using vec = std::vector<T>;
 
 using byte = unsigned char;
 using string = std::string;
@@ -39,11 +40,16 @@ using Block = Result;
 
 inline std::ostream &operator<<(std::ostream &os, const Value &v) {
   switch (v) {
-    case Value::i32: return os << "i32";
-    case Value::i64: return os << "i64";
-    case Value::f32: return os << "f32";
-    case Value::f64: return os << "f64";
-    default: return os << "illegal type value"; 
+    case Value::i32:
+      return os << "i32";
+    case Value::i64:
+      return os << "i64";
+    case Value::f32:
+      return os << "f32";
+    case Value::f64:
+      return os << "f64";
+    default:
+      return os << "illegal type value";
   }
 }
 
@@ -54,14 +60,14 @@ struct Func {
   vec<Value> result;
 };
 
-inline std::ostream &operator<<(std::ostream &os, const Func &v){
+inline std::ostream &operator<<(std::ostream &os, const Func &v) {
   os << "[";
-  for (int i = 0; i < v.args.size(); i++){
-    os << " " << v.args[i] ;
+  for (int i = 0; i < v.args.size(); i++) {
+    os << " " << v.args[i];
   }
   os << " ] -> [";
-  for (int i = 0; i < v.result.size(); i++){
-    os << " " << v.result[i] ;
+  for (int i = 0; i < v.result.size(); i++) {
+    os << " " << v.result[i];
   }
   os << " ]";
   return os;
@@ -96,17 +102,22 @@ struct Extern {
   };
 };
 
-}; // namespace type
+};  // namespace type
 
 // get type::Value from the 32 bit binary code
-inline type::Value decode_type(u32 v){
-    switch(v){
-        case 0x7F: return type::Value::i32;
-        case 0x7E: return type::Value::i64;
-        case 0x7D: return type::Value::f32;
-        case 0x7C: return type::Value::f64;
-        default: FATAL("invalid value 0x%x not a valtype\n", v);
-    }
+inline type::Value decode_type(u32 v) {
+  switch (v) {
+    case 0x7F:
+      return type::Value::i32;
+    case 0x7E:
+      return type::Value::i64;
+    case 0x7D:
+      return type::Value::f32;
+    case 0x7C:
+      return type::Value::f64;
+    default:
+      FATAL("invalid value 0x%x not a valtype\n", v);
+  }
 }
 
 #endif

@@ -1,30 +1,29 @@
-#include "InstrProfile.hpp"
-#include "types.hpp"
-#include "values.hpp"
-#include "util.hpp"
-#include "ast.hpp"
 #include <iostream>
 
-int main(int argc, char *argv[]) {
+#include "InstrProfile.hpp"
+#include "ast.hpp"
+#include "types.hpp"
+#include "util.hpp"
+#include "values.hpp"
 
+int main(int argc, char *argv[]) {
   // create all instruction profiles
-  vec<InstrProfile> profiles; 
-  for(byte i = 0; i < (0xBF + 0x01); i++){
+  vec<InstrProfile> profiles;
+  for (byte i = 0; i < (0xBF + 0x01); i++) {
     InstrProfile instr(i);
     profiles.push_back(instr);
   }
 
-  for(auto instr : profiles){
+  for (auto instr : profiles) {
     std::cout << instr << std::endl;
   }
-
 
   // get the module as bytes in an array
   FILE *fileptr;
   byte *buffer;
   long filelen;
 
-  if(argc != 2) {
+  if (argc != 2) {
     FATAL("give me a file\n");
   }
 
@@ -35,14 +34,12 @@ int main(int argc, char *argv[]) {
   filelen = ftell(fileptr);
   rewind(fileptr);
 
-  buffer = new byte[filelen+1];
+  buffer = new byte[filelen + 1];
   fread(buffer, filelen, 1, fileptr);
   buffer[filelen] = '\0';
   fclose(fileptr);
 
-  Module * m = load_module(buffer, filelen);
-  delete m;
+  Module m;
+  load_module(m, buffer, filelen);
   delete[] buffer;
-
-  
 }
