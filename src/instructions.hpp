@@ -2,21 +2,27 @@
 #define __INSTRUCTION_HPP__
 
 #include "InstrProfile.hpp"
+#include "indices.hpp"
 #include "named.hpp"
 #include "types.hpp"
 
 // This is the abstract class for all different types of instructions.
 class InstrImpl {
 public:
+  InstrImpl() {}
   explicit InstrImpl(u32 pos) : pos_(pos) {}
   virtual ~InstrImpl() {}
 
   u32 pos() const { return pos_; }
 
-  // TODO: takes a Store.
-  virtual void run();
-  // TODO: takes a Context.
-  virtual void verify();
+  // TODO:
+  //  * make virtual
+  //  * takes a Store.
+  void run();
+  // TODO:
+  //  * make virtual
+  //  * takes a Context.
+  void verify();
 
 private:
   u32 pos_;  // Index in bytecode
@@ -66,14 +72,27 @@ class Select : public InstrImpl {
   using InstrImpl::InstrImpl;
 };
 
-// TODO: maybe add some abstraction here
+// TODO: add some abstraction here
 class Numeric : public InstrImpl {
   using InstrImpl::InstrImpl;
 };
 
 template <typename T>
 class ImmediateImpl : public InstrImpl {
+public:
+  ImmediateImpl() {}
+
 protected:
   T imm;
+};
+
+class Call : public ImmediateImpl<funcidx> {
+public:
+  Call(byte *bytes, u32 *pos);
+};
+
+class LocalGet : public ImmediateImpl<localidx> {
+public:
+  LocalGet(byte *bytes, u32 *pos);
 };
 #endif

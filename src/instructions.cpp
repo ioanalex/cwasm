@@ -1,14 +1,28 @@
 #include "instructions.hpp"
+#include "parse.hpp"
+
+Call::Call(byte *bytes, u32 *pos) {
+  funcidx idx(parse_idx(bytes, pos));
+  imm = idx;
+}
+
+LocalGet::LocalGet(byte *bytes, u32 *pos) {
+  localidx idx(parse_idx(bytes, pos));
+  imm = idx;
+}
 
 Instr Instr::create(byte *bytes, u32 *pos) {
   InstrImpl *i = nullptr;  // TODO: the parsing goes here.
-  byte opcode = bytes[*pos];
+  debug("Entering Instr::create\n");
+  byte opcode = bytes[(*pos)++];
+
+  debug("Reading OPCODE: %hhx <-- %x\n", opcode, *pos - 1);
   switch (opcode) {
     case 0x0:
-      i = new Unreachable(*pos);
+      i = new Unreachable(*pos - 1);
       break;
     case 0x1:
-      i = new Nop(*pos);
+      i = new Nop(*pos - 1);
       break;
     case 0x2:
 
@@ -59,11 +73,11 @@ Instr Instr::create(byte *bytes, u32 *pos) {
       break;
 
     case 0xf:
-      i = new Return(*pos);
+      i = new Return(*pos - 1);
       break;
 
     case 0x10:
-
+      i = new Call(bytes, pos);
       break;
 
     case 0x11:
@@ -103,10 +117,10 @@ Instr Instr::create(byte *bytes, u32 *pos) {
       break;
 
     case 0x1a:
-      i = new Drop(*pos);
+      i = new Drop(*pos - 1);
       break;
     case 0x1b:
-      i = new Select(*pos);
+      i = new Select(*pos - 1);
       break;
     case 0x1c:
 
@@ -125,9 +139,9 @@ Instr Instr::create(byte *bytes, u32 *pos) {
       break;
 
     case 0x20:
-
+      i = new LocalGet(bytes, pos);
+      debug("OK\n");
       break;
-
     case 0x21:
 
       break;
@@ -273,8 +287,10 @@ Instr Instr::create(byte *bytes, u32 *pos) {
       break;
 
     case 0x45 ... 0xbf:
-      i = new Numeric(*pos);
+      i = new Numeric(*pos - 1);
       break;
   }
-  return Instr(i);
+  Instr ii(i);
+  debug("Returning from Instr::create\n");
+  return ii;
 }
