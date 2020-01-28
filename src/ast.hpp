@@ -20,7 +20,10 @@ struct Func {
   typeidx type;
   vec<type::Value> locals;
   Expr body;
-  Func(typeidx type) : type(type) {}
+  Func(typeidx type) : type(type) {
+    locals = vec<type::Value>();
+    body = Expr();
+  }
 };
 
 // Tables

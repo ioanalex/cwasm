@@ -11,7 +11,7 @@ LocalGet::LocalGet(byte *bytes, u32 *pos) {
   imm = idx;
 }
 
-Instr Instr::create(byte *bytes, u32 *pos) {
+InstrImpl *Instr::create(byte *bytes, u32 *pos) {
   InstrImpl *i = nullptr;  // TODO: the parsing goes here.
   debug("Entering Instr::create\n");
   byte opcode = bytes[(*pos)++];
@@ -290,7 +290,7 @@ Instr Instr::create(byte *bytes, u32 *pos) {
       i = new Numeric(*pos - 1);
       break;
   }
-  Instr ii(i);
+  // Instr ii(i);
   debug("Returning from Instr::create\n");
-  return ii;
+  return i;
 }
