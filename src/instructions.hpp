@@ -41,15 +41,15 @@ public:
   // desides which sub-class to use as an InstrImpl
   // initializes the impl onject
   // initializes the instr object using basic constructor
-  static InstrImpl *create(byte *, u32 *);  // called when parsing
+  static Instr create(byte *, u32 *);  // called when parsing
 
   // TODO: takes a Store.
   void run() { impl->run(); }
   // TODO: takes a Context.
   void verify() { impl->verify(); }
 
-protected:
-  InstrImpl *impl;
+private:
+  InstrImpl *impl = nullptr;
 };
 
 class Unreachable : public InstrImpl {
