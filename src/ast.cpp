@@ -9,7 +9,7 @@
 #include "types.hpp"
 #include "util.hpp"
 
-const char *section_names[] = {
+static const char *section_names[] = {
     "Custom",    // 0
     "Type",      // 1
     "Import",    // 2
@@ -295,33 +295,3 @@ Module *load_module(byte *bytes, u32 byte_count) {
   return new Module(types, funcs, tables, mems, globals, elems, datas, start,
                     imports, exports);
 }
-
-// Constuctors
-
-Module::Module(vec<type::Func> &types, vec<Func> &funcs, vec<Table> &tables,
-               vec<Memory> &mems, vec<Global> &globals, vec<Elem> &elem,
-               vec<Data> &data, Start &start, vec<Import> &imports,
-               vec<Export> &exports)
-    : types(types),
-      funcs(funcs),
-      tables(tables),
-      mems(mems),
-      globals(globals),
-      elem(elem),
-      data(data),
-      start(start),
-      imports(imports),
-      exports(exports) {}
-
-importdesc::importdesc(typeidx &f) : tag(FUNC), func(f) {}
-importdesc::importdesc(type::Table &t) : tag(TABLE), table(t) {}
-importdesc::importdesc(type::Memory &m) : tag(MEM), mem(m) {}
-importdesc::importdesc(type::Global &g) : tag(GLOBAL), global(g) {}
-Import::Import(type::Name &name, type::Name &mod, importdesc &desc)
-    : module(mod), name(name), desc(desc) {}
-
-exportdesc::exportdesc(funcidx &f) : tag(FUNC), func(f) {}
-exportdesc::exportdesc(tableidx &t) : tag(TABLE), table(t) {}
-exportdesc::exportdesc(memidx &m) : tag(MEM), mem(m) {}
-exportdesc::exportdesc(globalidx &g) : tag(GLOBAL), global(g) {}
-Export::Export(type::Name &name, exportdesc &desc) : name(name), desc(desc) {}

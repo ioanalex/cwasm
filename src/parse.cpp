@@ -69,7 +69,7 @@ Value const_eval(byte *bytes, u32 *pos, vec<Global> &globals) {
   opcode = parse_byte(
       bytes,
       pos);  // debug("next opcode is %x at addr: %x \n", opcode, *pos - 1);
-  ASSERT(opcode == 0x0B, "There must be an end opcode here!\n")
+  ASSERT(opcode == 0x0B, "There must be an end opcode here!\n");
   return v;
 }
 

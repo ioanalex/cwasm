@@ -3,25 +3,30 @@
 
 #include <cstdio>
 
+// The USE(x) template is used to silence C++ compiler warnings
+// issued for (yet) unused variables (typically parameters).
+template <typename T>
+inline void USE(T) {}
+
 #define DEBUG 1
 #define INFO 1
 #define WARN 1
 
 #define FATAL(...)                                               \
-  {                                                              \
+  do {                                                           \
     fprintf(stderr, "Fatal Error(%s:%d): ", __FILE__, __LINE__); \
     fprintf(stderr, __VA_ARGS__);                                \
     exit(1);                                                     \
-  }
+  } while (0)
 
 #define ASSERT(exp, ...)                                              \
-  {                                                                   \
+  do {                                                                \
     if (!(exp)) {                                                     \
       fprintf(stderr, "Assert Failed (%s:%d): ", __FILE__, __LINE__); \
       fprintf(stderr, __VA_ARGS__);                                   \
       exit(1);                                                        \
     }                                                                 \
-  }
+  } while (0)
 
 /*
  * macros for printing
@@ -29,32 +34,38 @@
 
 #if DEBUG
 #define debug(...)                                          \
-  {                                                         \
+  do {                                                      \
     fprintf(stderr, "DEBUG (%s:%d): ", __FILE__, __LINE__); \
     fprintf(stderr, __VA_ARGS__);                           \
-  }
+  } while (0)
 #else
-#define debug(...) ;
+#define debug(...) \
+  do {             \
+  } while (0)
 #endif
 
 #if INFO
 #define info(...)                                           \
-  {                                                         \
+  do {                                                      \
     fprintf(stderr, "INFO  (%s:%d): ", __FILE__, __LINE__); \
     fprintf(stderr, __VA_ARGS__);                           \
-  }
+  } while (0)
 #else
-#define info(...) ;
+#define info(...) \
+  do {            \
+  } while (0)
 #endif
 
 #if WARN
 #define warn(...)                                           \
-  {                                                         \
+  do {                                                      \
     fprintf(stderr, "WARN  (%s:%d): ", __FILE__, __LINE__); \
     fprintf(stderr, __VA_ARGS__);                           \
-  }
+  } while (0)
 #else
-#define warn(...) ;
+#define warn(...) \
+  do {            \
+  } while (0)
 #endif
 
 /*****************************************************************************/
