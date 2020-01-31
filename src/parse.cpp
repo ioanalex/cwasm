@@ -8,7 +8,10 @@
 
 inline u32 parse_byte(byte *bytes, u32 *pos) { return bytes[(*pos)++]; }
 
-u32 parse_idx(byte *bytes, u32 *pos) { return read_LEB(bytes, pos, 32); }
+u32 parse_idx(byte *bytes, u32 *pos) {
+  debug("Reading idx at %x\n", *pos);
+  return read_LEB(bytes, pos, 32);
+}
 
 Value const_eval(byte *bytes, u32 *pos, vec<Global> &globals) {
   Value v;
@@ -140,21 +143,23 @@ Memarg parse_memarg(byte *bytes, u32 *pos) {
 }
 
 void parse_expr(Expr &e, byte *bytes, u32 *pos) {
+  for (unsigned j = 0; j < 5; ++j) {
+    debug("%x --> |%x|\n", *pos + j, bytes[*pos + j]);
+  }
+
   u32 instr_count = read_LEB(bytes, pos, 32);
   debug("%d instructions\n", instr_count);
 
   for (unsigned i = 0; i < instr_count; ++i) {
-    debug("Parsing instr[%d]\n", i);
-    for (unsigned j = 0; j < 10; ++j) {
+    debug("Parsing instr[%d] at %x\n", i, *pos);
+    for (unsigned j = 0; j < 5; ++j) {
       debug("%x --> |%x|\n", *pos + j, bytes[*pos + j]);
     }
     e.emplace_back(Instr::create(bytes, pos));
-    for (unsigned j = 0; j < 10; ++j) {
-      debug("%x --> |%x|\n", *pos + j, bytes[*pos + j]);
-    }
+    if (bytes[e[i].pos()] == 0x0b) break;
   }
-  ASSERT(read_LEB(bytes, pos, 7) == 0x0b,
-         "Expressions end with the 0x0b code\n");
+
+  ASSERT(bytes[*pos - 1] == 0x0b, "Expressions end with the 0x0b code\n");
 }
 
 void parse_types(byte *bytes, u32 *pos, vec<type::Func> *types) {

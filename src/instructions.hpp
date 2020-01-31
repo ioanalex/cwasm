@@ -1,6 +1,6 @@
 #ifndef __INSTRUCTIONS_HPP__
 #define __INSTRUCTIONS_HPP__
-
+#include <memory>
 #include "InstrProfile.hpp"
 #include "types.hpp"
 
@@ -34,7 +34,7 @@ public:
   // initializes the impl onject
   // initializes the instr object using basic constructor
   static Instr create(byte *, u32 *);  // called when parsing
-
+  u32 pos() const { return impl->pos(); }
   // TODO: takes a Store.
   void run() { impl->run(); }
   // TODO: takes a Context.

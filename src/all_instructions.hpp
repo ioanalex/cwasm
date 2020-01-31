@@ -26,6 +26,10 @@ class Nop : public InstrImpl {
   DUMMY_INSTR_IMPL(Nop)
 };
 
+class End : public InstrImpl {
+  DUMMY_INSTR_IMPL(End)
+};
+
 class Return : public InstrImpl {
   DUMMY_INSTR_IMPL(Return)
 };
@@ -56,14 +60,14 @@ protected:
 class Call : public ImmediateImpl<funcidx> {
 public:
   Call(byte *bytes, u32 *pos)
-      : ImmediateImpl<funcidx>{*pos++, funcidx(parse_idx(bytes, pos))} {}
+      : ImmediateImpl<funcidx>{(*pos)++, funcidx(parse_idx(bytes, pos))} {}
   DUMMY_VIRTUAL(Call)
 };
 
 class LocalGet : public ImmediateImpl<localidx> {
 public:
   LocalGet(byte *bytes, u32 *pos)
-      : ImmediateImpl<localidx>{*pos++, localidx(parse_idx(bytes, pos))} {}
+      : ImmediateImpl<localidx>{(*pos)++, localidx(parse_idx(bytes, pos))} {}
   DUMMY_VIRTUAL(LocalGet)
 };
 
