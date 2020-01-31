@@ -2,6 +2,8 @@
 
 #define UNIMPLEMENTED return Instr(nullptr)
 
+using namespace Instruction;
+
 Instr Instr::create(byte *bytes, u32 *pos) {
   byte opcode = bytes[*pos];
   debug("Instr::create, reading OPCODE: %hhx <-- %x\n", opcode, *pos);
@@ -73,13 +75,13 @@ Instr Instr::create(byte *bytes, u32 *pos) {
     case 0x20:
       return Instr(new LocalGet(bytes, pos));
     case 0x21:
-      UNIMPLEMENTED;
+      return Instr(new LocalSet(bytes, pos));
     case 0x22:
-      UNIMPLEMENTED;
+      return Instr(new LocalTee(bytes, pos));
     case 0x23:
-      UNIMPLEMENTED;
+      return Instr(new GlobalGet(bytes, pos));
     case 0x24:
-      UNIMPLEMENTED;
+      return Instr(new GlobalSet(bytes, pos));
     case 0x25:
       UNIMPLEMENTED;
     case 0x26:

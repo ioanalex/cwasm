@@ -7,7 +7,7 @@
 #include "instructions.hpp"
 #include "named.hpp"
 #include "parse.hpp"
-
+namespace Instruction {
 #define DUMMY_VIRTUAL(SpecialInstrImpl) \
 public:                                 \
   virtual void run() {}                 \
@@ -64,11 +64,49 @@ public:
   DUMMY_VIRTUAL(Call)
 };
 
-class LocalGet : public ImmediateImpl<localidx> {
+// define usefull macro for classes that have the same constructor
+#define same_constr(ab, b) \
+public:                    \
+  ab(byte *bytes, u32 *pos) : b(bytes, pos) {}
+// end of macro
+
+// ---------------------- LOCAL ----------------------
+// class that abstracts all local.<something> instructions
+class Local : public ImmediateImpl<localidx> {
 public:
-  LocalGet(byte *bytes, u32 *pos)
+  Local(byte *bytes, u32 *pos)
       : ImmediateImpl<localidx>{(*pos)++, localidx(parse_idx(bytes, pos))} {}
-  DUMMY_VIRTUAL(LocalGet)
+  DUMMY_VIRTUAL(Local)
 };
 
+class LocalGet : public Local {
+  same_constr(LocalGet, Local) DUMMY_VIRTUAL(Local)
+};
+
+class LocalSet : public Local {
+  same_constr(LocalSet, Local) DUMMY_VIRTUAL(Local)
+};
+class LocalTee : public Local {
+  same_constr(LocalTee, Local) DUMMY_VIRTUAL(Local)
+};
+// --------------------------------------------------
+
+// ---------------------- GLOBAL ----------------------
+// class that abstracts all local.<something> instructions
+class Global : public ImmediateImpl<globalidx> {
+public:
+  Global(byte *bytes, u32 *pos)
+      : ImmediateImpl<globalidx>{(*pos)++, globalidx(parse_idx(bytes, pos))} {}
+  DUMMY_VIRTUAL(Global)
+};
+
+class GlobalGet : public Global {
+  same_constr(GlobalGet, Global) DUMMY_VIRTUAL(GloGloablGetbal)
+};
+
+class GlobalSet : public Global {
+  same_constr(GlobalSet, Global) DUMMY_VIRTUAL(GlobalSet)
+};
+// --------------------------------------------------
+}  // namespace Instruction
 #endif

@@ -14,9 +14,9 @@ int main(int argc, char *argv[]) {
     profiles.push_back(instr);
   }
 
-  for (auto instr : profiles) {
-    std::cout << instr << std::endl;
-  }
+  // for (auto instr : profiles) {
+  //   std::cout << instr << std::endl;
+  // }
 
   // get the module as bytes in an array
   FILE *fileptr;
