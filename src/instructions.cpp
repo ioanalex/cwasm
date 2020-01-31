@@ -1,5 +1,9 @@
 #include "all_instructions.hpp"
 
+/* This is dangerous because it will make the program loop
+ * for ever. This will happen because pos is never changed
+ * and thus we will never find the 'end' command.
+ */
 #define UNIMPLEMENTED return Instr(nullptr)
 
 using namespace Instruction;
