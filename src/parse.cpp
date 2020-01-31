@@ -140,21 +140,15 @@ Memarg parse_memarg(byte *bytes, u32 *pos) {
 }
 
 void parse_expr(Expr &e, byte *bytes, u32 *pos) {
-  u32 instr_count = read_LEB(bytes, pos, 32);
-  debug("%d instructions\n", instr_count);
-
-  for (unsigned i = 0; i < instr_count; ++i) {
-    debug("Parsing instr[%d]\n", i);
-    for (unsigned j = 0; j < 10; ++j) {
-      debug("%x --> |%x|\n", *pos + j, bytes[*pos + j]);
-    }
+  unsigned int instr_count;
+  while (true) {
+    debug("Parsing instr[%d] at %x\n", instr_count, *pos);
     e.emplace_back(Instr::create(bytes, pos));
-    for (unsigned j = 0; j < 10; ++j) {
-      debug("%x --> |%x|\n", *pos + j, bytes[*pos + j]);
-    }
+    if (bytes[*pos - 1] == 0x0b) break;
+    instr_count++;
   }
-  ASSERT(read_LEB(bytes, pos, 7) == 0x0b,
-         "Expressions end with the 0x0b code\n");
+
+  ASSERT(bytes[*pos - 1] == 0x0b, "Expressions end with the 0x0b code\n");
 }
 
 void parse_types(byte *bytes, u32 *pos, vec<type::Func> *types) {
@@ -310,20 +304,30 @@ void parse_elems(byte *bytes, u32 *pos, vec<Elem> *elems,
 void parse_codes(byte *bytes, u32 *pos, vec<Func> &funcs) {
   u32 code_count = read_LEB(bytes, pos, 32);
   u32 imported_func_count = funcs.size() - code_count;
-  debug("imported: %d    code for: %d    total: %d\n", imported_func_count,
+  debug("imported: %u    code for: %u    total: %lu\n", imported_func_count,
         code_count, funcs.size());
   ASSERT(code_count <= funcs.size(), "Mismatch in number of codes: %lu vs %u\n",
          funcs.size(), code_count);
+
   for (unsigned int i = 0; i < code_count; i++) {
     u32 size = read_LEB(bytes, pos, 32);
     USE(size);  // TODO: verification
     u32 locals_count = read_LEB(bytes, pos, 32);
+    debug("%d locals\n", locals_count);
     for (unsigned int j = 0; j < locals_count; j++) {
       u32 n = read_LEB(bytes, pos, 32);
       type::Value t(parse_valtype(bytes, pos));
       for (unsigned int k = 0; k < n; k++)
         funcs[i + imported_func_count].locals.push_back(t);
     }
+
+#if DEBUG
+    for (unsigned int i = imported_func_count; i < funcs.size(); ++i) {
+      for (auto l : funcs[i].locals) {
+        std::cout << l << std::endl;
+      }
+    }
+#endif
     debug("About to parse_expr\n");
     parse_expr(funcs[i + imported_func_count].body, bytes, pos);
     debug("OK parse_expr\n");
