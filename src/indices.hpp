@@ -3,7 +3,7 @@
 
 #include "named.hpp"
 #include "types.hpp"
-// Indices
+
 using typeidx = Named<u32, struct typeidx_>;
 using funcidx = Named<u32, struct funcidx_>;
 using tableidx = Named<u32, struct tableidx_>;

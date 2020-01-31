@@ -1,296 +1,81 @@
-#include "instructions.hpp"
-#include "parse.hpp"
+#include "all_instructions.hpp"
 
-Call::Call(byte *bytes, u32 *pos) {
-  funcidx idx(parse_idx(bytes, pos));
-  imm = idx;
-}
-
-LocalGet::LocalGet(byte *bytes, u32 *pos) {
-  localidx idx(parse_idx(bytes, pos));
-  imm = idx;
-}
+#define UNIMPLEMENTED return Instr(nullptr)
 
 Instr Instr::create(byte *bytes, u32 *pos) {
-  InstrImpl *i = nullptr;  // TODO: the parsing goes here.
-  debug("Entering Instr::create\n");
-  byte opcode = bytes[(*pos)++];
-
-  debug("Reading OPCODE: %hhx <-- %x\n", opcode, *pos - 1);
+  byte opcode = bytes[*pos];
+  debug("Instr::create, reading OPCODE: %hhx <-- %x\n", opcode, *pos);
   switch (opcode) {
-    case 0x0:
-      i = new Unreachable(*pos - 1);
-      break;
-    case 0x1:
-      i = new Nop(*pos - 1);
-      break;
-    case 0x2:
-
-      break;
-    case 0x3:
-
-      break;
-    case 0x4:
-
-      break;
-    case 0x5:
-
-      break;
-    case 0x6:
-
-      break;
-
-    case 0x7:
-
-      break;
-
-    case 0x8:
-
-      break;
-
-    case 0x9:
-
-      break;
-
-    case 0xa:
-
-      break;
-
-    case 0xb:
-
-      break;
-
-    case 0xc:
-
-      break;
-
-    case 0xd:
-
-      break;
-
-    case 0xe:
-
-      break;
-
-    case 0xf:
-      i = new Return(*pos - 1);
-      break;
-
-    case 0x10:
-      i = new Call(bytes, pos);
-      break;
-
-    case 0x11:
-
-      break;
-
-    case 0x12:
-
-      break;
-
-    case 0x13:
-
-      break;
-
-    case 0x14:
-
-      break;
-
-    case 0x15:
-
-      break;
-
-    case 0x16:
-
-      break;
-
-    case 0x17:
-
-      break;
-
-    case 0x18:
-
-      break;
-
-    case 0x19:
-
-      break;
-
-    case 0x1a:
-      i = new Drop(*pos - 1);
-      break;
-    case 0x1b:
-      i = new Select(*pos - 1);
-      break;
-    case 0x1c:
-
-      break;
-
-    case 0x1d:
-
-      break;
-
-    case 0x1e:
-
-      break;
-
-    case 0x1f:
-
-      break;
-
-    case 0x20:
-      i = new LocalGet(bytes, pos);
-      debug("OK\n");
-      break;
-    case 0x21:
-
-      break;
-
-    case 0x22:
-
-      break;
-
-    case 0x23:
-
-      break;
-
-    case 0x24:
-
-      break;
-
-    case 0x25:
-
-      break;
-
-    case 0x26:
-
-      break;
-
-    case 0x27:
-
-      break;
-
-    case 0x28:
-
-      break;
-
-    case 0x29:
-
-      break;
-
-    case 0x2a:
-
-      break;
-
-    case 0x2b:
-
-      break;
-
-    case 0x2c:
-
-      break;
-
-    case 0x2d:
-
-      break;
-
-    case 0x2e:
-
-      break;
-
-    case 0x2f:
-
-      break;
-
-    case 0x30:
-
-      break;
-
-    case 0x31:
-
-      break;
-
-    case 0x32:
-
-      break;
-
-    case 0x33:
-
-      break;
-
-    case 0x34:
-
-      break;
-
-    case 0x35:
-
-      break;
-
-    case 0x36:
-
-      break;
-
-    case 0x37:
-
-      break;
-
-    case 0x38:
-
-      break;
-
-    case 0x39:
-
-      break;
-
-    case 0x3a:
-
-      break;
-
-    case 0x3b:
-
-      break;
-
-    case 0x3c:
-
-      break;
-
-    case 0x3d:
-
-      break;
-
-    case 0x3e:
-
-      break;
-
-    case 0x3f:
-
-      break;
-
-    case 0x40:
-
-      break;
-
-    case 0x41:
-
-      break;
-
-    case 0x42:
-
-      break;
-
-    case 0x43:
-
-      break;
-
-    case 0x44:
-
-      break;
-
-    case 0x45 ... 0xbf:
-      i = new Numeric(*pos - 1);
-      break;
+    case 0x00: return Instr(new Unreachable(bytes, pos));
+    case 0x01: return Instr(new Nop(bytes, pos));
+    case 0x02: UNIMPLEMENTED;
+    case 0x03: UNIMPLEMENTED;
+    case 0x04: UNIMPLEMENTED;
+    case 0x05: UNIMPLEMENTED;
+    case 0x06: UNIMPLEMENTED;
+    case 0x07: UNIMPLEMENTED;
+    case 0x08: UNIMPLEMENTED;
+    case 0x09: UNIMPLEMENTED;
+    case 0x0a: UNIMPLEMENTED;
+    case 0x0b: UNIMPLEMENTED;
+    case 0x0c: UNIMPLEMENTED;
+    case 0x0d: UNIMPLEMENTED;
+    case 0x0e: UNIMPLEMENTED;
+    case 0x0f: return Instr(new Return(bytes, pos));
+    case 0x10: return Instr(new Call(bytes, pos));
+    case 0x11: UNIMPLEMENTED;
+    case 0x12: UNIMPLEMENTED;
+    case 0x13: UNIMPLEMENTED;
+    case 0x14: UNIMPLEMENTED;
+    case 0x15: UNIMPLEMENTED;
+    case 0x16: UNIMPLEMENTED;
+    case 0x17: UNIMPLEMENTED;
+    case 0x18: UNIMPLEMENTED;
+    case 0x19: UNIMPLEMENTED;
+    case 0x1a: return Instr(new Drop(bytes, pos));
+    case 0x1b: return Instr(new Select(bytes, pos));
+    case 0x1c: UNIMPLEMENTED;
+    case 0x1d: UNIMPLEMENTED;
+    case 0x1e: UNIMPLEMENTED;
+    case 0x1f: UNIMPLEMENTED;
+    case 0x20: return Instr(new LocalGet(bytes, pos));
+    case 0x21: UNIMPLEMENTED;
+    case 0x22: UNIMPLEMENTED;
+    case 0x23: UNIMPLEMENTED;
+    case 0x24: UNIMPLEMENTED;
+    case 0x25: UNIMPLEMENTED;
+    case 0x26: UNIMPLEMENTED;
+    case 0x27: UNIMPLEMENTED;
+    case 0x28: UNIMPLEMENTED;
+    case 0x29: UNIMPLEMENTED;
+    case 0x2a: UNIMPLEMENTED;
+    case 0x2b: UNIMPLEMENTED;
+    case 0x2c: UNIMPLEMENTED;
+    case 0x2d: UNIMPLEMENTED;
+    case 0x2e: UNIMPLEMENTED;
+    case 0x2f: UNIMPLEMENTED;
+    case 0x30: UNIMPLEMENTED;
+    case 0x31: UNIMPLEMENTED;
+    case 0x32: UNIMPLEMENTED;
+    case 0x33: UNIMPLEMENTED;
+    case 0x34: UNIMPLEMENTED;
+    case 0x35: UNIMPLEMENTED;
+    case 0x36: UNIMPLEMENTED;
+    case 0x37: UNIMPLEMENTED;
+    case 0x38: UNIMPLEMENTED;
+    case 0x39: UNIMPLEMENTED;
+    case 0x3a: UNIMPLEMENTED;
+    case 0x3b: UNIMPLEMENTED;
+    case 0x3c: UNIMPLEMENTED;
+    case 0x3d: UNIMPLEMENTED;
+    case 0x3e: UNIMPLEMENTED;
+    case 0x3f: UNIMPLEMENTED;
+    case 0x40: UNIMPLEMENTED;
+    case 0x41: UNIMPLEMENTED;
+    case 0x42: UNIMPLEMENTED;
+    case 0x43: UNIMPLEMENTED;
+    case 0x44: UNIMPLEMENTED;
+    case 0x45 ... 0xbf: return Instr(new Numeric(bytes, pos));
+    default: UNIMPLEMENTED;
   }
-  // Instr ii(i);
-  debug("Returning from Instr::create\n");
-  return Instr(i);
 }

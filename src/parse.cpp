@@ -310,7 +310,7 @@ void parse_elems(byte *bytes, u32 *pos, vec<Elem> *elems,
 void parse_codes(byte *bytes, u32 *pos, vec<Func> &funcs) {
   u32 code_count = read_LEB(bytes, pos, 32);
   u32 imported_func_count = funcs.size() - code_count;
-  debug("imported: %d    code for: %d    total: %d\n", imported_func_count,
+  debug("imported: %u    code for: %u    total: %lu\n", imported_func_count,
         code_count, funcs.size());
   ASSERT(code_count <= funcs.size(), "Mismatch in number of codes: %lu vs %u\n",
          funcs.size(), code_count);
