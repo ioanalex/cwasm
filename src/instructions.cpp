@@ -37,9 +37,9 @@ Instr Instr::create(byte *bytes, u32 *pos) {
     case 0x0b:
       return Instr(new End(bytes, pos));
     case 0x0c:
-      UNIMPLEMENTED;
+      return Instr(new Br(bytes, pos));
     case 0x0d:
-      UNIMPLEMENTED;
+      return Instr(new Br_If(bytes, pos));
     case 0x0e:
       UNIMPLEMENTED;
     case 0x0f:
@@ -47,34 +47,14 @@ Instr Instr::create(byte *bytes, u32 *pos) {
     case 0x10:
       return Instr(new Call(bytes, pos));
     case 0x11:
-      UNIMPLEMENTED;
-    case 0x12:
-      UNIMPLEMENTED;
-    case 0x13:
-      UNIMPLEMENTED;
-    case 0x14:
-      UNIMPLEMENTED;
-    case 0x15:
-      UNIMPLEMENTED;
-    case 0x16:
-      UNIMPLEMENTED;
-    case 0x17:
-      UNIMPLEMENTED;
-    case 0x18:
-      UNIMPLEMENTED;
-    case 0x19:
+      return Instr(new CallIndirect(bytes, pos));
+    case 0x12 ... 0x19:
       UNIMPLEMENTED;
     case 0x1a:
       return Instr(new Drop(bytes, pos));
     case 0x1b:
       return Instr(new Select(bytes, pos));
-    case 0x1c:
-      UNIMPLEMENTED;
-    case 0x1d:
-      UNIMPLEMENTED;
-    case 0x1e:
-      UNIMPLEMENTED;
-    case 0x1f:
+    case 0x1c ... 0x1f:
       UNIMPLEMENTED;
     case 0x20:
       return Instr(new LocalGet(bytes, pos));
@@ -86,58 +66,84 @@ Instr Instr::create(byte *bytes, u32 *pos) {
       return Instr(new GlobalGet(bytes, pos));
     case 0x24:
       return Instr(new GlobalSet(bytes, pos));
-    case 0x25:
-      UNIMPLEMENTED;
-    case 0x26:
-      UNIMPLEMENTED;
-    case 0x27:
+    case 0x25 ... 0x27:
       UNIMPLEMENTED;
     case 0x28:
-      UNIMPLEMENTED;
+      return Instr(new Load(bytes, pos, type::Value::i32));
     case 0x29:
-      UNIMPLEMENTED;
-    case 0x2a:
-      UNIMPLEMENTED;
-    case 0x2b:
-      UNIMPLEMENTED;
-    case 0x2c:
-      UNIMPLEMENTED;
-    case 0x2d:
-      UNIMPLEMENTED;
-    case 0x2e:
-      UNIMPLEMENTED;
-    case 0x2f:
-      UNIMPLEMENTED;
-    case 0x30:
-      UNIMPLEMENTED;
-    case 0x31:
-      UNIMPLEMENTED;
-    case 0x32:
-      UNIMPLEMENTED;
-    case 0x33:
-      UNIMPLEMENTED;
-    case 0x34:
-      UNIMPLEMENTED;
-    case 0x35:
-      UNIMPLEMENTED;
+      return Instr(new Load(bytes, pos, type::Value::i64));
+    case 0x2A:
+      return Instr(new Load(bytes, pos, type::Value::f32));
+    case 0x2B:
+      return Instr(new Load(bytes, pos, type::Value::f64));
+    case 0x2C: {
+      opt_st_size opt = {_8, _s};
+      return Instr(new Load(bytes, pos, type::Value::i32, opt));
+    }
+    case 0x2D: {
+      opt_st_size opt = {_8, _u};
+      return Instr(new Load(bytes, pos, type::Value::i32, opt));
+    }
+    case 0x2E: {
+      opt_st_size opt = {_16, _s};
+      return Instr(new Load(bytes, pos, type::Value::i32, opt));
+    }
+    case 0x2F: {
+      opt_st_size opt = {_16, _u};
+      return Instr(new Load(bytes, pos, type::Value::i32, opt));
+    }
+    case 0x30: {
+      opt_st_size opt = {_8, _s};
+      return Instr(new Load(bytes, pos, type::Value::i64, opt));
+    }
+    case 0x31: {
+      opt_st_size opt = {_8, _u};
+      return Instr(new Load(bytes, pos, type::Value::i64, opt));
+    }
+    case 0x32: {
+      opt_st_size opt = {_16, _s};
+      return Instr(new Load(bytes, pos, type::Value::i64, opt));
+    }
+    case 0x33: {
+      opt_st_size opt = {_16, _u};
+      return Instr(new Load(bytes, pos, type::Value::i64, opt));
+    }
+    case 0x34: {
+      opt_st_size opt = {_32, _s};
+      return Instr(new Load(bytes, pos, type::Value::i64, opt));
+    }
+    case 0x35: {
+      opt_st_size opt = {_32, _u};
+      return Instr(new Load(bytes, pos, type::Value::i64, opt));
+    }
     case 0x36:
-      UNIMPLEMENTED;
+      return Instr(new Store(bytes, pos, type::Value::i32));
     case 0x37:
-      UNIMPLEMENTED;
+      return Instr(new Store(bytes, pos, type::Value::i64));
     case 0x38:
-      UNIMPLEMENTED;
+      return Instr(new Store(bytes, pos, type::Value::f32));
     case 0x39:
-      UNIMPLEMENTED;
-    case 0x3a:
-      UNIMPLEMENTED;
-    case 0x3b:
-      UNIMPLEMENTED;
-    case 0x3c:
-      UNIMPLEMENTED;
-    case 0x3d:
-      UNIMPLEMENTED;
-    case 0x3e:
-      UNIMPLEMENTED;
+      return Instr(new Store(bytes, pos, type::Value::f64));
+    case 0x3a: {
+      opt_st_size opt = {_8, _u};  // when storing the sign doesn't matter
+      return Instr(new Load(bytes, pos, type::Value::i32, opt));
+    }
+    case 0x3b: {
+      opt_st_size opt = {_16, _u};
+      return Instr(new Load(bytes, pos, type::Value::i32, opt));
+    }
+    case 0x3c: {
+      opt_st_size opt = {_8, _u};
+      return Instr(new Load(bytes, pos, type::Value::i64, opt));
+    }
+    case 0x3d: {
+      opt_st_size opt = {_16, _u};
+      return Instr(new Load(bytes, pos, type::Value::i64, opt));
+    }
+    case 0x3e: {
+      opt_st_size opt = {_32, _u};
+      return Instr(new Load(bytes, pos, type::Value::i64, opt));
+    }
     case 0x3f:
       UNIMPLEMENTED;
     case 0x40:

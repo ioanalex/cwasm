@@ -1,6 +1,7 @@
 #ifndef __ALL_INSTRUCTIONS_HPP__
 #define __ALL_INSTRUCTIONS_HPP__
 
+#include <optional>
 #include <utility>
 
 #include "indices.hpp"
@@ -57,12 +58,24 @@ protected:
   T value;
 };
 
+// ---------------------- CALL ----------------------
 class Call : public ImmediateImpl<funcidx> {
 public:
   Call(byte *bytes, u32 *pos)
       : ImmediateImpl<funcidx>{(*pos)++, funcidx(parse_idx(bytes, pos))} {}
   DUMMY_VIRTUAL(Call)
 };
+
+class CallIndirect : public ImmediateImpl<typeidx> {
+public:
+  CallIndirect(byte *bytes, u32 *pos)
+      : ImmediateImpl<typeidx>{(*pos)++, typeidx(parse_idx(bytes, pos))} {
+    ASSERT(bytes[*pos] == 0x00, "Call indirect must have a 0x00 in the end\n");
+    (*pos)++;  // to skip the 0x00
+  }
+  DUMMY_VIRTUAL(CallIndirect)
+};
+// ---------------------------------------------------
 
 // define usefull macro for classes that have the same constructor
 #define same_constr(ab, b) \
@@ -89,9 +102,9 @@ class LocalSet : public Local {
 class LocalTee : public Local {
   same_constr(LocalTee, Local) DUMMY_VIRTUAL(Local)
 };
-// --------------------------------------------------
+// -------------------------------------------------
 
-// ---------------------- GLOBAL ----------------------
+// ---------------------- GLOBAL -------------------
 // class that abstracts all local.<something> instructions
 class Global : public ImmediateImpl<globalidx> {
 public:
@@ -108,5 +121,50 @@ class GlobalSet : public Global {
   same_constr(GlobalSet, Global) DUMMY_VIRTUAL(GlobalSet)
 };
 // --------------------------------------------------
+
+// ---------------------- BRANCH --------------------
+class Br : public ImmediateImpl<labelidx> {
+public:
+  Br(byte *bytes, u32 *pos)
+      : ImmediateImpl<labelidx>{(*pos)++, labelidx(parse_idx(bytes, pos))} {}
+  DUMMY_VIRTUAL(Br)
+};
+
+class Br_If : public ImmediateImpl<labelidx> {
+public:
+  Br_If(byte *bytes, u32 *pos)
+      : ImmediateImpl<labelidx>{(*pos)++, labelidx(parse_idx(bytes, pos))} {}
+  DUMMY_VIRTUAL(Br_If)
+};
+
+// ------------------- MEMORY ---------------------
+enum _opt_size { _8, _16, _32 };
+enum _opt_sign { _u, _s };
+struct opt_st_size {
+  _opt_size size;
+  _opt_sign sign;
+};
+
+#define LOAD_STORE(name)                                             \
+  class name : public ImmediateImpl<Memarg> {                        \
+  public:                                                            \
+    name(byte *bytes, u32 *pos, type::Value type)                    \
+        : ImmediateImpl<Memarg>{(*pos)++, parse_memarg(bytes, pos)}, \
+          type(type) {}                                              \
+    name(byte *bytes, u32 *pos, type::Value type, opt_st_size opt)   \
+        : ImmediateImpl<Memarg>{(*pos)++, parse_memarg(bytes, pos)}, \
+          type(type),                                                \
+          opt(opt) {}                                                \
+    DUMMY_VIRTUAL(name)                                              \
+  private:                                                           \
+    type::Value type;                                                \
+    std::optional<opt_st_size> opt;                                  \
+  };                                                                 \
+  //-------------------------------------------------
+
+LOAD_STORE(Load)
+LOAD_STORE(Store)
+
 }  // namespace Instruction
+
 #endif
