@@ -11,6 +11,7 @@ inline void USE(T) {}
 #define DEBUG 1
 #define INFO 1
 #define WARN 1
+#define WAIT 0
 
 #define FATAL(...)                                               \
   do {                                                           \

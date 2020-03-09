@@ -239,6 +239,9 @@ void load_module(Module &mod, byte *bytes, u32 byte_count) {
       }
       case 10: {
         warn("Parsing Code(10) section (length: 0x%x)\n", slen);
+#if WAIT
+        WaitEnter();
+#endif
         parse_codes(bytes, &pos, mod.funcs);
         warn("Parsing Code complete\n");
         break;

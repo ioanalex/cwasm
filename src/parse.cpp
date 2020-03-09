@@ -2,6 +2,7 @@
 
 #include "ast.hpp"
 #include "binary.hpp"
+#include "global.hpp"
 #include "types.hpp"
 #include "util.hpp"
 #include "values.hpp"
@@ -146,6 +147,9 @@ void parse_expr(Expr &e, byte *bytes, u32 *pos) {
     e.emplace_back(Instr::create(bytes, pos));
     if (bytes[*pos - 1] == 0x0b) break;
     instr_count++;
+#if WAIT
+    WaitEnter();
+#endif
   }
 
   ASSERT(bytes[*pos - 1] == 0x0b, "Expressions end with the 0x0b code\n");

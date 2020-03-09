@@ -1,10 +1,11 @@
 #include "all_instructions.hpp"
+#include "util.hpp"
 
 /* This is dangerous because it will make the program loop
  * for ever. This will happen because pos is never changed
  * and thus we will never find the 'end' command.
  */
-#define UNIMPLEMENTED return Instr(nullptr)
+#define UNIMPLEMENTED FATAL("Instruction is unimplemented, exiting\n");
 
 using namespace Instruction;
 
