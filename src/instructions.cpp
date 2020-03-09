@@ -150,13 +150,13 @@ Instr Instr::create(byte *bytes, u32 *pos) {
     case 0x40:
       UNIMPLEMENTED;
     case 0x41:
-      UNIMPLEMENTED;
+      return Instr(new Const(bytes, pos, type::Value::i32));
     case 0x42:
-      UNIMPLEMENTED;
+      return Instr(new Const(bytes, pos, type::Value::i64));
     case 0x43:
-      UNIMPLEMENTED;
+      return Instr(new Const(bytes, pos, type::Value::f32));
     case 0x44:
-      UNIMPLEMENTED;
+      return Instr(new Const(bytes, pos, type::Value::f64));
     case 0x45 ... 0xbf:
       return Instr(new Numeric(bytes, pos));
     default:

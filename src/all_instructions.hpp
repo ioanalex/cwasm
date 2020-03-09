@@ -1,9 +1,11 @@
 #ifndef __ALL_INSTRUCTIONS_HPP__
 #define __ALL_INSTRUCTIONS_HPP__
 
+#include <cstring>
 #include <optional>
 #include <utility>
 
+#include "binary.hpp"
 #include "indices.hpp"
 #include "instructions.hpp"
 #include "named.hpp"
@@ -18,6 +20,22 @@ public:                                 \
 public:                                                            \
   SpecialInstrImpl(byte *bytes, u32 *pos) : InstrImpl((*pos)++) {} \
   DUMMY_VIRTUAL(SpecialInstrImpl)
+
+/* This class is used to abstract all instructions
+ * that have an immediate argument
+ */
+template <typename T>
+class ImmediateImpl : public InstrImpl {
+public:
+  ImmediateImpl(u32 pos) : InstrImpl(pos) {}
+  ImmediateImpl(u32 pos, const T &imm) : InstrImpl(pos), value(imm) {}
+  ImmediateImpl(u32 pos, T &&imm) : InstrImpl(pos), value(std::move(imm)) {}
+
+protected:
+  T value;
+};
+
+/* */
 
 class Unreachable : public InstrImpl {
   DUMMY_INSTR_IMPL(Unreachable)
@@ -43,21 +61,47 @@ class Select : public InstrImpl {
   DUMMY_INSTR_IMPL(Select)
 };
 
+// ------------------- Numbers ----------------------
+
+class Const : public ImmediateImpl<Value> {
+public:
+  Const(byte *bytes, u32 *pos, type::Value type)
+      : ImmediateImpl<Value>((*pos)++) {
+    // TODO: write read_value function based on type..
+    // This code repeats (parse.cpp:const_eval)
+    switch (type) {
+      case type::Value::i32:
+        v = from_i32(read_LEB(bytes, pos, 32));
+        break;
+      case type::Value::i64:
+        v = from_i64(read_LEB(bytes, pos, 64));
+        break;
+      case type::Value::f32: {
+        f32 f;
+        std::memcpy(&f, bytes + *pos, 4);
+        v = from_f32(f);
+        *pos = *pos + 4;
+        break;
+      }
+      case type::Value::f64: {
+        f64 f;
+        std::memcpy(&f, bytes + *pos, 8);
+        v = from_f64(f);
+        *pos = *pos + 8;
+        break;
+      }
+    }
+  }
+  DUMMY_VIRTUAL(Const)
+private:
+  Value v;
+};
+
 // TODO: add some abstraction here
 class Numeric : public InstrImpl {
   DUMMY_INSTR_IMPL(Numeric)
 };
-
-template <typename T>
-class ImmediateImpl : public InstrImpl {
-public:
-  ImmediateImpl(u32 pos, const T &imm) : InstrImpl(pos), value(imm) {}
-  ImmediateImpl(u32 pos, T &&imm) : InstrImpl(pos), value(std::move(imm)) {}
-
-protected:
-  T value;
-};
-
+// --------------------------------------------------
 // ---------------------- CALL ----------------------
 class Call : public ImmediateImpl<funcidx> {
 public:
