@@ -2,9 +2,13 @@
 
 #include "InstrProfile.hpp"
 #include "ast.hpp"
+#include "global.hpp"
 #include "types.hpp"
 #include "util.hpp"
 #include "values.hpp"
+
+byte *bytes;
+long filelen;
 
 int main(int argc, char *argv[]) {
   // create all instruction profiles
@@ -20,8 +24,6 @@ int main(int argc, char *argv[]) {
 
   // get the module as bytes in an array
   FILE *fileptr;
-  byte *buffer;
-  long filelen;
 
   if (argc != 2) {
     FATAL("give me a file\n");
@@ -34,12 +36,12 @@ int main(int argc, char *argv[]) {
   filelen = ftell(fileptr);
   rewind(fileptr);
 
-  buffer = new byte[filelen + 1];
-  fread(buffer, filelen, 1, fileptr);
-  buffer[filelen] = '\0';
+  bytes = new byte[filelen + 1];
+  fread(bytes, filelen, 1, fileptr);
+  bytes[filelen] = '\0';
   fclose(fileptr);
 
   Module m;
-  load_module(m, buffer, filelen);
-  delete[] buffer;
+  load_module(m, bytes, filelen);
+  delete[] bytes;
 }

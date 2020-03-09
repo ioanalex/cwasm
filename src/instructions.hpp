@@ -1,6 +1,7 @@
 #ifndef __INSTRUCTIONS_HPP__
 #define __INSTRUCTIONS_HPP__
 #include <memory>
+
 #include "InstrProfile.hpp"
 #include "types.hpp"
 

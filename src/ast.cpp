@@ -5,9 +5,12 @@
 #include <iostream>
 
 #include "binary.hpp"
+#include "global.hpp"
 #include "parse.hpp"
 #include "types.hpp"
 #include "util.hpp"
+
+u32 pos;
 
 static const char *section_names[] = {
     "Custom",    // 0
@@ -25,7 +28,7 @@ static const char *section_names[] = {
 };
 
 void load_module(Module &mod, byte *bytes, u32 byte_count) {
-  u32 pos = 0;
+  pos = 0;
   u32 word = read_u32(bytes, pos);
   std::cout << "module magic word is " << word << std::endl;
   word = read_u32(bytes, pos);
