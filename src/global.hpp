@@ -1,11 +1,13 @@
 #ifndef __DEV_HPP__
 #define __DEV_HPP__
 
+#include "InstrProfile.hpp"
 #include "types.hpp"
 
 extern byte *bytes;   // buffer used for file
 extern u32 pos;       // position on the buffer
 extern long filelen;  // length of the file
+extern vec<InstrProfile> profiles;
 
 inline void WaitEnter() {
   for (auto i = pos; i < filelen - pos + 1; i++) {

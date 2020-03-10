@@ -14,3 +14,4 @@ void parse_datas(byte *, u32 *, vec<Data> *, vec<Global> &);
 
 u32 parse_idx(byte *, u32 *);
 Memarg parse_memarg(byte *, u32 *);
+type::Value parse_valtype(byte *, u32 *);

@@ -145,7 +145,7 @@ void parse_expr(Expr &e, byte *bytes, u32 *pos) {
   while (true) {
     debug("Parsing instr[%d] at %x\n", instr_count, *pos);
     e.emplace_back(Instr::create(bytes, pos));
-    if (bytes[*pos - 1] == 0x0b) break;
+    if (e.back().code() == 0x0B) break;
     instr_count++;
 #if WAIT
     WaitEnter();

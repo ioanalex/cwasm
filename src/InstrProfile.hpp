@@ -51,6 +51,8 @@ public:
   string get_name();
   byte get_code();
   instr_type get_type();
+  bool is_used();
+  void use();
 
   friend std::ostream &operator<<(std::ostream &, const InstrProfile &);
 
@@ -59,6 +61,7 @@ protected:
   string name;
   bool has_args;
   instr_type type;
+  bool used;
 };
 
 #endif

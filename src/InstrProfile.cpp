@@ -5,6 +5,7 @@
 InstrProfile::InstrProfile(byte opcode) {
   code = opcode;
   bool error = false;
+  used = false;
   type.args = vec<itype>(0);
   type.ret = vec<itype>(0);
 
@@ -24,6 +25,9 @@ InstrProfile::InstrProfile(byte opcode) {
 instr_type InstrProfile::get_type() { return type; }
 string InstrProfile::get_name() { return name; }
 byte InstrProfile::get_code() { return code; }
+bool InstrProfile::is_used() { return used; }
+// Setters
+void InstrProfile::use() { used = true; }
 
 std::ostream &operator<<(std::ostream &os, const InstrProfile &i) {
   std::cout << i.name << "(0x" << std::hex << (int)(i.code) << ")"

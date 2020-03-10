@@ -9,18 +9,14 @@
 
 byte *bytes;
 long filelen;
+vec<InstrProfile> profiles;
 
 int main(int argc, char *argv[]) {
   // create all instruction profiles
-  vec<InstrProfile> profiles;
   for (byte i = 0; i < (0xBF + 0x01); i++) {
     InstrProfile instr(i);
     profiles.push_back(instr);
   }
-
-  // for (auto instr : profiles) {
-  //   std::cout << instr << std::endl;
-  // }
 
   // get the module as bytes in an array
   FILE *fileptr;
@@ -44,4 +40,9 @@ int main(int argc, char *argv[]) {
   Module m;
   load_module(m, bytes, filelen);
   delete[] bytes;
+
+  std::cout << "--------- COMMANDS THAT WERE NOT USED ---------\n";
+  for (auto instr : profiles) {
+    if (!instr.is_used()) std::cout << instr << std::endl;
+  }
 }

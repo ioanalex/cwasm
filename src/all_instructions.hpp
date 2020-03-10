@@ -10,6 +10,7 @@
 #include "instructions.hpp"
 #include "named.hpp"
 #include "parse.hpp"
+
 namespace Instruction {
 #define DUMMY_VIRTUAL(SpecialInstrImpl) \
 public:                                 \
@@ -45,63 +46,120 @@ class Nop : public InstrImpl {
   DUMMY_INSTR_IMPL(Nop)
 };
 
+class Block : public InstrImpl {
+public:
+  Block(byte *bytes, u32 *pos) : InstrImpl((*pos)++) {
+    debug("BLOCK\n");
+    if (bytes[*pos] != 0x40) {
+      blocktype = parse_valtype(bytes, pos);
+    }
+    while (bytes[*pos] != 0x0B) {
+      instrs.emplace_back(Instr::create(bytes, pos));
+    }
+    (*pos)++;  // to skip the END(0x0B) instruction
+    debug("ENDBLOCK\n");
+  }
+
+  DUMMY_VIRTUAL(Block)
+
+  vec<Instr> instrs;
+  std::optional<type::Value> blocktype;
+};
+
+// TODO: Block and Loop have the same constructor (we could use the same_constr
+// macro)
+class Loop : public InstrImpl {
+public:
+  Loop(byte *bytes, u32 *pos) : InstrImpl((*pos)++) {
+    debug("LOOP\n");
+
+    if (bytes[*pos] != 0x40) {
+      blocktype = parse_valtype(bytes, pos);
+    }
+    while (bytes[*pos] != 0x0B) {
+      instrs.emplace_back(Instr::create(bytes, pos));
+    }
+    (*pos)++;  // to skip the END(0x0B) instruction
+    debug("ENDLOOP\n");
+  }
+
+  DUMMY_VIRTUAL(Loop)
+
+  vec<Instr> instrs;
+  std::optional<type::Value> blocktype;
+};
+
+class If : public InstrImpl {
+public:
+  If(byte *bytes, u32 *pos) : InstrImpl((*pos)++) {
+    debug("IF\n");
+    if (bytes[*pos] != 0x40) {
+      blocktype = parse_valtype(bytes, pos);
+    }
+
+    while (bytes[*pos] != 0x0B && bytes[*pos] != 0x05) {
+      ifinstrs.emplace_back(Instr::create(bytes, pos));
+    }
+    if (bytes[*pos] == 0x05) {
+      debug("ELSE\n");
+
+      (*pos)++;
+
+      while (bytes[*pos] != 0x0B) {
+        elseinstrs.emplace_back(Instr::create(bytes, pos));
+      }
+      debug("ENDELSE\n");
+    }
+    (*pos)++;  // to skip the END(0x0B) instruction
+    debug("ENDIF\n");
+  }
+
+  DUMMY_VIRTUAL(If)
+
+  vec<Instr> ifinstrs;
+  vec<Instr> elseinstrs;
+  std::optional<type::Value> blocktype;
+};
+
+// TODO: maybe this should be removed
 class End : public InstrImpl {
   DUMMY_INSTR_IMPL(End)
 };
+
+// ---------------------- BRANCH --------------------
+class Br : public ImmediateImpl<labelidx> {
+public:
+  Br(byte *bytes, u32 *pos)
+      : ImmediateImpl<labelidx>{(*pos)++, labelidx(parse_idx(bytes, pos))} {}
+  DUMMY_VIRTUAL(Br)
+};
+
+class Br_If : public ImmediateImpl<labelidx> {
+public:
+  Br_If(byte *bytes, u32 *pos)
+      : ImmediateImpl<labelidx>{(*pos)++, labelidx(parse_idx(bytes, pos))} {}
+  DUMMY_VIRTUAL(Br_If)
+};
+
+class Br_Table : public InstrImpl {
+public:
+  Br_Table(byte *bytes, u32 *pos) : InstrImpl((*pos)++), labels(), labelN(0) {
+    u32 count = read_LEB(bytes, pos, 32);
+    for (auto i = 0; i < count; i++) {
+      labels.emplace_back(labelidx(parse_idx(bytes, pos)));
+    }
+    labelN = labelidx(parse_idx(bytes, pos));
+  }
+  DUMMY_VIRTUAL(Br_Table)
+  vec<labelidx> labels;
+  labelidx labelN;
+};
+// -------------------------------------------------
 
 class Return : public InstrImpl {
   DUMMY_INSTR_IMPL(Return)
 };
 
-class Drop : public InstrImpl {
-  DUMMY_INSTR_IMPL(Drop)
-};
-
-class Select : public InstrImpl {
-  DUMMY_INSTR_IMPL(Select)
-};
-
-// ------------------- Numbers ----------------------
-
-class Const : public ImmediateImpl<Value> {
-public:
-  Const(byte *bytes, u32 *pos, type::Value type)
-      : ImmediateImpl<Value>((*pos)++) {
-    // TODO: write read_value function based on type..
-    // This code repeats (parse.cpp:const_eval)
-    switch (type) {
-      case type::Value::i32:
-        v = from_i32(read_LEB(bytes, pos, 32));
-        break;
-      case type::Value::i64:
-        v = from_i64(read_LEB(bytes, pos, 64));
-        break;
-      case type::Value::f32: {
-        f32 f;
-        std::memcpy(&f, bytes + *pos, 4);
-        v = from_f32(f);
-        *pos = *pos + 4;
-        break;
-      }
-      case type::Value::f64: {
-        f64 f;
-        std::memcpy(&f, bytes + *pos, 8);
-        v = from_f64(f);
-        *pos = *pos + 8;
-        break;
-      }
-    }
-  }
-  DUMMY_VIRTUAL(Const)
-private:
-  Value v;
-};
-
-// TODO: add some abstraction here
-class Numeric : public InstrImpl {
-  DUMMY_INSTR_IMPL(Numeric)
-};
-// --------------------------------------------------
 // ---------------------- CALL ----------------------
 class Call : public ImmediateImpl<funcidx> {
 public:
@@ -120,6 +178,14 @@ public:
   DUMMY_VIRTUAL(CallIndirect)
 };
 // ---------------------------------------------------
+
+class Drop : public InstrImpl {
+  DUMMY_INSTR_IMPL(Drop)
+};
+
+class Select : public InstrImpl {
+  DUMMY_INSTR_IMPL(Select)
+};
 
 // define usefull macro for classes that have the same constructor
 #define same_constr(ab, b) \
@@ -166,22 +232,7 @@ class GlobalSet : public Global {
 };
 // --------------------------------------------------
 
-// ---------------------- BRANCH --------------------
-class Br : public ImmediateImpl<labelidx> {
-public:
-  Br(byte *bytes, u32 *pos)
-      : ImmediateImpl<labelidx>{(*pos)++, labelidx(parse_idx(bytes, pos))} {}
-  DUMMY_VIRTUAL(Br)
-};
-
-class Br_If : public ImmediateImpl<labelidx> {
-public:
-  Br_If(byte *bytes, u32 *pos)
-      : ImmediateImpl<labelidx>{(*pos)++, labelidx(parse_idx(bytes, pos))} {}
-  DUMMY_VIRTUAL(Br_If)
-};
-
-// ------------------- MEMORY ---------------------
+// ------------------------- MEMORY ---------------------------
 enum _opt_size { _8, _16, _32 };
 enum _opt_sign { _u, _s };
 struct opt_st_size {
@@ -203,12 +254,66 @@ struct opt_st_size {
   private:                                                           \
     type::Value type;                                                \
     std::optional<opt_st_size> opt;                                  \
-  };                                                                 \
-  //-------------------------------------------------
+  };
 
 LOAD_STORE(Load)
 LOAD_STORE(Store)
 
+class MemorySize : public InstrImpl {
+public:
+  MemorySize(u32 *pos) : InstrImpl((*pos)++) { printf("MEMORYSIZEINSTR\n"); }
+  DUMMY_VIRTUAL(MemorySize)
+};
+
+class MemoryGrow : public InstrImpl {
+public:
+  MemoryGrow(u32 *pos) : InstrImpl((*pos)++) { printf("MEMORYGROWINSTR\n"); }
+  DUMMY_VIRTUAL(MemoryGrow)
+};
+
+//---------------------------------------------------------
+
+// ------------------- Numbers ----------------------
+
+class Const : public ImmediateImpl<Value> {
+public:
+  Const(byte *bytes, u32 *pos, type::Value type)
+      : ImmediateImpl<Value>((*pos)++) {
+    // TODO: write read_value function based on type..
+    // This code repeats (parse.cpp:const_eval)
+    switch (type) {
+      case type::Value::i32:
+        v = from_i32(read_LEB(bytes, pos, 32));
+        break;
+      case type::Value::i64:
+        v = from_i64(read_LEB(bytes, pos, 64));
+        break;
+      case type::Value::f32: {
+        f32 f;
+        std::memcpy(&f, bytes + *pos, 4);
+        v = from_f32(f);
+        *pos = *pos + 4;
+        break;
+      }
+      case type::Value::f64: {
+        f64 f;
+        std::memcpy(&f, bytes + *pos, 8);
+        v = from_f64(f);
+        *pos = *pos + 8;
+        break;
+      }
+    }
+  }
+  DUMMY_VIRTUAL(Const)
+private:
+  Value v;
+};
+
+// TODO: add some abstraction here
+class Numeric : public InstrImpl {
+  DUMMY_INSTR_IMPL(Numeric)
+};
+// --------------------------------------------------
 }  // namespace Instruction
 
 #endif
