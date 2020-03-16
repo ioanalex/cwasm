@@ -8,6 +8,7 @@
 #include "instructions.hpp"
 #include "named.hpp"
 #include "types.hpp"
+#include "util.hpp"
 #include "values.hpp"
 
 // Following the spec (Structure -> Modules)
@@ -22,19 +23,29 @@ struct Func {
   Expr body;
   Func(typeidx type) : type(type), locals(), body() {}
 };
+inline std::ostream &operator<<(std::ostream &os, const Func &f) {
+  os << "func :: @" << f.type << std::endl;
+  printvec(f.locals, 2);
+  return os << "\t\t" << f.body.size() << " instructions" << std::endl;
+}
 
 // Tables
 struct Table {
   type::Table type;
   Table(type::Table type) : type(type) {}
 };
+inline std::ostream &operator<<(std::ostream &os, const Table &t) {
+  return os << t.type << std::endl;
+}
 
 // Memories
 struct Memory {
   type::Memory type;
   Memory(type::Memory type) : type(type) {}
 };
-
+inline std::ostream &operator<<(std::ostream &os, const Memory &m) {
+  return os << m.type << std::endl;
+}
 struct Memarg {
   u32 align;
   u32 offset;
@@ -47,6 +58,9 @@ struct Global {
   Global(type::Global type) : type(type) {}
   Global(type::Global type, Value init) : type(type), init(init) {}
 };
+inline std::ostream &operator<<(std::ostream &os, const Global &g) {
+  return os << g.type << " " << g.init << std::endl;
+}
 
 struct Elem {
   tableidx table;  // Currently only one table is allowed so tableidx must be 0
@@ -142,5 +156,6 @@ struct Module {
 };
 
 void load_module(Module &, byte *, u32);
+void PrintModule(Module &);
 
 #endif

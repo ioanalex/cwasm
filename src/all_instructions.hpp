@@ -261,13 +261,13 @@ LOAD_STORE(Store)
 
 class MemorySize : public InstrImpl {
 public:
-  MemorySize(u32 *pos) : InstrImpl((*pos)++) { printf("MEMORYSIZEINSTR\n"); }
+  MemorySize(u32 *pos) : InstrImpl((*pos)++) { warn("MEMORYSIZEINSTR\n"); }
   DUMMY_VIRTUAL(MemorySize)
 };
 
 class MemoryGrow : public InstrImpl {
 public:
-  MemoryGrow(u32 *pos) : InstrImpl((*pos)++) { printf("MEMORYGROWINSTR\n"); }
+  MemoryGrow(u32 *pos) : InstrImpl((*pos)++) { warn("MEMORYGROWINSTR\n"); }
   DUMMY_VIRTUAL(MemoryGrow)
 };
 

@@ -27,6 +27,16 @@ static const char *section_names[] = {
     "Data"       // 11 !
 };
 
+void PrintModule(Module &mod) {
+  std::cout << "Module:" << std::endl;
+  std::cout << "  Types:" << std::endl;
+  printvec(mod.types, 2) std::cout << "  Funcs:" << std::endl;
+  printvec(mod.funcs, 2) std::cout << "  Tables:" << std::endl;
+  printvec(mod.tables, 2) std::cout << "  Memories:" << std::endl;
+  printvec(mod.mems, 2) std::cout << "  Globals" << std::endl;
+  printvec(mod.globals, 2)
+}
+
 void load_module(Module &mod, byte *bytes, u32 byte_count) {
   pos = 0;
   u32 word = read_u32(bytes, pos);
@@ -51,8 +61,9 @@ void load_module(Module &mod, byte *bytes, u32 byte_count) {
         warn("Parsing Type(1) section (length: 0x%x)\n", slen);
         parse_types(bytes, &pos, &mod.types);
         warn("Parsing complete\n");
-        for (int i = 0; i < mod.types.size(); i++)
-          std::cout << mod.types[i] << std::endl;
+#if DEBUG
+        printvec(mod.types, 2);
+#endif
         break;
       }
       case 2: {

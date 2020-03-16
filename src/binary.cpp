@@ -49,6 +49,7 @@ type::Name read_name(byte *bytes, u32 *pos) {
   *pos += namelen;
   name_c[namelen] = '\0';
   type::Name name(name_c);
+  free(name_c);
   return name;
 }
 

@@ -8,9 +8,9 @@
 template <typename T>
 inline void USE(T) {}
 
-#define DEBUG 1
-#define INFO 1
-#define WARN 1
+#define DEBUG 0
+#define INFO 0
+#define WARN 0
 #define WAIT 0
 
 #define FATAL(...)                                               \
@@ -68,6 +68,16 @@ inline void USE(T) {}
   do {            \
   } while (0)
 #endif
+
+inline void tabs(int n) {
+  for (int i = 0; i < n; i++) std::cout << "\t";
+}
+#define itloop(vec) for (auto it = vec.cbegin(); it != vec.cend(); it++)
+#define printvec(vec, ntabs)         \
+  itloop(vec) {                      \
+    tabs(ntabs);                     \
+    std::cout << (*it) << std::endl; \
+  }
 
 /*****************************************************************************/
 

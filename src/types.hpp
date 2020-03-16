@@ -30,14 +30,6 @@ namespace type {
 using Name = std::string;
 
 enum class Value { i32, i64, f32, f64 };
-
-struct Result {
-  bool has_type = false;
-  Value type;
-};
-
-using Block = Result;
-
 inline std::ostream &operator<<(std::ostream &os, const Value &v) {
   switch (v) {
     case Value::i32:
@@ -52,6 +44,18 @@ inline std::ostream &operator<<(std::ostream &os, const Value &v) {
       return os << "illegal type value";
   }
 }
+
+struct Result {
+  bool has_type = false;
+  Value type;
+};
+inline std::ostream &operator<<(std::ostream &os, const Result &r) {
+  os << "result::";
+  if (r.has_type) return os << r.type;
+  return os << "none";
+}
+
+using Block = Result;
 
 enum class Elem { funcref };
 
@@ -77,20 +81,32 @@ struct Limits {
   u32 min;
   u32 max = empty_u32;
 };
+inline std::ostream &operator<<(std::ostream &os, const Limits &l) {
+  return os << "from " << l.min << " to " << l.max;
+}
 
 struct Memory {
   Limits limits;
 };
+inline std::ostream &operator<<(std::ostream &os, const Memory &m) {
+  return os << "Memory " << m.limits;
+}
 
 struct Table {
   Limits limits;
   Elem elem;
 };
+inline std::ostream &operator<<(std::ostream &os, const Table &t) {
+  return os << "Table :: funcref " << t.limits;
+}
 
 struct Global {
   bool mut;
   Value value;
 };
+inline std::ostream &operator<<(std::ostream &os, const Global &g) {
+  return os << "Global " << ((g.mut) ? "(mut)" : "") << g.value;
+}
 
 struct Extern {
   enum { FUNC, TABLE, MEMORY, GLOBAL } tag;

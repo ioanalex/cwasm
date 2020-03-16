@@ -5,17 +5,20 @@
 #include "global.hpp"
 #include "types.hpp"
 #include "util.hpp"
+#include "validate.hpp"
 #include "values.hpp"
 
 byte *bytes;
+
 long filelen;
+
 vec<InstrProfile> profiles;
 
 int main(int argc, char *argv[]) {
   // create all instruction profiles
   for (byte i = 0; i < (0xBF + 0x01); i++) {
     InstrProfile instr(i);
-    profiles.push_back(instr);
+    profiles.emplace_back(instr);
   }
 
   // get the module as bytes in an array
@@ -41,8 +44,13 @@ int main(int argc, char *argv[]) {
   load_module(m, bytes, filelen);
   delete[] bytes;
 
-  std::cout << "--------- COMMANDS THAT WERE NOT USED ---------\n";
-  for (auto instr : profiles) {
-    if (!instr.is_used()) std::cout << instr << std::endl;
-  }
+  PrintModule(m);
+
+  InitContext(m);
+  PrintContext();
+
+  // std::cout << "--------- COMMANDS THAT WERE NOT USED ---------\n";
+  // for (auto instr : profiles) {
+  //   if (!instr.is_used()) std::cout << instr << std::endl;
+  // }
 }

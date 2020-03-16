@@ -214,6 +214,7 @@ void parse_imports(byte *bytes, u32 *pos, vec<Import> *imports) {
               kind);
     }
     imports->emplace_back(Import(import_name, import_module, *desc));
+    delete desc;
   }
 }
 
@@ -288,6 +289,7 @@ void parse_exports(byte *bytes, u32 *pos, vec<Export> *exports) {
             kind);
     }
     exports->emplace_back(Export(export_name, *desc));
+    delete desc;
   }
 }
 
