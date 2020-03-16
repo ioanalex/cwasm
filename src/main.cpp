@@ -49,6 +49,8 @@ int main(int argc, char *argv[]) {
   InitContext(m);
   PrintContext();
 
+  Validate::func(m.funcs.front());
+
   // std::cout << "--------- COMMANDS THAT WERE NOT USED ---------\n";
   // for (auto instr : profiles) {
   //   if (!instr.is_used()) std::cout << instr << std::endl;

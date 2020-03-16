@@ -48,6 +48,8 @@ inline std::ostream &operator<<(std::ostream &os, const Value &v) {
 struct Result {
   bool has_type = false;
   Value type;
+  Result() {}
+  Result(type::Value &v) : has_type(true), type(v) {}
 };
 inline std::ostream &operator<<(std::ostream &os, const Result &r) {
   os << "result::";

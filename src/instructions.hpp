@@ -18,7 +18,7 @@ public:
   // TODO: takes a Store.
   virtual void run() = 0;
   // TODO: takes a Context.
-  virtual void verify() = 0;
+  virtual bool validate() = 0;
 
 private:
   u32 pos_;  // Index in bytecode
@@ -43,7 +43,7 @@ public:
   // TODO: takes a Store.
   void run() { impl->run(); }
   // TODO: takes a Context.
-  void verify() { impl->verify(); }
+  virtual bool validate() { impl->validate(); }
 
 private:
   std::unique_ptr<InstrImpl> impl;

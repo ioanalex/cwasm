@@ -15,7 +15,7 @@ namespace Instruction {
 #define DUMMY_VIRTUAL(SpecialInstrImpl) \
 public:                                 \
   virtual void run() {}                 \
-  virtual void verify() {}
+  virtual bool validate() {}
 
 #define DUMMY_INSTR_IMPL(SpecialInstrImpl)                         \
 public:                                                            \

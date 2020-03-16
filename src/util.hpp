@@ -2,6 +2,15 @@
 #define __UTIL_HPP__
 
 #include <cstdio>
+#include <vector>
+
+template <typename T>
+std::vector<T> operator+(const std::vector<T> &a, const std::vector<T> &b) {
+  std::vector<T> newvector(a.size() + b.size());
+  std::copy(a.begin(), a.end(), newvector.begin());
+  std::copy(b.begin(), b.end(), newvector.end() + a.size());
+  return newvector;
+}
 
 // The USE(x) template is used to silence C++ compiler warnings
 // issued for (yet) unused variables (typically parameters).
@@ -72,7 +81,7 @@ inline void USE(T) {}
 inline void tabs(int n) {
   for (int i = 0; i < n; i++) std::cout << "\t";
 }
-#define itloop(vec) for (auto it = vec.cbegin(); it != vec.cend(); it++)
+#define itloop(vec) for (auto it = vec.begin(); it != vec.end(); it++)
 #define printvec(vec, ntabs)         \
   itloop(vec) {                      \
     tabs(ntabs);                     \
