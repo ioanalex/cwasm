@@ -1,5 +1,7 @@
 #include "validate.hpp"
 
+#include "util.hpp"
+
 Context context;
 
 void InitContext(Module &mod) {
@@ -36,6 +38,71 @@ void PrintContext() {
   std::cout << context.return_ << std::endl;
 }
 
+const char *val2str(valtype v) {
+  switch (v) {
+    case valtype::I32:
+      return "I32";
+    case valtype::I64:
+      return "I64";
+    case valtype::F32:
+      return "F32";
+    case valtype::F64:
+      return "F64";
+    case valtype::Unknown:
+      return "Unknown";
+  }
+  return "";  // this is so that the compiler doesn't produce warning;
+}
+
+std::stack<valtype> opds;  // value or unknown
+std::stack<frame> ctrls;
+
+void push_opd(valtype v) { opds.push(v); }
+valtype pop_opd() {
+  if (opds.size() == ctrls.top().height && ctrls.top().unreachable)
+    return valtype::Unknown;
+  if (opds.size() == ctrls.top().height)
+    FATAL("cannot consume stack values from parent.\n");
+  valtype ret = opds.top();
+  opds.pop();
+  return ret;
+}
+valtype pop_opd(valtype expect) {
+  valtype actual = pop_opd();
+  if (actual == valtype::Unknown) return expect;
+  if (expect == valtype::Unknown) return actual;
+  if (actual != expect)
+    FATAL("got %s, expected %s .\n", val2str(actual), val2str(expect));
+  return actual;
+}
+
+void push_opds(vec<valtype> types) {
+  for (auto t : types) push_opd(t);
+}
+void pop_opds(vec<valtype> types) {
+  for (unsigned i = types.size(); i-- > 0;) pop_opd(types.at(i));
+}
+
+void push_ctrl(vec<valtype> labels, vec<valtype> out) {
+  frame fr = {labels, out, opds.size(), false};
+  ctrls.push(fr);
+}
+vec<valtype> pop_ctrl() {
+  if (ctrls.empty()) FATAL("control stack is empty.\n");
+  frame fr = ctrls.top();
+  pop_opds(fr.end_types);
+  if (opds.size() != fr.height)
+    FATAL("the stack has not been cleaned properly\n");
+  ctrls.pop();
+  return fr.end_types;
+}
+
+void unreachable() {
+  // resize the operand stack to it's original height
+  while (ctrls.size() > ctrls.top().height) opds.pop();
+  ctrls.top().unreachable = true;
+}
+
 bool Validate::funcs(Module &m) {
   itloop(m.funcs) {
     bool is_ok = Validate::func(*it);
@@ -62,4 +129,7 @@ bool Validate::func(Func &f) {
   return Validate::expr(f.body);
 }
 
-bool Validate::expr(Expr &ex) { itloop(ex) if (it->validate()) return false; }
+bool Validate::expr(Expr &ex) {
+  itloop(ex) if (!it->validate()) return false;
+  return true;
+}
