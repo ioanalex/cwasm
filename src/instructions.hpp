@@ -10,7 +10,7 @@
 class InstrImpl {
 public:
   explicit InstrImpl(u32 pos) : pos_(pos) {}
-  virtual ~InstrImpl() {}
+  // virtual ~InstrImpl() {}
 
   u32 pos() const { return pos_; }
   u32 code() const { return bytes[pos_]; }
@@ -43,10 +43,19 @@ public:
   // TODO: takes a Store.
   void run() { impl->run(); }
   // TODO: takes a Context.
-  virtual bool validate() { impl->validate(); }
+  bool validate() {
+    std::cout << "(0x" << std::hex << code() << ") "
+              << profiles[code()].get_name() << std::endl;
+    bool b = impl->validate();
+    return b;
+  }
 
 private:
   std::unique_ptr<InstrImpl> impl;
 };
+inline std::ostream &operator<<(std::ostream &os, const Instr &i) {
+  return os << "(0x" << std::hex << i.code() << ") "
+            << profiles[i.code()].get_name();
+}
 
 #endif

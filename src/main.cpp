@@ -49,7 +49,7 @@ int main(int argc, char *argv[]) {
   InitContext(m);
   PrintContext();
 
-  Validate::func(m.funcs.front());
+  Validate::funcs(m);
 
   // std::cout << "--------- COMMANDS THAT WERE NOT USED ---------\n";
   // for (auto instr : profiles) {

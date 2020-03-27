@@ -15,12 +15,11 @@ namespace Instruction {
 #define DUMMY_VIRTUAL(SpecialInstrImpl) \
 public:                                 \
   virtual void run() {}                 \
-  virtual bool validate() {}
+  virtual bool validate() { return true; }
 
-#define DUMMY_INSTR_IMPL(SpecialInstrImpl)                         \
-public:                                                            \
-  SpecialInstrImpl(byte *bytes, u32 *pos) : InstrImpl((*pos)++) {} \
-  DUMMY_VIRTUAL(SpecialInstrImpl)
+#define DUMMY_INSTR_IMPL(SpecialInstrImpl) \
+public:                                    \
+  SpecialInstrImpl(byte *bytes, u32 *pos) : InstrImpl((*pos)++) {}
 
 /* This class is used to abstract all instructions
  * that have an immediate argument
@@ -39,11 +38,16 @@ protected:
 /* */
 
 class Unreachable : public InstrImpl {
-  DUMMY_INSTR_IMPL(Unreachable)
+public:
+  Unreachable(byte *bytes, u32 *pos) : InstrImpl((*pos)++) {}
+  void run() {}
+  bool validate();
 };
 
 class Nop : public InstrImpl {
-  DUMMY_INSTR_IMPL(Nop)
+  DUMMY_INSTR_IMPL(Nop);
+  void run() {}
+  bool validate();
 };
 
 class Block : public InstrImpl {
@@ -60,7 +64,8 @@ public:
     debug("ENDBLOCK\n");
   }
 
-  DUMMY_VIRTUAL(Block)
+  void run() {}
+  bool validate();
 
   vec<Instr> instrs;
   std::optional<type::Value> blocktype;
@@ -83,7 +88,8 @@ public:
     debug("ENDLOOP\n");
   }
 
-  DUMMY_VIRTUAL(Loop)
+  void run() {}
+  bool validate();
 
   vec<Instr> instrs;
   std::optional<type::Value> blocktype;
@@ -114,7 +120,8 @@ public:
     debug("ENDIF\n");
   }
 
-  DUMMY_VIRTUAL(If)
+  void run() {}
+  bool validate();
 
   vec<Instr> ifinstrs;
   vec<Instr> elseinstrs;
@@ -123,7 +130,10 @@ public:
 
 // TODO: maybe this should be removed
 class End : public InstrImpl {
-  DUMMY_INSTR_IMPL(End)
+public:
+  End(byte *bytes, u32 *pos) : InstrImpl((*pos)++) {}
+  void run() {}
+  bool validate();
 };
 
 // ---------------------- BRANCH --------------------
@@ -131,14 +141,16 @@ class Br : public ImmediateImpl<labelidx> {
 public:
   Br(byte *bytes, u32 *pos)
       : ImmediateImpl<labelidx>{(*pos)++, labelidx(parse_idx(bytes, pos))} {}
-  DUMMY_VIRTUAL(Br)
+  void run() {}
+  bool validate();
 };
 
 class Br_If : public ImmediateImpl<labelidx> {
 public:
   Br_If(byte *bytes, u32 *pos)
       : ImmediateImpl<labelidx>{(*pos)++, labelidx(parse_idx(bytes, pos))} {}
-  DUMMY_VIRTUAL(Br_If)
+  void run() {}
+  bool validate();
 };
 
 class Br_Table : public InstrImpl {
@@ -150,7 +162,8 @@ public:
     }
     labelN = labelidx(parse_idx(bytes, pos));
   }
-  DUMMY_VIRTUAL(Br_Table)
+  void run() {}
+  bool validate();
   vec<labelidx> labels;
   labelidx labelN;
 };
@@ -158,6 +171,8 @@ public:
 
 class Return : public InstrImpl {
   DUMMY_INSTR_IMPL(Return)
+  void run() {}
+  bool validate();
 };
 
 // ---------------------- CALL ----------------------
@@ -165,7 +180,8 @@ class Call : public ImmediateImpl<funcidx> {
 public:
   Call(byte *bytes, u32 *pos)
       : ImmediateImpl<funcidx>{(*pos)++, funcidx(parse_idx(bytes, pos))} {}
-  DUMMY_VIRTUAL(Call)
+  void run() {}
+  bool validate();
 };
 
 class CallIndirect : public ImmediateImpl<typeidx> {
@@ -175,16 +191,21 @@ public:
     ASSERT(bytes[*pos] == 0x00, "Call indirect must have a 0x00 in the end\n");
     (*pos)++;  // to skip the 0x00
   }
-  DUMMY_VIRTUAL(CallIndirect)
+  void run() {}
+  bool validate();
 };
 // ---------------------------------------------------
 
 class Drop : public InstrImpl {
-  DUMMY_INSTR_IMPL(Drop)
+  DUMMY_INSTR_IMPL(Drop);
+  void run() {}
+  bool validate();
 };
 
 class Select : public InstrImpl {
-  DUMMY_INSTR_IMPL(Select)
+  DUMMY_INSTR_IMPL(Select);
+  void run() {}
+  bool validate();
 };
 
 // define usefull macro for classes that have the same constructor
@@ -203,14 +224,20 @@ public:
 };
 
 class LocalGet : public Local {
-  same_constr(LocalGet, Local) DUMMY_VIRTUAL(Local)
+  same_constr(LocalGet, Local);
+  void run() {}
+  bool validate();
 };
 
 class LocalSet : public Local {
-  same_constr(LocalSet, Local) DUMMY_VIRTUAL(Local)
+  same_constr(LocalSet, Local);
+  void run() {}
+  bool validate();
 };
 class LocalTee : public Local {
-  same_constr(LocalTee, Local) DUMMY_VIRTUAL(Local)
+  same_constr(LocalTee, Local);
+  void run() {}
+  bool validate();
 };
 // -------------------------------------------------
 
@@ -224,11 +251,15 @@ public:
 };
 
 class GlobalGet : public Global {
-  same_constr(GlobalGet, Global) DUMMY_VIRTUAL(GloGloablGetbal)
+  same_constr(GlobalGet, Global);
+  void run() {}
+  bool validate();
 };
 
 class GlobalSet : public Global {
-  same_constr(GlobalSet, Global) DUMMY_VIRTUAL(GlobalSet)
+  same_constr(GlobalSet, Global);
+  void run() {}
+  bool validate();
 };
 // --------------------------------------------------
 
@@ -250,7 +281,9 @@ struct opt_st_size {
         : ImmediateImpl<Memarg>{(*pos)++, parse_memarg(bytes, pos)}, \
           type(type),                                                \
           opt(opt) {}                                                \
-    DUMMY_VIRTUAL(name)                                              \
+    void run() {}                                                    \
+    bool validate();                                                 \
+                                                                     \
   private:                                                           \
     type::Value type;                                                \
     std::optional<opt_st_size> opt;                                  \
@@ -261,14 +294,22 @@ LOAD_STORE(Store)
 
 class MemorySize : public InstrImpl {
 public:
-  MemorySize(u32 *pos) : InstrImpl((*pos)++) { warn("MEMORYSIZEINSTR\n"); }
-  DUMMY_VIRTUAL(MemorySize)
+  MemorySize(u32 *pos) : InstrImpl((*pos)++) {
+    warn("MEMORYSIZEINSTR\n");
+    (*pos)++;
+  }
+  void run() {}
+  bool validate();
 };
 
 class MemoryGrow : public InstrImpl {
 public:
-  MemoryGrow(u32 *pos) : InstrImpl((*pos)++) { warn("MEMORYGROWINSTR\n"); }
-  DUMMY_VIRTUAL(MemoryGrow)
+  MemoryGrow(u32 *pos) : InstrImpl((*pos)++) {
+    warn("MEMORYGROWINSTR\n");
+    (*pos)++;
+  }
+  void run() {}
+  bool validate();
 };
 
 //---------------------------------------------------------
@@ -304,14 +345,18 @@ public:
       }
     }
   }
-  DUMMY_VIRTUAL(Const)
+  void run() {}
+  bool validate();
+
 private:
   Value v;
 };
 
 // TODO: add some abstraction here
 class Numeric : public InstrImpl {
-  DUMMY_INSTR_IMPL(Numeric)
+  DUMMY_INSTR_IMPL(Numeric);
+  void run() {}
+  bool validate();
 };
 // --------------------------------------------------
 }  // namespace Instruction

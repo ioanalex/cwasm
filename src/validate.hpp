@@ -16,18 +16,39 @@ struct Context {
   type::Result return_;
 };
 
-void InitContext(Module &);
+void InitContext(Module&);
 void PrintContext();
 
 // define the data structures needed for the body validation
-enum class valtype { I32, I64, F32, F64, Unknown };
+enum valtype { I32, I64, F32, F64, Unknown };
 
+inline std::ostream& operator<<(std::ostream& os, const valtype& v) {
+  const char* valtype2str[]{"i32", "i64", "f32", "f64", "Unknown"};
+  return os << valtype2str[v];
+}
+
+valtype res2valtype(const type::Result&);
+valtype gettype(std::optional<type::Value>);
+vec<valtype> gettypes(const vec<type::Value>&);
 struct frame {
   vec<valtype> label_types;
   vec<valtype> end_types;
   u32 height;
   bool unreachable;
 };
+inline std::ostream& operator<<(std::ostream& os, const frame& f) {
+  os << "h:" << f.height << " unr:" << f.unreachable << " labels"
+     << " end_types" << std::endl;
+  itloop(f.label_types) {
+    tabs(3);
+    os << "  " << (*it) << std::endl;
+  }
+  itloop(f.end_types) {
+    tabs(4);
+    os << "  " << (*it) << std::endl;
+  }
+  return os;
+}
 
 // functions to access the stacks
 void push_opd(valtype);
@@ -43,8 +64,8 @@ void unreachable();
 
 // end of body validation
 namespace Validate {
-bool expr(Expr &);
-bool func(Func &);
-bool funcs(Module &);
+bool expr(Expr&);
+bool func(Func&);
+bool funcs(Module&);
 }  // namespace Validate
 #endif

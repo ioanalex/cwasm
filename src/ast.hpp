@@ -26,7 +26,9 @@ struct Func {
 inline std::ostream &operator<<(std::ostream &os, const Func &f) {
   os << "func :: @" << f.type << std::endl;
   printvec(f.locals, 2);
-  return os << "\t\t" << f.body.size() << " instructions" << std::endl;
+  os << "\t\t" << f.body.size() << " instructions" << std::endl;
+  printvec(f.body, 3);
+  return os;
 }
 
 // Tables

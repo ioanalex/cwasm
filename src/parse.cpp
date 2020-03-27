@@ -141,7 +141,7 @@ Memarg parse_memarg(byte *bytes, u32 *pos) {
 }
 
 void parse_expr(Expr &e, byte *bytes, u32 *pos) {
-  unsigned int instr_count;
+  unsigned int instr_count = 0;
   while (true) {
     debug("Parsing instr[%d] at %x\n", instr_count, *pos);
     e.emplace_back(Instr::create(bytes, pos));
