@@ -16,7 +16,7 @@ using labelidx = Named<u32, struct labelidx_>;
   inline std::ostream &operator<<(std::ostream &os, const idx &i) { \
     idx a(i);                                                       \
     u32 b = a.value();                                              \
-    return os << b << std::endl;                                    \
+    return os << b;                                                 \
   }
 
 printableidx(typeidx);

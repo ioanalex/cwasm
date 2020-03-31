@@ -9,11 +9,11 @@
 // This is the abstract class for all different types of instructions.
 class InstrImpl {
 public:
-  explicit InstrImpl(u32 pos) : pos_(pos) {}
+  explicit InstrImpl(u32 pos) : pos_(pos), code_(bytes[pos]) {}
   // virtual ~InstrImpl() {}
 
   u32 pos() const { return pos_; }
-  u32 code() const { return bytes[pos_]; }
+  u32 code() const { return code_; }
 
   // TODO: takes a Store.
   virtual void run() = 0;
@@ -22,6 +22,7 @@ public:
 
 private:
   u32 pos_;  // Index in bytecode
+  byte code_;
 };
 
 class Instr {
@@ -44,7 +45,7 @@ public:
   void run() { impl->run(); }
   // TODO: takes a Context.
   bool validate() {
-    std::cout << "(0x" << std::hex << code() << ") "
+    std::cout << "(0x" << std::hex << code() << std::dec << ") "
               << profiles[code()].get_name() << std::endl;
     bool b = impl->validate();
     return b;
@@ -54,7 +55,7 @@ private:
   std::unique_ptr<InstrImpl> impl;
 };
 inline std::ostream &operator<<(std::ostream &os, const Instr &i) {
-  return os << "(0x" << std::hex << i.code() << ") "
+  return os << "(0x" << std::hex << i.code() << std::dec << ") "
             << profiles[i.code()].get_name();
 }
 

@@ -24,8 +24,8 @@ struct Func {
   Func(typeidx type) : type(type), locals(), body() {}
 };
 inline std::ostream &operator<<(std::ostream &os, const Func &f) {
-  os << "func :: @" << f.type << std::endl;
-  printvec(f.locals, 2);
+  os << "func :: @" << f.type << std::endl << "\t\tlocals:" << std::endl;
+  printvec(f.locals, 3);
   os << "\t\t" << f.body.size() << " instructions" << std::endl;
   printvec(f.body, 3);
   return os;

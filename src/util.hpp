@@ -8,7 +8,7 @@ template <typename T>
 std::vector<T> operator+(const std::vector<T> &a, const std::vector<T> &b) {
   std::vector<T> newvector(a.size() + b.size());
   std::copy(a.begin(), a.end(), newvector.begin());
-  std::copy(b.begin(), b.end(), newvector.end() + a.size());
+  std::copy(b.begin(), b.end(), newvector.begin() + a.size());
   return newvector;
 }
 
@@ -81,11 +81,11 @@ inline void USE(T) {}
 inline void tabs(int n) {
   for (int i = 0; i < n; i++) std::cout << "\t";
 }
-#define itloop(vec) for (auto it = vec.begin(); it != vec.end(); it++)
-#define printvec(vec, ntabs)         \
-  itloop(vec) {                      \
-    tabs(ntabs);                     \
-    std::cout << (*it) << std::endl; \
+#define iloop(vec) for (int i = 0; i < vec.size(); i++)
+#define printvec(vec, ntabs)             \
+  for (int i = 0; i < vec.size(); i++) { \
+    tabs(ntabs);                         \
+    std::cout << vec[i] << std::endl;    \
   }
 
 /*****************************************************************************/

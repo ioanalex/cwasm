@@ -11,16 +11,16 @@ extern Context context;
 // TODO: This should be implemented as a basic optimization.
 bool ByType(byte opcode) {
   instr_type type = profiles[opcode].get_type();
-  itloop(type.args) {
-    if (it->index() == 1) {
+  iloop(type.args) {
+    if (type.args[i].index() == 1) {
       warn("i am not that smart yet (0x%x)\n", opcode);
       return true;
     }
-    pop_opd(gettype(std::get<type::Value>(*it)));
+    pop_opd(gettype(std::get<type::Value>(type.args[i])));
   }
-  itloop(type.ret) {
-    if (it->index() == 1) FATAL("i am not that smart yet\n");
-    push_opd(gettype(std::get<type::Value>(*it)));
+  iloop(type.ret) {
+    if (type.ret[i].index() == 1) FATAL("i am not that smart yet\n");
+    push_opd(gettype(std::get<type::Value>(type.ret[i])));
   }
   return true;
 }
@@ -45,16 +45,13 @@ bool Nop::validate() { return true; }
 bool Block::validate() {
   valtype type = gettype(blocktype);
   push_ctrl(vec<valtype>({type}), vec<valtype>({type}));
-  // TODO: update the context! This is VERY important
 
   // validate the instructions enclosed by the block
-  itloop(instrs) it->validate();
+  iloop(instrs) instrs[i].validate();
 
   // simulate END instr (remember that blocks eat up their END opcode)
   auto results = pop_ctrl();
   push_opds(results);
-
-  // TODO: revert context
 
   return true;
 }
@@ -63,10 +60,14 @@ bool Block::validate() {
 bool Loop::validate() {
   valtype type = gettype(blocktype);
   push_ctrl(vec<valtype>(), vec<valtype>({type}));
-  // TODO: update the context
+std::cout << "ENTER LOOP" << std::endl;
+  // validate the instructions enclosed by the loop
+  iloop(instrs) instrs[i].validate();
+std::cout << "EXIT LOOP" << std::endl;
 
-  // validate the instructions enclosed by the block
-  itloop(instrs) it->validate();
+  // simulate END instr (remember that loops eat up their END opcode)
+  auto results = pop_ctrl();
+  push_opds(results);
 
   return true;
 }
@@ -106,7 +107,8 @@ bool Select::validate() {
 
 bool LocalGet::validate() {
   // 1. check the context
-  if (this->value >= context.locals.size()) FATAL("The local is not defined\n");
+  if (this->value >= context.locals.size())
+    FATAL("The local is not defined\n");
   // 2. get the type from context
   valtype type = gettype(context.locals.at(this->value));
   // 3. push it in the operand stack
@@ -117,7 +119,8 @@ bool LocalGet::validate() {
 
 bool LocalSet::validate() {
   // 1. check the context
-  if (this->value >= context.locals.size()) FATAL("The local is not defined\n");
+  if (this->value >= context.locals.size())
+    FATAL("The local is not defined\n");
   // 2. get the type from context
   valtype type = gettype(context.locals.at(this->value));
   // 3. pop it from the operand stack
@@ -128,7 +131,8 @@ bool LocalSet::validate() {
 
 bool LocalTee::validate() {
   // 1. check the context
-  if (this->value >= context.locals.size()) FATAL("The local is not defined\n");
+  if (this->value >= context.locals.size())
+    FATAL("The local is not defined\n");
   // 2. get the type from context
   valtype type = gettype(context.locals.at(this->value));
   // 3. pop it from the operand stack and the push it

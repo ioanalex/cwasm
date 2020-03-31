@@ -18,6 +18,9 @@ struct Context {
 
 void InitContext(Module&);
 void PrintContext();
+void UpdateContext(vec<type::Value>&, vec<type::Value>&);
+void UpdateContext(vec<type::Value>&, vec<type::Value>&, type::Result);
+void StartBlock();
 
 // define the data structures needed for the body validation
 enum valtype { I32, I64, F32, F64, Unknown };
@@ -39,13 +42,13 @@ struct frame {
 inline std::ostream& operator<<(std::ostream& os, const frame& f) {
   os << "h:" << f.height << " unr:" << f.unreachable << " labels"
      << " end_types" << std::endl;
-  itloop(f.label_types) {
+  iloop(f.label_types) {
     tabs(3);
-    os << "  " << (*it) << std::endl;
+    os << "  " << f.label_types[i] << std::endl;
   }
-  itloop(f.end_types) {
+  iloop(f.end_types) {
     tabs(4);
-    os << "  " << (*it) << std::endl;
+    os << "  " << f.end_types[i] << std::endl;
   }
   return os;
 }

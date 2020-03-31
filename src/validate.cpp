@@ -5,7 +5,8 @@
 Context context;
 
 void InitContext(Module &mod) {
-  context.types = mod.types;
+  context.types.resize(mod.types.size());
+  std::copy(mod.types.begin(), mod.types.end(), context.types.begin());
   // each mod.func has a typeidx to types
   // itloop(mod.funcs) {
   //   type::Func functype = mod.types[(*it).type];
@@ -45,16 +46,36 @@ void InitContext(Module &mod) {
 }
 
 void PrintContext() {
-  std::cout << "Validation Context:" << std::endl;
-  std::cout << "  Types:" << std::endl;
-  printvec(context.types, 2) std::cout << "  Funcs:" << std::endl;
-  printvec(context.funcs, 2) std::cout << "  Tables:" << std::endl;
-  printvec(context.tables, 2) std::cout << "  Memories:" << std::endl;
-  printvec(context.mems, 2) std::cout << "  Globals" << std::endl;
-  printvec(context.globals, 2) std::cout << "  Locals:" << std::endl;
-  printvec(context.locals, 2) std::cout << "  Labels:" << std::endl;
-  printvec(context.labels, 2) std::cout << "  Return:" << std::endl << "\t\t";
-  std::cout << context.return_ << std::endl;
+  // std::cout << "Validation Context:" << std::endl;
+  // std::cout << "  Types:" << std::endl;
+  // printvec(*(context.types), 2) std::cout << "  Funcs:" << std::endl;
+  // printvec(context.funcs, 2) std::cout << "  Tables:" << std::endl;
+  // printvec(context.tables, 2) std::cout << "  Memories:" << std::endl;
+  // printvec(context.mems, 2) std::cout << "  Globals" << std::endl;
+  // printvec(context.globals, 2) std::cout << "  Locals:" << std::endl;
+  // printvec(context.locals, 2) std::cout << "  Labels:" << std::endl;
+  // printvec(context.labels, 2) std::cout << "  Return:" << std::endl <<
+  // "\t\t"; std::cout << context.return_ << std::endl;
+}
+
+void UpdateContext(vec<type::Value> &locals, vec<type::Value> &labels) {
+  context.locals.resize(locals.size());
+  std::copy(locals.begin(), locals.end(), context.locals.begin());
+
+  context.labels.resize(labels.size());
+  std::copy(labels.begin(), labels.end(), context.labels.begin());
+
+  context.return_ = type::Result();
+}
+void UpdateContext(vec<type::Value> &locals, vec<type::Value> &labels,
+                   type::Result return_) {
+  context.locals.resize(locals.size());
+  std::copy(locals.begin(), locals.end(), context.locals.begin());
+
+  context.labels.resize(labels.size());
+  std::copy(labels.begin(), labels.end(), context.labels.begin());
+
+  context.return_ = return_;
 }
 
 const char *val2str(valtype v) {
@@ -74,6 +95,27 @@ const char *val2str(valtype v) {
 }
 valtype res2valtype(const type::Result &res) {
   return (res.has_type) ? gettype(res.type) : valtype::Unknown;
+}
+
+type::Result valtype2res(const valtype &res) {
+  type::Value ret;
+  switch (res) {
+    case valtype::Unknown:
+      return type::Result();
+    case valtype::I32:
+      ret = type::Value::i32;
+      break;
+    case valtype::I64:
+      ret = type::Value::i64;
+      break;
+    case valtype::F32:
+      ret = type::Value::f32;
+      break;
+    case valtype::F64:
+      ret = type::Value::f64;
+      break;
+  }
+  return type::Result(ret);
 }
 valtype gettype(std::optional<type::Value> t) {
   valtype type;
@@ -99,11 +141,7 @@ valtype gettype(std::optional<type::Value> t) {
 
 vec<valtype> gettypes(const vec<type::Value> &v) {
   vec<valtype> res(v.size());
-  int i = 0;
-  itloop(v) {
-    res[i] = gettype(*it);
-    i++;
-  }
+  iloop(v) { res[i] = gettype(v[i]); }
   return res;
 }
 
@@ -137,7 +175,7 @@ void pop_opds(vec<valtype> types) {
 }
 
 void push_ctrl(vec<valtype> labels, vec<valtype> out) {
-  frame fr = {labels, out, opds.size(), false};
+  frame fr = {labels, out, (u32)opds.size(), false};
   ctrls.push_back(fr);
 }
 vec<valtype> pop_ctrl() {
@@ -161,10 +199,10 @@ void unreachable() {
 }
 
 bool Validate::funcs(Module &m) {
-  itloop(m.funcs) {
-    if (it->body.empty()) continue;  // this is an imported function
-    std::cout << "Validating func " << *it << std::endl;
-    bool is_ok = Validate::func(*it);
+  iloop(m.funcs) {
+    if (m.funcs[i].body.empty()) continue;  // this is an imported function
+    std::cout << "Validating func " << m.funcs[i] << std::endl;
+    bool is_ok = Validate::func(m.funcs[i]);
     std::cout << "OK" << std::endl;
     if (!is_ok) return false;
   }
@@ -173,39 +211,50 @@ bool Validate::funcs(Module &m) {
 
 bool Validate::func(Func &f) {
   // 1. check context
-  if (f.type >= context.types.size()) FATAL("the type is not defined\n");
+  if (f.type.value() >= context.types.size())
+    FATAL("the type %d is not defined\n", f.type.value());
   // 2. get the type from the context
   type::Func functype(context.types.at(f.type));
   // 3. update context (C') by getting locals, labels and return
-  context.locals = functype.args + f.locals;
-  context.labels.resize(functype.result.size());
-  std::copy(functype.result.begin(), functype.result.end(),
-            context.labels.begin());
+  vec<type::Value> newlocals = functype.args + f.locals;
   if (functype.result.empty()) {
-    context.return_ = type::Result();
-    // 5. add the initial frame to the control stack
+    UpdateContext(newlocals, functype.result);
+    // 4.1 . add the initial frame to the control stack
     push_ctrl(vec<valtype>(), vec<valtype>());
   } else if (functype.result.size() == 1) {
-    context.return_ = type::Result(functype.result.front());
-    // 5. add the initial frame to the control stack
-    valtype res = res2valtype(context.return_);
+    type::Result ret(functype.result.front());
+    std::cout<<"1"<<std::endl;
+    UpdateContext(newlocals, functype.result, ret);
+    std::cout<<"1"<<std::endl;
+
+    // 4.1. add the initial frame to the control stack
+    valtype res = res2valtype(ret);
     push_ctrl(vec<valtype>({res}), vec<valtype>({res}));
   } else {
     FATAL("Functions can only return one value\n");
   }
-
-  std::cout << "changed context to:" << std::endl;
-  PrintContext();
+  // 4.2 . validate body
+  // std::cout << "changed context to:" << std::endl;
+  // PrintContext();
 
   bool res = Validate::expr(f.body);
 
   ASSERT(ctrls.empty(), "The control stack is not empty\n");
-  ASSERT(opds.size() == 1,
-         "The operand stack should be left with just one valtype\n");
-  debug("function validated with result type :: ");
-  std::cout << opds.back() << std::endl;
+  ASSERT(opds.size() < 2,
+         "The operand stack should be left empty or with just one valtype not "
+         "%ld\n",
+         opds.size());
+  type::Result result;
+  if (opds.size() == 0) {
+    result = type::Result();
+  } else {
+    result = valtype2res(opds.front());
 
-  opds.pop_back();
+    opds.pop_back();
+  }
+  // 5. result type of function
+  std::cout << "function validated with result type :: " << result << std::endl;
+
   return res;
 }
 

@@ -56,7 +56,8 @@ public:
     debug("BLOCK\n");
     if (bytes[*pos] != 0x40) {
       blocktype = parse_valtype(bytes, pos);
-    }
+    } else
+      (*pos)++;  // to skip 0x40
     while (bytes[*pos] != 0x0B) {
       instrs.emplace_back(Instr::create(bytes, pos));
     }
@@ -80,7 +81,8 @@ public:
 
     if (bytes[*pos] != 0x40) {
       blocktype = parse_valtype(bytes, pos);
-    }
+    } else
+      (*pos)++;  // to skip 0x40
     while (bytes[*pos] != 0x0B) {
       instrs.emplace_back(Instr::create(bytes, pos));
     }
@@ -101,7 +103,8 @@ public:
     debug("IF\n");
     if (bytes[*pos] != 0x40) {
       blocktype = parse_valtype(bytes, pos);
-    }
+    } else
+      (*pos)++;  // to skip 0x40
 
     while (bytes[*pos] != 0x0B && bytes[*pos] != 0x05) {
       ifinstrs.emplace_back(Instr::create(bytes, pos));
@@ -131,7 +134,7 @@ public:
 // TODO: maybe this should be removed
 class End : public InstrImpl {
 public:
-  End(byte *bytes, u32 *pos) : InstrImpl((*pos)++) {}
+  End(byte *bytes, u32 *pos) : InstrImpl((*pos)++) { debug("END\n"); }
   void run() {}
   bool validate();
 };

@@ -42,17 +42,20 @@ int main(int argc, char *argv[]) {
 
   Module m;
   load_module(m, bytes, filelen);
-  delete[] bytes;
+  
 
   PrintModule(m);
 
   InitContext(m);
-  PrintContext();
+  // PrintContext();
+  PrintModule(m);
 
+  // Validate::funcs(m);
   Validate::funcs(m);
 
   // std::cout << "--------- COMMANDS THAT WERE NOT USED ---------\n";
   // for (auto instr : profiles) {
   //   if (!instr.is_used()) std::cout << instr << std::endl;
   // }
+  delete[] bytes;
 }

@@ -30,7 +30,7 @@ bool InstrProfile::is_used() { return used; }
 void InstrProfile::use() { used = true; }
 
 std::ostream &operator<<(std::ostream &os, const InstrProfile &i) {
-  std::cout << i.name << "(0x" << std::hex << (int)(i.code) << ")"
+  std::cout << i.name << "(0x" << std::hex << (int)(i.code) << std::dec << ")"
             << " :: " << i.type;
   return os;
 }
