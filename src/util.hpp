@@ -21,7 +21,7 @@ inline void USE(T) {}
 #define INFO 1
 #define WARN 1
 #define WAIT 0
-#define PRINT_STACKS 0
+#define PRINT_STACKS 1
 #define FATAL(...)                                               \
   do {                                                           \
     fprintf(stderr, "Fatal Error(%s:%d): ", __FILE__, __LINE__); \

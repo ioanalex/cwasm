@@ -3,6 +3,7 @@
 
 #include <cstdint>
 #include <iostream>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -50,6 +51,14 @@ struct Result {
   Value type;
   Result() {}
   Result(type::Value &v) : has_type(true), type(v) {}
+  Result(std::optional<type::Value> &v) {
+    if (v.has_value()) {
+      has_type = true;
+      type = v.value();
+    } else {
+      has_type = false;
+    }
+  }
 };
 inline std::ostream &operator<<(std::ostream &os, const Result &r) {
   os << "result::";

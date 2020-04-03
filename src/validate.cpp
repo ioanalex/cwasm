@@ -53,8 +53,9 @@ void PrintContext() {
   // printvec(context.tables, 2) std::cout << "  Memories:" << std::endl;
   // printvec(context.mems, 2) std::cout << "  Globals" << std::endl;
   // printvec(context.globals, 2) std::cout << "  Locals:" << std::endl;
-  // printvec(context.locals, 2) std::cout << "  Labels:" << std::endl;
-  // printvec(context.labels, 2) std::cout << "  Return:" << std::endl <<
+  // printvec(context.locals, 2)
+  std::cout << "  Labels:" << std::endl;
+  printvec(context.labels, 2)  // std::cout << "  Return:" << std::endl <<
   // "\t\t"; std::cout << context.return_ << std::endl;
 }
 
@@ -78,6 +79,16 @@ void UpdateContext(vec<type::Value> &locals, vec<type::Value> &labels,
   context.return_ = return_;
 }
 
+void AddLabel(type::Result label) {
+  context.labels.insert(context.labels.begin(), label);
+}
+void RemoveLabel(type::Result expect) {
+  type::Result l = context.labels.front();
+  if ((l.has_type && expect.has_type && l.type != expect.type) ||
+      (l.has_type && !expect.has_type) || (!l.has_type && expect.has_type))
+    FATAL("Removed a label that was different than the one I added\n");
+  context.labels.erase(context.labels.begin());
+}
 const char *val2str(valtype v) {
   switch (v) {
     case valtype::I32:
@@ -147,6 +158,12 @@ vec<valtype> gettypes(const vec<type::Value> &v) {
 
 vec<valtype> opds;  // value or unknown
 vec<frame> ctrls;
+void PrintStacks() {
+#if PRINT_STACKS
+  printvec(ctrls, 2);
+  printvec(opds, 1);
+#endif
+}
 
 void push_opd(valtype v) { opds.push_back(v); }
 valtype pop_opd() {
@@ -175,6 +192,9 @@ void pop_opds(vec<valtype> types) {
 }
 
 void push_ctrl(vec<valtype> labels, vec<valtype> out) {
+  ASSERT(labels.size() <= 1, "Zero or one result type per label, not %ld\n",
+         labels.size());
+  ASSERT(out.size() <= 1, "One result type to return\n");
   frame fr = {labels, out, (u32)opds.size(), false};
   ctrls.push_back(fr);
 }
@@ -187,6 +207,9 @@ vec<valtype> pop_ctrl() {
   ctrls.pop_back();
   return fr.end_types;
 }
+
+long unsigned int ctrls_size() { return ctrls.size(); }
+frame n_frame(int n) { return ctrls[ctrls.size() - 1 - n]; }
 
 void unreachable() {
   // resize the operand stack to it's original height
@@ -223,9 +246,9 @@ bool Validate::func(Func &f) {
     push_ctrl(vec<valtype>(), vec<valtype>());
   } else if (functype.result.size() == 1) {
     type::Result ret(functype.result.front());
-    std::cout<<"1"<<std::endl;
+    std::cout << "1" << std::endl;
     UpdateContext(newlocals, functype.result, ret);
-    std::cout<<"1"<<std::endl;
+    std::cout << "1" << std::endl;
 
     // 4.1. add the initial frame to the control stack
     valtype res = res2valtype(ret);
@@ -262,16 +285,9 @@ bool Validate::expr(Expr &ex) {
   std::cout << ex.size() << " instructions to validate" << std::endl;
   for (auto i = 0; i < ex.size(); i++) {
     if (!(ex[i].validate())) return false;
-#if PRINT_STACKS
-    printvec(ctrls, 2);
-    printvec(opds, 1);
-#endif
+    PrintStacks();
   }
   debug("finished with body\n");
-#if PRINT_STACKS
-  printvec(ctrls, 2);
-  printvec(opds, 1);
-#endif
-
+  PrintStacks();
   return true;
 }

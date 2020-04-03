@@ -65,7 +65,8 @@
     "cfenv": "cpp",
     "cinttypes": "cpp",
     "typeindex": "cpp",
-    "valarray": "cpp"
+    "valarray": "cpp",
+    "unordered_set": "cpp"
   },
   "files.exclude": {
     "**/src/*.d": true

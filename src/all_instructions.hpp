@@ -72,7 +72,7 @@ public:
   std::optional<type::Value> blocktype;
 };
 
-// TODO: Block and Loop have the same constructor (we could use the same_constr
+// NOTE: Block and Loop have the same constructor (we could use the same_constr
 // macro)
 class Loop : public InstrImpl {
 public:
@@ -111,7 +111,7 @@ public:
     }
     if (bytes[*pos] == 0x05) {
       debug("ELSE\n");
-
+      has_else = true;
       (*pos)++;
 
       while (bytes[*pos] != 0x0B) {
@@ -126,6 +126,7 @@ public:
   void run() {}
   bool validate();
 
+  bool has_else;
   vec<Instr> ifinstrs;
   vec<Instr> elseinstrs;
   std::optional<type::Value> blocktype;
