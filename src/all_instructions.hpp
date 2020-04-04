@@ -99,7 +99,7 @@ public:
 
 class If : public InstrImpl {
 public:
-  If(byte *bytes, u32 *pos) : InstrImpl((*pos)++) {
+  If(byte *bytes, u32 *pos) : InstrImpl((*pos)++), has_else(false) {
     debug("IF\n");
     if (bytes[*pos] != 0x40) {
       blocktype = parse_valtype(bytes, pos);

@@ -42,7 +42,6 @@ int main(int argc, char *argv[]) {
 
   Module m;
   load_module(m, bytes, filelen);
-  
 
   PrintModule(m);
 
@@ -51,7 +50,7 @@ int main(int argc, char *argv[]) {
   PrintModule(m);
 
   // Validate::funcs(m);
-  Validate::funcs(m);
+  Validate::func(m.funcs[17]);
 
   // std::cout << "--------- COMMANDS THAT WERE NOT USED ---------\n";
   // for (auto instr : profiles) {

@@ -45,13 +45,18 @@ bool Nop::validate() { return true; }
 bool Block::validate() {
   valtype type = gettype(blocktype);
   AddLabel(blocktype);
-  push_ctrl(vec<valtype>({type}), vec<valtype>({type}));
-
+  if (blocktype.has_value())
+    push_ctrl(vec<valtype>({type}), vec<valtype>({type}));
+  else
+    push_ctrl(vec<valtype>(), vec<valtype>());
+  std::cout << "ENTER BLOCK" << std::endl;
   // validate the instructions enclosed by the block
   iloop(instrs) {
     instrs[i].validate();
     PrintStacks();
   }
+  std::cout << "EXIT BLOCK" << std::endl;
+
   RemoveLabel(blocktype);
   // simulate END instr (remember that blocks eat up their END opcode)
   auto results = pop_ctrl();
@@ -64,7 +69,10 @@ bool Block::validate() {
 bool Loop::validate() {
   valtype type = gettype(blocktype);
   AddLabel(type::Result());
-  push_ctrl(vec<valtype>(), vec<valtype>({type}));
+  if (blocktype.has_value())
+    push_ctrl(vec<valtype>(), vec<valtype>({type}));
+  else
+    push_ctrl(vec<valtype>(), vec<valtype>());
   std::cout << "ENTER LOOP" << std::endl;
   // validate the instructions enclosed by the loop
   iloop(instrs) {
@@ -86,7 +94,10 @@ bool If::validate() {
   AddLabel(blocktype);
 
   pop_opd(valtype::I32);
-  push_ctrl(vec<valtype>({type}), vec<valtype>({type}));
+  if (blocktype.has_value())
+    push_ctrl(vec<valtype>({type}), vec<valtype>({type}));
+  else
+    push_ctrl(vec<valtype>(), vec<valtype>());
 
   std::cout << "ENTER IF" << std::endl;
   // validate the instructions in if body
@@ -95,7 +106,7 @@ bool If::validate() {
     PrintStacks();
   }
 
-  std::cout << "EXIT IF" << std::endl;
+  std::cout << "EXIT IF" << ((has_else) ? " expect else " : "") << std::endl;
 
   if (has_else) {
     auto results = pop_ctrl();
@@ -129,19 +140,21 @@ bool Br::validate() {
   // datastructures (this is why the first if just warns)
   if (ctrls_size() <= this->value) FATAL("Label index is too big\n");
   // 2. get labeltype
-  valtype labeltype = res2valtype(context.labels[this->value]);
-  valtype temp = n_frame(this->value).label_types.front();
-  ASSERT(labeltype == temp,
-         "Labeltypes from context and ctrls must much. Got %s from context and "
-         "%s from ctrls\n",
-         val2str(labeltype), val2str(temp));
+  // valtype labeltype = res2valtype(context.labels[this->value]);
+  // std::cout << labeltype << std::endl;
+  // PrintContext();
+  vec<valtype> temp = n_frame(this->value).label_types;
+  // ASSERT(labeltype == temp,
+  //        "Labeltypes from context and ctrls must much. Got %s from context
+  //        and "
+  //        "%s from ctrls\n",
+  //        val2str(labeltype), val2str(temp));
 
   // 3. then
 
   PrintContext();
-  pop_opd(labeltype);
+  pop_opds(temp);
   unreachable();
-
   return true;
 }
 
@@ -153,17 +166,18 @@ bool Br_If::validate() {
   // datastructures (this is why the first if just warns)
   if (ctrls_size() <= this->value) FATAL("Label index is too big\n");
   // 2. get labeltype
-  valtype labeltype = res2valtype(context.labels[this->value]);
-  valtype temp = n_frame(this->value).label_types.front();
-  ASSERT(labeltype == temp,
-         "Labeltypes from context and ctrls must much. Got %s from context and "
-         "%s from ctrls\n",
-         val2str(labeltype), val2str(temp));
+  // valtype labeltype = res2valtype(context.labels[this->value]);
+  vec<valtype> temp = n_frame(this->value).label_types;
+  // ASSERT(labeltype == temp,
+  //        "Labeltypes from context and ctrls must much. Got %s from context
+  //        and "
+  //        "%s from ctrls\n",
+  //        val2str(labeltype), val2str(temp));
 
   // 3. then
   pop_opd(valtype::I32);
-  pop_opd(labeltype);
-  push_opd(labeltype);
+  pop_opds(temp);
+  push_opds(temp);
 
   return true;
 }
@@ -176,12 +190,13 @@ bool Br_Table::validate() {
   // datastructures (this is why the first if just warns)
   if (ctrls_size() <= this->labelN) FATAL("Label index is too big\n");
   // 2. get labelNtype
-  valtype labelNtype = res2valtype(context.labels[this->labelN]);
-  valtype temp = n_frame(this->labelN).label_types.front();
-  ASSERT(labelNtype == temp,
-         "Labeltypes from context and ctrls must much. Got %s from context and "
-         "%s from ctrls\n",
-         val2str(labelNtype), val2str(temp));
+  // valtype labelNtype = res2valtype(context.labels[this->labelN]);
+  vec<valtype> temp = n_frame(this->labelN).label_types;
+  // ASSERT(labelNtype == temp,
+  //        "Labeltypes from context and ctrls must much. Got %s from context
+  //        and "
+  //        "%s from ctrls\n",
+  //        val2str(labelNtype), val2str(temp));
 
   // 3. for all indexes in labels
   iloop(this->labels) {
@@ -191,14 +206,13 @@ bool Br_Table::validate() {
     if (context.labels.size() <= this->labels[i])
       FATAL("The %d labels (idx: %d) is not defined\n", i,
             this->labels[i].value());
-    valtype labeltype = res2valtype(context.labels[this->labels[i]]);
-    if (labeltype != labelNtype)
-      FATAL("Label #%d (idx: %d) is of type %s, not %s\n", i,
-            this->labels[i].value(), val2str(labeltype), val2str(labelNtype));
+    // valtype labeltype = res2valtype(context.labels[this->labels[i]]);
+    if (n_frame(this->labels[i].value()).label_types != temp)
+      FATAL("Label mismatch\n");
   }
   // 4. then
   pop_opd(valtype::I32);
-  pop_opd(labelNtype);
+  pop_opds(temp);
   unreachable();
 
   return true;

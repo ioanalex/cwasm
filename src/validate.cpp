@@ -162,6 +162,7 @@ void PrintStacks() {
 #if PRINT_STACKS
   printvec(ctrls, 2);
   printvec(opds, 1);
+  // WaitEnter();
 #endif
 }
 
@@ -188,7 +189,10 @@ void push_opds(vec<valtype> types) {
   for (auto t : types) push_opd(t);
 }
 void pop_opds(vec<valtype> types) {
-  for (unsigned i = types.size(); i-- > 0;) pop_opd(types.at(i));
+  for (unsigned i = types.size(); i-- > 0;) {
+    // std::cout << "poping" << types.at(i) << std::endl;
+    pop_opd(types.at(i));
+  }
 }
 
 void push_ctrl(vec<valtype> labels, vec<valtype> out) {
@@ -209,15 +213,21 @@ vec<valtype> pop_ctrl() {
 }
 
 long unsigned int ctrls_size() { return ctrls.size(); }
-frame n_frame(int n) { return ctrls[ctrls.size() - 1 - n]; }
+frame n_frame(int n) {
+  // std::cout << "requested frame " << n << std::endl;
+  // std::cout << "true frame is" << ctrls_size() - 1 - n << std::endl;
+
+  return ctrls[ctrls_size() - 1 - n];
+}
 
 void unreachable() {
   // resize the operand stack to it's original height
   // std::cout << "original height is " << ctrls.back().height << std::endl;
-  while (ctrls.size() > ctrls.back().height + 1) {
-    // std::cout << "Stack at " << ctrls.size() << ", popping" << std::endl;
-    opds.pop_back();
-  }
+  // while (ctrls.size() > ctrls.back().height + 1) {
+  //   // std::cout << "Stack at " << ctrls.size() << ", popping" << std::endl;
+  //   opds.pop_back();
+  // }
+  opds.erase(opds.begin() + ctrls.back().height, opds.end());
   ctrls.back().unreachable = true;
 }
 
@@ -233,6 +243,9 @@ bool Validate::funcs(Module &m) {
 }
 
 bool Validate::func(Func &f) {
+  // clear stacks
+  // opds.resize(0);
+  // ctrls.resize(0);
   // 1. check context
   if (f.type.value() >= context.types.size())
     FATAL("the type %d is not defined\n", f.type.value());
@@ -264,15 +277,14 @@ bool Validate::func(Func &f) {
 
   ASSERT(ctrls.empty(), "The control stack is not empty\n");
   ASSERT(opds.size() < 2,
-         "The operand stack should be left empty or with just one valtype not "
+         "The operand stack should be left empty or  with just one valtype not "
          "%ld\n",
          opds.size());
   type::Result result;
   if (opds.size() == 0) {
     result = type::Result();
   } else {
-    result = valtype2res(opds.front());
-
+    result = valtype2res(opds.back());
     opds.pop_back();
   }
   // 5. result type of function
