@@ -49,8 +49,8 @@ int main(int argc, char *argv[]) {
   // PrintContext();
   PrintModule(m);
 
-  // Validate::funcs(m);
-  Validate::func(m.funcs[17]);
+  Validate::funcs(m);
+  // Validate::func(m.funcs[17]);
 
   // std::cout << "--------- COMMANDS THAT WERE NOT USED ---------\n";
   // for (auto instr : profiles) {
