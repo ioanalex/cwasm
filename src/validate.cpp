@@ -68,6 +68,7 @@ void UpdateContext(vec<type::Value> &locals, vec<type::Value> &labels) {
 
   context.return_ = type::Result();
 }
+
 void UpdateContext(vec<type::Value> &locals, vec<type::Value> &labels,
                    type::Result return_) {
   context.locals.resize(locals.size());
@@ -82,6 +83,7 @@ void UpdateContext(vec<type::Value> &locals, vec<type::Value> &labels,
 void AddLabel(type::Result label) {
   context.labels.insert(context.labels.begin(), label);
 }
+
 void RemoveLabel(type::Result expect) {
   type::Result l = context.labels.front();
   if ((l.has_type && expect.has_type && l.type != expect.type) ||
@@ -89,6 +91,7 @@ void RemoveLabel(type::Result expect) {
     FATAL("Removed a label that was different than the one I added\n");
   context.labels.erase(context.labels.begin());
 }
+
 const char *val2str(valtype v) {
   switch (v) {
     case valtype::I32:
@@ -104,6 +107,7 @@ const char *val2str(valtype v) {
   }
   return "";  // this is so that the compiler doesn't produce warning;
 }
+
 valtype res2valtype(const type::Result &res) {
   return (res.has_type) ? gettype(res.type) : valtype::Unknown;
 }
@@ -128,6 +132,7 @@ type::Result valtype2res(const valtype &res) {
   }
   return type::Result(ret);
 }
+
 valtype gettype(std::optional<type::Value> t) {
   valtype type;
   if (t.has_value()) {
@@ -167,6 +172,7 @@ void PrintStacks() {
 }
 
 void push_opd(valtype v) { opds.push_back(v); }
+
 valtype pop_opd() {
   if (opds.size() == ctrls.back().height && ctrls.back().unreachable)
     return valtype::Unknown;
@@ -176,6 +182,7 @@ valtype pop_opd() {
   opds.pop_back();
   return ret;
 }
+
 valtype pop_opd(valtype expect) {
   valtype actual = pop_opd();
   if (actual == valtype::Unknown) return expect;
@@ -188,6 +195,7 @@ valtype pop_opd(valtype expect) {
 void push_opds(vec<valtype> types) {
   for (auto t : types) push_opd(t);
 }
+
 void pop_opds(vec<valtype> types) {
   for (unsigned i = types.size(); i-- > 0;) {
     // std::cout << "poping" << types.at(i) << std::endl;
@@ -202,6 +210,7 @@ void push_ctrl(vec<valtype> labels, vec<valtype> out) {
   frame fr = {labels, out, (u32)opds.size(), false};
   ctrls.push_back(fr);
 }
+
 vec<valtype> pop_ctrl() {
   if (ctrls.empty()) FATAL("control stack is empty.\n");
   frame fr = ctrls.back();
@@ -213,6 +222,7 @@ vec<valtype> pop_ctrl() {
 }
 
 long unsigned int ctrls_size() { return ctrls.size(); }
+
 frame n_frame(int n) {
   // std::cout << "requested frame " << n << std::endl;
   // std::cout << "true frame is" << ctrls_size() - 1 - n << std::endl;

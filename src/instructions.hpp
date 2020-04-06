@@ -10,7 +10,7 @@
 class InstrImpl {
 public:
   explicit InstrImpl(u32 pos) : pos_(pos), code_(bytes[pos]) {}
-  // virtual ~InstrImpl() {}
+  virtual ~InstrImpl() {}
 
   u32 pos() const { return pos_; }
   u32 code() const { return code_; }
@@ -54,6 +54,7 @@ public:
 private:
   std::unique_ptr<InstrImpl> impl;
 };
+
 inline std::ostream &operator<<(std::ostream &os, const Instr &i) {
   return os << "(0x" << std::hex << i.code() << std::dec << ") "
             << profiles[i.code()].get_name();

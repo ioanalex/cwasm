@@ -81,7 +81,9 @@ inline void USE(T) {}
 inline void tabs(int n) {
   for (int i = 0; i < n; i++) std::cout << "\t";
 }
+
 #define iloop(vec) for (int i = 0; i < vec.size(); i++)
+
 #define printvec(vec, ntabs)             \
   for (int i = 0; i < vec.size(); i++) { \
     tabs(ntabs);                         \

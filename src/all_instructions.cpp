@@ -25,8 +25,9 @@ bool ByType(byte opcode) {
   return true;
 }
 
-#define validateByType(i) \
+#define VALIDATE_BY_TYPE(i) \
   bool i::validate() { return ByType(code()); }
+
 // Unimplemented things
 #define UNIMPLEMENTED(i) \
   bool i::validate() { return true; }
@@ -251,7 +252,6 @@ bool Call::validate() {
   push_opds(ret);
   return true;
 }
-// UNIMPLEMENTED(CallIndirect);
 
 bool CallIndirect::validate() {
   // 1.check context (C.tables[0])
@@ -349,9 +349,12 @@ bool GlobalSet::validate() {
   return true;
 }
 
-validateByType(Load);
-validateByType(Store);
-validateByType(MemorySize);
-validateByType(MemoryGrow);
-validateByType(Const);
-validateByType(Numeric);
+VALIDATE_BY_TYPE(Load)
+VALIDATE_BY_TYPE(Store)
+VALIDATE_BY_TYPE(MemorySize)
+VALIDATE_BY_TYPE(MemoryGrow)
+VALIDATE_BY_TYPE(Const)
+VALIDATE_BY_TYPE(Numeric)
+
+#undef VALIDATE_BY_TYPE
+#undef UNIMPLEMENTED

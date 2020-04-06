@@ -12,19 +12,21 @@ using globalidx = Named<u32, struct globalidx_>;
 using localidx = Named<u32, struct localidx_>;
 using labelidx = Named<u32, struct labelidx_>;
 
-#define printableidx(idx)                                           \
+#define PRINTABLE_INDEX(idx)                                        \
   inline std::ostream &operator<<(std::ostream &os, const idx &i) { \
     idx a(i);                                                       \
     u32 b = a.value();                                              \
     return os << b;                                                 \
   }
 
-printableidx(typeidx);
-printableidx(funcidx);
-printableidx(tableidx);
-printableidx(memidx);
-printableidx(globalidx);
-printableidx(localidx);
-printableidx(labelidx);
+PRINTABLE_INDEX(typeidx)
+PRINTABLE_INDEX(funcidx)
+PRINTABLE_INDEX(tableidx)
+PRINTABLE_INDEX(memidx)
+PRINTABLE_INDEX(globalidx)
+PRINTABLE_INDEX(localidx)
+PRINTABLE_INDEX(labelidx)
+
+#undef PRINTABLE_INDEX
 
 #endif

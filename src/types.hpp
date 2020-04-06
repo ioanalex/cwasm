@@ -31,6 +31,7 @@ namespace type {
 using Name = std::string;
 
 enum class Value { i32, i64, f32, f64 };
+
 inline std::ostream &operator<<(std::ostream &os, const Value &v) {
   switch (v) {
     case Value::i32:
