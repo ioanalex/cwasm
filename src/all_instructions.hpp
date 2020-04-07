@@ -72,8 +72,8 @@ public:
   std::optional<type::Value> blocktype;
 };
 
-// NOTE: Block and Loop have the same constructor (we could use the same_constr
-// macro)
+// NOTE: Block and Loop have the same constructor
+// (we could use the SAME_CONSTR macro)
 class Loop : public InstrImpl {
 public:
   Loop(byte *bytes, u32 *pos) : InstrImpl((*pos)++) {
@@ -212,10 +212,9 @@ class Select : public InstrImpl {
   bool validate();
 };
 
-// define usefull macro for classes that have the same constructor
-#define same_constr(ab, b) \
-public:                    \
-  ab(byte *bytes, u32 *pos) : b(bytes, pos) {}
+// define useful macro for classes that have the same constructor
+#define SAME_CONSTR(derived, base) \
+  derived(byte *bytes, u32 *pos) : base(bytes, pos) {}
 // end of macro
 
 // ---------------------- LOCAL ----------------------
@@ -228,18 +227,22 @@ public:
 };
 
 class LocalGet : public Local {
-  same_constr(LocalGet, Local);
+public:
+  SAME_CONSTR(LocalGet, Local)
   void run() {}
   bool validate();
 };
 
 class LocalSet : public Local {
-  same_constr(LocalSet, Local);
+public:
+  SAME_CONSTR(LocalSet, Local)
   void run() {}
   bool validate();
 };
+
 class LocalTee : public Local {
-  same_constr(LocalTee, Local);
+public:
+  SAME_CONSTR(LocalTee, Local)
   void run() {}
   bool validate();
 };
@@ -255,13 +258,15 @@ public:
 };
 
 class GlobalGet : public Global {
-  same_constr(GlobalGet, Global);
+public:
+  SAME_CONSTR(GlobalGet, Global);
   void run() {}
   bool validate();
 };
 
 class GlobalSet : public Global {
-  same_constr(GlobalSet, Global);
+public:
+  SAME_CONSTR(GlobalSet, Global);
   void run() {}
   bool validate();
 };
@@ -285,6 +290,7 @@ struct opt_st_size {
         : ImmediateImpl<Memarg>{(*pos)++, parse_memarg(bytes, pos)}, \
           type(type),                                                \
           opt(opt) {}                                                \
+    type::Value getType() const { return type; }                     \
     void run() {}                                                    \
     bool validate();                                                 \
                                                                      \
@@ -363,6 +369,12 @@ class Numeric : public InstrImpl {
   bool validate();
 };
 // --------------------------------------------------
+
+#undef DUMMY_VIRTUAL
+#undef DUMMY_INSTR_IMPL
+#undef SAME_CONSTR
+#undef LOAD_STORE
+
 }  // namespace Instruction
 
 #endif

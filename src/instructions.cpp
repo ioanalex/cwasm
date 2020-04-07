@@ -2,11 +2,7 @@
 #include "global.hpp"
 #include "util.hpp"
 
-/* This is dangerous because it will make the program loop
- * for ever. This will happen because pos is never changed
- * and thus we will never find the 'end' command.
- */
-#define UNIMPLEMENTED FATAL("Instruction is unimplemented, exiting\n");
+#define UNIMPLEMENTED FATAL("Instruction is unimplemented, exiting\n")
 
 using namespace Instruction;
 
@@ -153,3 +149,5 @@ Instr Instr::create(byte *bytes, u32 *pos) {
             profiles.at(bytes[*pos]).get_code());
   }
 }
+
+#undef UNIMPLEMENTED

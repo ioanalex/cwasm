@@ -9,17 +9,14 @@
 #include "values.hpp"
 
 byte *bytes;
-
 long filelen;
 
 vec<InstrProfile> profiles;
 
 int main(int argc, char *argv[]) {
   // create all instruction profiles
-  for (byte i = 0; i < (0xBF + 0x01); i++) {
-    InstrProfile instr(i);
-    profiles.emplace_back(instr);
-  }
+  for (byte i = 0; i < (0xBF + 0x01); ++i)
+    profiles.emplace_back(InstrProfile(i));
 
   // get the module as bytes in an array
   FILE *fileptr;
