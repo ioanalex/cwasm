@@ -35,7 +35,9 @@ make
 cd $ROOT_DIR
 
 # run the tests
-FAILED_TESTS=""
+echo "Running tests:"
+printf "\t"
+FAILED_TESTS=" "
 for prog in $WASM_DIR/*.wasm; do
 
     ./cwasm $prog &>/dev/null
@@ -44,9 +46,18 @@ for prog in $WASM_DIR/*.wasm; do
         printf '.'
     else
         printf 'X'
-        FAILED_TESTS="${FAILED_TESTS} ${prog}"
+        NAME=$(basename $prog)
+        FAILED_TESTS="${FAILED_TESTS}\n ${NAME}"
     fi
 done
-echo
 
-echo $FAILED_TESTS
+echo -e "\n\n"
+
+# Print results
+if [ "$FAILED_TESTS" == " " ]; then
+    echo -e "${GREEN}All tests passed!${NC}"
+else
+    echo -e "${RED}-- FAILED TESTS --${NC}"
+    echo -e $FAILED_TESTS
+    echo -e "${RED}------------------${NC}"
+fi
