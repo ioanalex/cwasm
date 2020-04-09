@@ -36,13 +36,16 @@ cd $ROOT_DIR
 
 # run the tests
 echo "Running tests:"
-printf "\t"
+printf '\t'
 FAILED_TESTS=" "
+col=0
 for prog in $WASM_DIR/*.wasm; do
 
     ./cwasm $prog &>/dev/null
     EXITCODE=$?
     if [ $EXITCODE -eq 0 ]; then
+        ((col++))
+        test $col -eq 31 && echo "" && printf '\t' && col=1
         printf '.'
     else
         printf 'X'
