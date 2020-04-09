@@ -11,13 +11,16 @@ extern Context context;
 // TODO: This should be implemented as a basic optimization.
 bool ByType(byte opcode) {
   instr_type type = profiles[opcode].get_type();
+  vec<valtype> args;  //, ret;
   iloop(type.args) {
     if (type.args[i].index() == 1) {
-      warn("i am not that smart yet (0x%x)\n", opcode);
+      FATAL("i am not that smart yet (0x%x)\n", opcode);
       return true;
     }
-    pop_opd(gettype(std::get<type::Value>(type.args[i])));
+    args.push_back(gettype(std::get<type::Value>(type.args[i])));
+    // pop_opd(gettype(std::get<type::Value>(type.args[i])));
   }
+  pop_opds(args);
   iloop(type.ret) {
     if (type.ret[i].index() == 1) FATAL("i am not that smart yet\n");
     push_opd(gettype(std::get<type::Value>(type.ret[i])));
@@ -229,10 +232,13 @@ bool Return::validate() {
   // 1. check that return_ is defined, that is true
   // 2. get return type
   type::Result ret = context.return_;
-  valtype ret_ = res2valtype(ret);
-
+  vec<valtype> rets;
+  if (ret.has_type) {
+    valtype ret_ = res2valtype(ret);
+    rets.push_back(ret_);
+  }
   // 3. then
-  pop_opd(ret_);
+  pop_opds(rets);
   unreachable();
 
   return true;
