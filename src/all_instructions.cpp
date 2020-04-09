@@ -85,7 +85,7 @@ bool Loop::validate() {
   }
   std::cout << "EXIT LOOP" << std::endl;
 
-  RemoveLabel(blocktype);
+  RemoveLabel(type::Result());
   // simulate END instr (remember that loops eat up their END opcode)
   auto results = pop_ctrl();
   push_opds(results);

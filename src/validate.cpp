@@ -87,8 +87,10 @@ void AddLabel(type::Result label) {
 void RemoveLabel(type::Result expect) {
   type::Result l = context.labels.front();
   if ((l.has_type && expect.has_type && l.type != expect.type) ||
-      (l.has_type && !expect.has_type) || (!l.has_type && expect.has_type))
+      (l.has_type && !expect.has_type) || (!l.has_type && expect.has_type)) {
+    std::cout << "Got " << l << " | expected " << expect << std::endl;
     FATAL("Removed a label that was different than the one I added\n");
+  }
   context.labels.erase(context.labels.begin());
 }
 
