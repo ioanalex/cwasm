@@ -74,7 +74,7 @@
   "editor.formatOnSave": true,
   "editor.formatOnPaste": true,
   "clang-format.executable": "/usr/bin/clang-format",
-  "python.formatting.provider": "black",
+  "python.formatting.provider": "yapf",
   "[python]": {
     "editor.formatOnSave": false,
     "editor.formatOnPaste": false
