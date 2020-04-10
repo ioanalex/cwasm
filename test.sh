@@ -2,11 +2,11 @@
 
 # set -v
 
-LANG=en_US.UTF-8
-
 ROOT_DIR=$PWD
-CPP_DIR=$ROOT_DIR/cpp_testfiles
-WASM_DIR=$ROOT_DIR/wasm_tests
+TEST_DIR=$ROOT_DIR/tests
+SRCS_DIR=$TEST_DIR/srcs
+CPP_DIR=$SRCS_DIR/cpp_testfiles
+WASM_DIR=$TEST_DIR/bins
 
 # colors for output
 RED='\033[91;1m'
@@ -23,7 +23,7 @@ else
     exit $EXITCODE
 fi
 
-# check if wasm_tests dir is present
+# check if bins dir is present
 if [ ! -d "$WASM_DIR" ]; then
     echo "MKDIR wasm_test"
     mkdir $WASM_DIR
@@ -31,21 +31,26 @@ fi
 
 # compile all cpp files to wasm
 cd $CPP_DIR
+export WASM_DIR
 make
 cd $ROOT_DIR
 
 # run the tests
-echo "Running tests:"
-printf '\t'
+echo "------------------------------"
+echo -e "${GREEN}Running tests:${NC}"
+echo "------------------------------"
+
 FAILED_TESTS=" "
+
 col=0
+
 for prog in $WASM_DIR/*.wasm; do
 
     ./cwasm $prog &>/dev/null
     EXITCODE=$?
     if [ $EXITCODE -eq 0 ]; then
         ((col++))
-        test $col -eq 31 && echo "" && printf '\t' && col=1
+        test $col -eq 31 && echo "" && col=1
         printf '.'
     else
         printf 'X'

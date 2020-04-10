@@ -4,7 +4,7 @@ CXX=em++
 CXXFLAGS= -std=c++17 -Wall -s WASM=1 -O2
 
 SRC_DIR= .
-WASM_DIR= ../wasm_tests
+WASM_DIR?=
 
 SRC_FILES=$(wildcard $(SRC_DIR)/*.cpp)
 PROGRAMS=$(patsubst $(SRC_DIR)/%.cpp,$(WASM_DIR)/%.wasm,$(SRC_FILES))
@@ -16,7 +16,7 @@ PROGRAMS=$(patsubst $(SRC_DIR)/%.cpp,$(WASM_DIR)/%.wasm,$(SRC_FILES))
 
 $(WASM_DIR)/%.wasm: $(SRC_DIR)/%.cpp
 	@echo "EM++   "$@
-	@$(CXX) $(CXXFLAGS) $< -o $@  
+	@$(CXX) $(CXXFLAGS) $< -o $@ &> /dev/null 
 
 all: $(PROGRAMS)
 

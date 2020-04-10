@@ -1,5 +1,5 @@
 /obj/
-/wasm_tests/
+/tests/bins/*.wasm
 /cwasm
 /.vscode
 *.wat
