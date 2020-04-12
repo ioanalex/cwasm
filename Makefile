@@ -1,16 +1,20 @@
 .PHONY: default all autogen clean distclean
 
 CXX=c++
+ifeq ($(CXX),c++)
+CXXFLAGS=-std=c++17 -Wall -Wno-sign-compare -g 
+else
 CXXFLAGS=-std=c++17 -Wall -g
+endif
 LDFLAGS=
 
 SRCDIR=src
 OBJDIR=obj
 BINDIR=.
 
-SRCS=$(wildcard $(SRCDIR)/*.cpp)
-OBJS=$(patsubst $(SRCDIR)/%.cpp,$(OBJDIR)/%.o,$(SRCS))
-DEPS=$(patsubst %.cpp,%.d,$(SRCS))
+SRCS ::= $(wildcard $(SRCDIR)/*.cpp)
+OBJS ::= $(patsubst $(SRCDIR)/%.cpp,$(OBJDIR)/%.o,$(SRCS))
+DEPS ::= $(patsubst %.cpp,%.d,$(SRCS))
 
 EXEC=$(BINDIR)/cwasm
 
