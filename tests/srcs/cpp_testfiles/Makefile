@@ -6,8 +6,8 @@ CXXFLAGS= -std=c++17 -Wall -s WASM=1 -O2
 SRC_DIR= .
 WASM_DIR?=
 
-SRC_FILES=$(wildcard $(SRC_DIR)/*.cpp)
-PROGRAMS=$(patsubst $(SRC_DIR)/%.cpp,$(WASM_DIR)/%.wasm,$(SRC_FILES))
+SRC_FILES::=$(wildcard $(SRC_DIR)/*.cpp)
+PROGRAMS::=$(patsubst $(SRC_DIR)/%.cpp,$(WASM_DIR)/%.wasm,$(SRC_FILES))
 
 # PROGRAMS=fairsum-2N fairsum-ON2 fairsum-ON3 fairsum \
 #   longsumk-ON2 longsumk-ON3 longsumk \

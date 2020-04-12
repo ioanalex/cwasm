@@ -30,7 +30,7 @@ while i < len(ops_lines):
         def parse_args(line):
             if line == "":
                 return "",""
-            args, ret = line.split('→')
+            args, ret = line.split('→');
             args = args.strip("[]")
             ret = ret.strip("[]")
             return args, ret
