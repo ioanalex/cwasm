@@ -36,6 +36,6 @@ def parse_a_file(filename):
                 break
 
 # run `parse_a_file` for all .bin.wast files
-files = [f for f in os.listdir(core_tests_dir) if f.split('.')[1] == 'bin']
-for f in files:
-    parse_a_file(os.path.join(core_tests_dir, f))         
+files = [f for f in os.listdir(core_tests_dir) if len(f.split('.')) > 1 and f.split('.')[1] == 'bin']
+# for f in files:
+#     parse_a_file(os.path.join(core_tests_dir, f))         
