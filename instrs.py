@@ -19,7 +19,7 @@ while i < len(ops_lines):
     name = str(ops_lines[i])
     opcode = str(ops_lines[i+1])
 
-    print("case {}:\nname = \"{}\";".format(opcode, name));
+    print("case {}:\nname = \"{}\";".format(opcode, name))
 
     # else and end commands have no type so we are done with them
     if(not name == "else" and not name == "end"):
@@ -30,7 +30,7 @@ while i < len(ops_lines):
         def parse_args(line):
             if line == "":
                 return "",""
-            args, ret = line.split('→');
+            args, ret = line.split('→')
             args = args.strip("[]")
             ret = ret.strip("[]")
             return args, ret
