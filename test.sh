@@ -32,7 +32,7 @@ fi
 
 # compile all cpp files to wasm
 cd $CPP_DIR
-WASM_DIR=$WASM_DIR make clean &>/dev/null
+# WASM_DIR=$WASM_DIR make clean &>/dev/null
 WASM_DIR=$WASM_DIR make
 cd $ROOT_DIR
 
@@ -70,10 +70,10 @@ echo "------------------------------"
 FAILED_TESTS=" "
 
 col=0
-
+tempfile=$(mktemp)
 for prog in $WASM_DIR/*.wasm; do
-
-    ./cwasm $prog &>/dev/null
+    >tempfile # truncate file
+    ./cwasm $prog &>tempfile
     EXITCODE=$?
     if [ $EXITCODE -eq 0 ]; then
         ((col++))
@@ -83,6 +83,9 @@ for prog in $WASM_DIR/*.wasm; do
         printf 'X'
         NAME=$(basename $prog)
         FAILED_TESTS="${FAILED_TESTS}\n ${NAME}"
+        echo
+        cat tempfile
+        break
     fi
 done
 

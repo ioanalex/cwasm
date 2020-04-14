@@ -11,14 +11,23 @@ root_dir = os.path.dirname(os.path.realpath(__file__))
 tests_dir = os.path.join(root_dir, 'tests')
 core_tests_dir = os.path.join(tests_dir, 'srcs/core-tests')
 def parse_a_file(filename):
+    print("Reading: " + filename)
     with open(filename, 'r') as file:
         i = 0
         line = file.readline()
-        while True:            
+        while True:     
+            is_valid = True 
+            if "(assert_invalid" in line or "(assert_malformed" in line:
+                is_valid = False   
+                line = file.readline()   
             if "(module" in line:
                 # this is the start of a module
                 outputname = os.path.basename(filename).split('.')[0] + "_module_" + str(i) + ".wasm"
-                outputname = os.path.join(tests_dir, 'bins', outputname)
+                if is_valid:
+                    outputname = os.path.join(tests_dir, 'bins', outputname)
+                else:
+                    outputname = os.path.join(tests_dir, 'bins/fail', outputname)
+                print("-->" + outputname)
                 i = i + 1
                 # open the output file (create it if it does not exist),
                 # delete the contents
@@ -37,5 +46,5 @@ def parse_a_file(filename):
 
 # run `parse_a_file` for all .bin.wast files
 files = [f for f in os.listdir(core_tests_dir) if len(f.split('.')) > 1 and f.split('.')[1] == 'bin']
-# for f in files:
-#     parse_a_file(os.path.join(core_tests_dir, f))         
+for f in files:
+    parse_a_file(os.path.join(core_tests_dir, f))         

@@ -2,12 +2,15 @@
 /obj/
 # ignore all wasm testfiles. Run the test script to produce them
 /tests/bins/*.wasm
+/tests/bins/fail/*.wasm
 # ignore all the bin.wast files, since make can produce them (you should have the spec tests)
 /tests/srcs/core-tests/*bin.wast
 #same as above, keep in mind no plain wast files should be here
 /tests/scrs/core-tests/*.wast
 # ignore the executable
 /cwasm
+# temporary created my test.sh
+/tempfile
 /.vscode
 
 # Backup files etc.
