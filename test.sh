@@ -41,8 +41,6 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
-echo "cpp:$RUN_CPP spec:$RUN_SPEC"
-
 ROOT_DIR=$PWD
 TEST_DIR=$ROOT_DIR/tests
 SRCS_DIR=$TEST_DIR/srcs
@@ -98,8 +96,8 @@ if [ $RUN_SPEC -eq 1 ]; then
     # SPEC_CORE_DIR=/absolute/path/to/spec/test/core
 
     # There are 74 tests (which expand to more later).
-    # Let's count the number of .bin.wast files
-    num=$(ls -1 $CORE_TEST_DIR/*.bin.wast | wc -l)
+    # Let's count the number of .wast files
+    num=$(ls -1 $CORE_TEST_DIR/ | grep .wast | wc -l)
     if [ $num != "74" ]; then
         printf "${YELLOW}The bin.wast files need a refresh fou you want to remake them?[y/N](default: N):${NC}"
         read -r ans
@@ -118,6 +116,21 @@ if [ $RUN_SPEC -eq 1 ]; then
     # Step 2: get the hex code from each .bin.wast file
     echo -e "⚒ ${YELLOW}Generating spec core tests${NC} $PWD"
     ./specTests.py
+
+    # check that all is good
+    # script that checks that all failed tests are under bins/fail
+    for file in $CORE_TEST_DIR/*; do
+        name=$(basename --suffix=.bin.wast $file)
+        a=$(grep -e 'assert_malformed' -e 'assert_invalid' $file | wc -l)
+        if [ $a -ne 0 ]; then
+            b=$(ls -1 tests/bins/fail/${name}_module_* | wc -l)
+            if [ ! $a -eq $b ]; then
+             echo -e "\033[31;1m👎 error:\033[0m file: ${name} has not been processed correctly"
+             exit 1
+            fi
+        fi
+    done
+    echo -e "\033[32;1m👍\033[0m all test files were processed correctly" 
 fi
 
 test $RUN_CPP -eq 0 -a $RUN_SPEC -eq 0 && exit 0
