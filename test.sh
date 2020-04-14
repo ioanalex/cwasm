@@ -38,7 +38,7 @@ if [ ! -d "$WASM_DIR/fail" ]; then
 fi
 
 # compile all cpp files to wasm
-echo -e "${YELLOW}Generating cpp (emscripten) tests${NC}"
+echo -e "⚒ ${YELLOW}Generating cpp (emscripten) tests${NC}"
 cd $CPP_DIR
 # WASM_DIR=$WASM_DIR make clean &>/dev/null
 WASM_DIR=$WASM_DIR make
@@ -60,6 +60,7 @@ if [ $num != "74" ]; then
         printf "absolute path to SPEC WASM interpreter: " && read WASMI
         printf "absolute path to spec tests (core): " && read SPEC_CORE_DIR
 
+        echo -e "⚒ Generating .bin.wast files"
         cd $CORE_TEST_DIR
         WASMI=$WASMI SPEC_CORE_DIR=$SPEC_CORE_DIR make clean
         WASMI=$WASMI SPEC_CORE_DIR=$SPEC_CORE_DIR make
@@ -68,8 +69,8 @@ if [ $num != "74" ]; then
 fi
 
 # Step 2: get the hex code from each .bin.wast file
-echo -e "${YELLOW}Generating spec core tests${NC}"
-./specTest.py &>/dev/null # it outputs a lot of junk that are helpfull for debugging
+echo -e "⚒ ${YELLOW}Generating spec core tests${NC} $PWD"
+./specTests.py
 
 # run the tests
 echo "----------------------------------------------------"
@@ -105,9 +106,9 @@ echo -e "\n\n"
 
 # Print results
 if [ "$FAILED_TESTS" == " " ]; then
-    echo -e "${GREEN}All ${count}/${total} tests passed!${NC}"
+    echo -e "${GREEN}\u2714 All ${count}/${total} tests passed!${NC}"
 else
-    echo -e "${RED}-- FAILED TESTS --${NC}"
+    echo -e "${RED}-- 💩 FAILED TESTS 💩 --${NC}"
     echo -e $FAILED_TESTS
-    echo -e "${RED}------------------${NC}"
+    echo -e "${RED}----------------------${NC}"
 fi

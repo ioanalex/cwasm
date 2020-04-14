@@ -7,11 +7,13 @@
 import os
 import math
 
+debug=False
 root_dir = os.path.dirname(os.path.realpath(__file__))
 tests_dir = os.path.join(root_dir, 'tests')
 core_tests_dir = os.path.join(tests_dir, 'srcs/core-tests')
 def parse_a_file(filename):
-    print("Reading: " + filename)
+    if debug:
+        print("Reading: " + filename)
     with open(filename, 'r') as file:
         i = 0
         line = file.readline()
@@ -27,7 +29,8 @@ def parse_a_file(filename):
                     outputname = os.path.join(tests_dir, 'bins', outputname)
                 else:
                     outputname = os.path.join(tests_dir, 'bins/fail', outputname)
-                print("-->" + outputname)
+                if debug:
+                    print("-->" + outputname)
                 i = i + 1
                 # open the output file (create it if it does not exist),
                 # delete the contents
