@@ -2,6 +2,47 @@
 
 # set -v
 
+print_usage() {
+    echo "Usage: $0 [OPTIONS]"
+    echo "  OPTIONS:"
+    echo "      -h | --help               print this message"
+    echo "      -r | --run  [cpp | spec]  select what tests you want to run"
+    echo "                                by default all tests are run"
+    echo "      -v | --verbose            enable verbose output (set -v)"
+    echo ""
+}
+
+RUN_CPP=1
+RUN_SPEC=1
+
+# check options
+while [[ $# -gt 0 ]]; do
+    option=$1
+    case "$option" in
+    "-h" | "--help")
+        print_usage
+        exit 0
+        ;;
+    "-r" | "--run")
+        test $2 == cpp && RUN_SPEC=0
+        test $2 == spec && RUN_CPP=0
+        shift
+        shift
+        ;;
+    "-v" | "--verbose")
+        set -v
+        shift
+        ;;
+    *)
+        echo "Unknown option: $1"
+        print_usage
+        exit 1
+        ;;
+    esac
+done
+
+echo "cpp:$RUN_CPP spec:$RUN_SPEC"
+
 ROOT_DIR=$PWD
 TEST_DIR=$ROOT_DIR/tests
 SRCS_DIR=$TEST_DIR/srcs
@@ -15,16 +56,6 @@ GREEN='\033[32;1m'
 YELLOW='\033[33;1m'
 NC='\033[0m' # No Color
 
-# check for emscripten compiler
-em++ -v &>/dev/null
-EXITCODE=$?
-if [ $EXITCODE -eq 0 ]; then
-    echo -e "${GREEN}emcc is available${NC}"
-else
-    echo -e "${RED}emcc is missing${NC}, make sure to source the emsdk_env.sh"
-    exit $EXITCODE
-fi
-
 # check if bins dir is present
 if [ ! -d "$WASM_DIR" ]; then
     echo "MKDIR bins"
@@ -37,40 +68,59 @@ if [ ! -d "$WASM_DIR/fail" ]; then
     mkdir "$WASM_DIR/fail"
 fi
 
-# compile all cpp files to wasm
-echo -e "⚒ ${YELLOW}Generating cpp (emscripten) tests${NC}"
-cd $CPP_DIR
-# WASM_DIR=$WASM_DIR make clean &>/dev/null
-WASM_DIR=$WASM_DIR make
-cd $ROOT_DIR
+# clea bins dir
+rm $WASM_DIR/*.wasm &>/dev/null
+rm $WASM_DIR/fail/*.wasm &>/dev/null
 
-# compile all core-tests (2 steps)
-# Step 1: *.wast -> *.bin.wast
-# This step needs two env variables
-# WASMI=/absolute/path/to/wasm/interpreter
-# SPEC_CORE_DIR=/absolute/path/to/spec/test/core
-
-# There are 74 tests (which expand to more later).
-# Let's count the number of .bin.wast files
-num=$(ls -1 $CORE_TEST_DIR/*.bin.wast | wc -l)
-if [ $num != "74" ]; then
-    printf "${YELLOW}The bin.wast files need a refresh fou you want to remake them?[y/N](default: N):${NC}"
-    read -r ans
-    if [ $ans == 'y' ]; then
-        printf "absolute path to SPEC WASM interpreter: " && read WASMI
-        printf "absolute path to spec tests (core): " && read SPEC_CORE_DIR
-
-        echo -e "⚒ Generating .bin.wast files"
-        cd $CORE_TEST_DIR
-        WASMI=$WASMI SPEC_CORE_DIR=$SPEC_CORE_DIR make clean
-        WASMI=$WASMI SPEC_CORE_DIR=$SPEC_CORE_DIR make
-        cd $ROOT_DIR
+if [ $RUN_CPP -eq 1 ]; then
+    # check for emscripten compiler
+    em++ -v &>/dev/null
+    EXITCODE=$?
+    if [ $EXITCODE -eq 0 ]; then
+        echo -e "${GREEN}emcc is available${NC}"
+    else
+        echo -e "${RED}emcc is missing${NC}, make sure to source the emsdk_env.sh"
+        exit $EXITCODE
     fi
+
+    # compile all cpp files to wasm
+    echo -e "⚒ ${YELLOW}Generating cpp (emscripten) tests${NC}"
+    cd $CPP_DIR
+    # WASM_DIR=$WASM_DIR make clean &>/dev/null
+    WASM_DIR=$WASM_DIR make
+    cd $ROOT_DIR
+fi
+if [ $RUN_SPEC -eq 1 ]; then
+    # compile all core-tests (2 steps)
+    # Step 1: *.wast -> *.bin.wast
+    # This step needs two env variables
+    # WASMI=/absolute/path/to/wasm/interpreter
+    # SPEC_CORE_DIR=/absolute/path/to/spec/test/core
+
+    # There are 74 tests (which expand to more later).
+    # Let's count the number of .bin.wast files
+    num=$(ls -1 $CORE_TEST_DIR/*.bin.wast | wc -l)
+    if [ $num != "74" ]; then
+        printf "${YELLOW}The bin.wast files need a refresh fou you want to remake them?[y/N](default: N):${NC}"
+        read -r ans
+        if [ $ans == 'y' ]; then
+            printf "absolute path to SPEC WASM interpreter: " && read WASMI
+            printf "absolute path to spec tests (core): " && read SPEC_CORE_DIR
+
+            echo -e "⚒ Generating .bin.wast files"
+            cd $CORE_TEST_DIR
+            WASMI=$WASMI SPEC_CORE_DIR=$SPEC_CORE_DIR make clean
+            WASMI=$WASMI SPEC_CORE_DIR=$SPEC_CORE_DIR make
+            cd $ROOT_DIR
+        fi
+    fi
+
+    # Step 2: get the hex code from each .bin.wast file
+    echo -e "⚒ ${YELLOW}Generating spec core tests${NC} $PWD"
+    ./specTests.py
 fi
 
-# Step 2: get the hex code from each .bin.wast file
-echo -e "⚒ ${YELLOW}Generating spec core tests${NC} $PWD"
-./specTests.py
+test $RUN_CPP -eq 0 -a $RUN_SPEC -eq 0 && exit 0
 
 # run the tests
 echo "----------------------------------------------------"
