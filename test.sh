@@ -151,6 +151,26 @@ for prog in $WASM_DIR/*.wasm; do
     fi
     ((count++))
 done
+# for prog in $WASM_DIR/fail/*.wasm; do
+#     >tempfile # truncate file
+#     ./cwasm $prog &>tempfile
+#     EXITCODE=$?
+#     if [ $EXITCODE -ne 0 ]; then
+#         ((col++))
+#         test $col -eq 51 && printf " (${count} / ${total})" && echo "" && col=1
+#         printf '.'
+#     else
+#         printf 'X'
+#         NAME=$(basename $prog)
+#         FAILED_TESTS="${FAILED_TESTS}\n ${NAME}"
+#         echo
+#         cat tempfile
+#         msg=$(cat $WASM_DIR/fail/msg/$prog)
+#         echo "test should fail: $msg"
+#         break
+#     fi
+#     ((count++))
+# done
 
 echo -e "\n\n"
 

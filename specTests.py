@@ -17,11 +17,10 @@ def parse_a_file(filename):
     with open(filename, 'r') as file:
         i = 0
         line = file.readline()
-        while True:     
-            is_valid = True 
+        is_valid = True
+        while True:      
             if "(assert_invalid" in line or "(assert_malformed" in line:
-                is_valid = False   
-                line = file.readline()   
+                is_valid = False      
             if "(module" in line:
                 # this is the start of a module
                 outputname = os.path.basename(filename).split('.')[0] + "_module_" + str(i) + ".wasm"
@@ -38,11 +37,30 @@ def parse_a_file(filename):
                 with open(outputname, 'wb') as output:
                     line = file.readline()
                     while ')' not in line:
-                        towrite = line.strip().strip('\"')
+                        line = line.strip()
+                        
+                        towrite = line.strip('\"')
                         towrite = "".join(towrite.split('\\'))
                         towrite = bytes.fromhex(towrite)
+                    
                         output.write(towrite)
                         line = file.readline()
+                    # it is possible to have: "\00...\f3..") so what we should do is
+                    # strip the line of all whitespace
+                    line = line.strip() # <hex>)<otherstuf>
+                    if len(line) > 1:
+                        # split at ) and keep the hex part
+                        line = line.split(')')[0]
+                        bins = line.split(' ') # it is possible to have 2 lines of hex in one.....
+                        # print(bins)
+                        for bin in bins:
+                            # now just do what we always do                            
+                            towrite = bin.strip('\"')
+                            towrite = "".join(towrite.split('\\'))
+                            towrite = bytes.fromhex(towrite)
+                            output.write(towrite)
+                    is_valid = True #reset is_valid for the next module
+
             line = file.readline()
             if not line:
                 break

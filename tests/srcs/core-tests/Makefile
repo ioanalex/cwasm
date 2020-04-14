@@ -4,11 +4,12 @@ WASMI?=
 SPEC_CORE_DIR?=
 BIN_WAST_DIR=.
 
-define fix-files =
-sed -i 's:module binary \":module binary\n \":g' $@  # Fixing no \n after (module binary in some cases
-sed -i 's:(module binary):(module binary\n):g' $@  # Fixing no \n after (module binary in some cases
-sed -i 's:module \$.* binary:module binary:g' $@ # Remove $M1 and other such annotations
-endef
+# This doesn't work....
+# define fix-files =
+# sed -i 's:module \$.* binary:module binary:g' $(BIN_WAST_DIR)/*.bin.wast 
+# sed -i 's:module binary \":module binary\n \":g' $(BIN_WAST_DIR)/*.bin.wast  
+# sed -i 's:(module binary):(module binary\n):g' $(BIN_WAST_DIR)/*.bin.wast  
+# endef
 
 # This checks if spec/core exists
 ifeq ($(SPEC_CORE_DIR),)
@@ -37,10 +38,13 @@ endif
 # Rule to transform the test files to binary
 $(BIN_WAST_DIR)/%.bin.wast: $(SRC_DIR)/%.wast
 	@echo "WAST2WASM "$@
-	@$(WASMI) -d $< -o $@ &> /dev/null  && \
-	$(fix-files)
+	@$(WASMI) -d $< -o $@ &> /dev/null
+	
+# fix-files:
+# 	$(shell BIN_WAST_DIR=$(BIN_WAST_DIR) ./fix_files.sh)
 
-all: $(BIN_WAST_FILES) 
+all: $(BIN_WAST_FILES)
+	$(shell ./fix_files.sh)
 
 clean: 
 	$(RM) $(BIN_WAST_FILES)
