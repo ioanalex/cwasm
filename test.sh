@@ -12,6 +12,7 @@ WASM_DIR=$TEST_DIR/bins
 # colors for output
 RED='\033[31;1m'
 GREEN='\033[32;1m'
+YELLOW='\033[33;1m'
 NC='\033[0m' # No Color
 
 # check for emscripten compiler
@@ -26,11 +27,18 @@ fi
 
 # check if bins dir is present
 if [ ! -d "$WASM_DIR" ]; then
-    echo "MKDIR wasm_test"
+    echo "MKDIR bins"
     mkdir $WASM_DIR
 fi
 
+# check if bins/fail dir is present
+if [ ! -d "$WASM_DIR/fail" ]; then
+    echo "MKDIR bins/fail"
+    mkdir "$WASM_DIR/fail"
+fi
+
 # compile all cpp files to wasm
+echo -e "${YELLOW}Generating cpp (emscripten) tests${NC}"
 cd $CPP_DIR
 # WASM_DIR=$WASM_DIR make clean &>/dev/null
 WASM_DIR=$WASM_DIR make
@@ -46,7 +54,7 @@ cd $ROOT_DIR
 # Let's count the number of .bin.wast files
 num=$(ls -1 $CORE_TEST_DIR/*.bin.wast | wc -l)
 if [ $num != "74" ]; then
-    printf "${GREEN}The bin.wast files need a refresh fou you want to remake them?[y/N](default: N):${NC}"
+    printf "${YELLOW}The bin.wast files need a refresh fou you want to remake them?[y/N](default: N):${NC}"
     read -r ans
     if [ $ans == 'y' ]; then
         printf "absolute path to SPEC WASM interpreter: " && read WASMI
@@ -60,15 +68,18 @@ if [ $num != "74" ]; then
 fi
 
 # Step 2: get the hex code from each .bin.wast file
-# This is done by specTest.py
+echo -e "${YELLOW}Generating spec core tests${NC}"
+./specTest.py &>/dev/null # it outputs a lot of junk that are helpfull for debugging
 
 # run the tests
-echo "------------------------------"
+echo "----------------------------------------------------"
 echo -e "${GREEN}Running tests:${NC}"
-echo "------------------------------"
+echo "----------------------------------------------------"
 
 FAILED_TESTS=" "
 
+count=0
+total=$(ls -1 $WASM_DIR/*.wasm | wc -l)
 col=0
 tempfile=$(mktemp)
 for prog in $WASM_DIR/*.wasm; do
@@ -77,7 +88,7 @@ for prog in $WASM_DIR/*.wasm; do
     EXITCODE=$?
     if [ $EXITCODE -eq 0 ]; then
         ((col++))
-        test $col -eq 31 && echo "" && col=1
+        test $col -eq 51 && printf " (${count} / ${total})" && echo "" && col=1
         printf '.'
     else
         printf 'X'
@@ -87,13 +98,14 @@ for prog in $WASM_DIR/*.wasm; do
         cat tempfile
         break
     fi
+    ((count++))
 done
 
 echo -e "\n\n"
 
 # Print results
 if [ "$FAILED_TESTS" == " " ]; then
-    echo -e "${GREEN}All $(ls -1 $WASM_DIR | wc -l) tests passed!${NC}"
+    echo -e "${GREEN}All ${count}/${total} tests passed!${NC}"
 else
     echo -e "${RED}-- FAILED TESTS --${NC}"
     echo -e $FAILED_TESTS
