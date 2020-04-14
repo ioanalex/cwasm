@@ -8,12 +8,16 @@ print_usage() {
     echo "      -h | --help               print this message"
     echo "      -r | --run  [cpp | spec]  select what tests you want to run"
     echo "                                by default all tests are run"
+    echo "      -f | --fail               run tests that should fail. This will"
+    echo "                                not happen by default. Should be used"
+    echo "                                when spec tests are enabled."
     echo "      -v | --verbose            enable verbose output (set -v)"
     echo ""
 }
 
 RUN_CPP=1
 RUN_SPEC=1
+RUN_FAIL=0
 
 # check options
 while [[ $# -gt 0 ]]; do
@@ -31,6 +35,10 @@ while [[ $# -gt 0 ]]; do
         ;;
     "-v" | "--verbose")
         set -v
+        shift
+        ;;
+    "-f" | "--fail")
+        RUN_FAIL=1
         shift
         ;;
     *)
@@ -164,34 +172,54 @@ for prog in $WASM_DIR/*.wasm; do
     fi
     ((count++))
 done
-# for prog in $WASM_DIR/fail/*.wasm; do
-#     >tempfile # truncate file
-#     ./cwasm $prog &>tempfile
-#     EXITCODE=$?
-#     if [ $EXITCODE -ne 0 ]; then
-#         ((col++))
-#         test $col -eq 51 && printf " (${count} / ${total})" && echo "" && col=1
-#         printf '.'
-#     else
-#         printf 'X'
-#         NAME=$(basename $prog)
-#         FAILED_TESTS="${FAILED_TESTS}\n ${NAME}"
-#         echo
-#         cat tempfile
-#         msg=$(cat $WASM_DIR/fail/msg/$prog)
-#         echo "test should fail: $msg"
-#         break
-#     fi
-#     ((count++))
-# done
 
-echo -e "\n\n"
+echo ""
+echo ""
+
+if [ $RUN_FAIL -eq 1 ]; then
+# run the tests that should fail
+echo "----------------------------------------------------"
+echo -e "${GREEN}Running tests that should fail:${NC}"
+echo "----------------------------------------------------"
+
+    count2=0
+    total2=$(ls -1 $WASM_DIR/fail/*.wasm | wc -l)
+    col2=0
+    for prog in $WASM_DIR/fail/*.wasm; do
+        >tempfile # truncate file
+        ./cwasm $prog &>tempfile
+        EXITCODE=$?
+        if [ $EXITCODE -ne 0 ]; then
+            ((col2++))
+            test $col2 -eq 51 && printf " (${count2} / ${total2})" && echo "" && col2=1
+            printf '.'
+        else
+            printf 'X'
+            NAME=$(basename $prog)
+            FAILED_TESTS="${FAILED_TESTS}\n ${NAME}"
+            echo
+            cat tempfile
+            # TODO?: This would be nice in the future
+            # msg=$(cat $WASM_DIR/fail/msg/$prog)
+            # echo "test should fail: $msg"
+            break
+        fi
+        ((count++))
+    done
+else
+    count2=0
+    total2=0
+fi
 
 # Print results
 if [ "$FAILED_TESTS" == " " ]; then
-    echo -e "${GREEN}\u2714 All ${count}/${total} tests passed!${NC}"
+    all_count=$(( count + count2))
+    all_total=$(( total + total2))
+    echo -e "${GREEN}\u2714 All ${all_count}/${all_total} tests passed!${NC}"
 else
     echo -e "${RED}-- 💩 FAILED TESTS 💩 --${NC}"
     echo -e $FAILED_TESTS
     echo -e "${RED}----------------------${NC}"
 fi
+
+echo ""
