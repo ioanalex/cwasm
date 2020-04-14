@@ -63,8 +63,14 @@ void UpdateContext(vec<type::Value> &locals, vec<type::Value> &labels) {
   context.locals.resize(locals.size());
   std::copy(locals.begin(), locals.end(), context.locals.begin());
 
-  context.labels.resize(labels.size());
-  std::copy(labels.begin(), labels.end(), context.labels.begin());
+  // is labels are empty we should add a label of type Result::none
+  if (labels.empty()) {
+    context.labels.resize(1);
+    context.labels[0] = type::Result();
+  } else {
+    context.labels.resize(labels.size());
+    std::copy(labels.begin(), labels.end(), context.labels.begin());
+  }
 
   context.return_ = type::Result();
 }
@@ -74,8 +80,14 @@ void UpdateContext(vec<type::Value> &locals, vec<type::Value> &labels,
   context.locals.resize(locals.size());
   std::copy(locals.begin(), locals.end(), context.locals.begin());
 
-  context.labels.resize(labels.size());
-  std::copy(labels.begin(), labels.end(), context.labels.begin());
+  // is labels are empty we should add a label of type Result::none
+  if (labels.empty()) {
+    context.labels.resize(1);
+    context.labels[0] = type::Result();
+  } else {
+    context.labels.resize(labels.size());
+    std::copy(labels.begin(), labels.end(), context.labels.begin());
+  }
 
   context.return_ = return_;
 }

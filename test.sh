@@ -10,8 +10,8 @@ CORE_TEST_DIR=$SRCS_DIR/core-tests
 WASM_DIR=$TEST_DIR/bins
 
 # colors for output
-RED='\033[91;1m'
-GREEN='\033[92;1m'
+RED='\033[31;1m'
+GREEN='\033[32;1m'
 NC='\033[0m' # No Color
 
 # check for emscripten compiler
@@ -44,11 +44,11 @@ cd $ROOT_DIR
 
 # There are 74 tests (which expand to more later).
 # Let's count the number of .bin.wast files
-num=$(ls -1 *.bin.wast | wc -l)
-if [ num -neq 74 ]; then
+num=$(ls -1 $CORE_TEST_DIR/*.bin.wast | wc -l)
+if [ $num != "74" ]; then
     printf "${GREEN}The bin.wast files need a refresh fou you want to remake them?[y/N](default: N):${NC}"
     read -r ans
-    if [ ans -eq 'y' ]; then
+    if [ $ans == 'y' ]; then
         printf "absolute path to SPEC WASM interpreter: " && read WASMI
         printf "absolute path to spec tests (core): " && read SPEC_CORE_DIR
 
@@ -93,7 +93,7 @@ echo -e "\n\n"
 
 # Print results
 if [ "$FAILED_TESTS" == " " ]; then
-    echo -e "${GREEN}All tests passed!${NC}"
+    echo -e "${GREEN}All $(ls -1 $WASM_DIR | wc -l) tests passed!${NC}"
 else
     echo -e "${RED}-- FAILED TESTS --${NC}"
     echo -e $FAILED_TESTS

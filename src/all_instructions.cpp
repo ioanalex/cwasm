@@ -188,7 +188,8 @@ bool Br_If::validate() {
 
 bool Br_Table::validate() {
   // 1. check context
-  if (context.labels.size() <= this->labelN) warn("Label is not defined\n");
+  if (context.labels.size() <= this->labelN)
+    warn("Label is not defined size:%ld\n", context.labels.size());
   // The following statement performs the same check as above, but based on the
   // control stack. This is redundant but is a good sanity check for our
   // datastructures (this is why the first if just warns)
