@@ -40,8 +40,10 @@ void PrintModule(Module &mod) {
 void load_module(Module &mod, byte *bytes, u32 byte_count) {
   pos = 0;
   u32 word = read_u32(bytes, pos);
+  ASSERT(word == 1836278016, "magic number is wrong\n");
   std::cout << "module magic word is " << word << std::endl;
   word = read_u32(bytes, pos);
+  ASSERT(word == 1, "version is wrong\n");
   std::cout << "module version is " << word << std::endl;
 
   while (pos < byte_count) {
