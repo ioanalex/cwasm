@@ -13,6 +13,8 @@
 /tempfile
 /.vscode
 
+/check.sh
+
 # Backup files etc.
 
 *~
