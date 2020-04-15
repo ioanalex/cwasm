@@ -214,7 +214,7 @@ class Select : public InstrImpl {
 
 // define useful macro for classes that have the same constructor
 #define SAME_CONSTR(derived, base) \
-  derived(byte *bytes, u32 *pos) : base(bytes, pos) {}
+  derived(byte *bytes, u32 *pos) : base(bytes, pos)
 // end of macro
 
 // ---------------------- LOCAL ----------------------
@@ -228,21 +228,21 @@ public:
 
 class LocalGet : public Local {
 public:
-  SAME_CONSTR(LocalGet, Local)
+  SAME_CONSTR(LocalGet, Local) {}
   void run() {}
   bool validate();
 };
 
 class LocalSet : public Local {
 public:
-  SAME_CONSTR(LocalSet, Local)
+  SAME_CONSTR(LocalSet, Local) {}
   void run() {}
   bool validate();
 };
 
 class LocalTee : public Local {
 public:
-  SAME_CONSTR(LocalTee, Local)
+  SAME_CONSTR(LocalTee, Local) {}
   void run() {}
   bool validate();
 };
@@ -259,14 +259,14 @@ public:
 
 class GlobalGet : public Global {
 public:
-  SAME_CONSTR(GlobalGet, Global);
+  SAME_CONSTR(GlobalGet, Global) { set_const(); }
   void run() {}
   bool validate();
 };
 
 class GlobalSet : public Global {
 public:
-  SAME_CONSTR(GlobalSet, Global);
+  SAME_CONSTR(GlobalSet, Global) {}
   void run() {}
   bool validate();
 };
@@ -330,6 +330,7 @@ class Const : public ImmediateImpl<Value> {
 public:
   Const(byte *bytes, u32 *pos, type::Value type)
       : ImmediateImpl<Value>((*pos)++) {
+    set_const();
     // TODO: write read_value function based on type..
     // This code repeats (parse.cpp:const_eval)
     switch (type) {

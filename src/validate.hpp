@@ -78,8 +78,12 @@ frame n_frame(int n);
 
 namespace Validate {
 bool expr(Expr&);
+bool limits(type::Limits&, u32);
 bool func(Func&);
 bool funcs(Module&);
+bool tables(Module&);
+bool mems(Module &);
+bool globals(Module &);
 }  // namespace Validate
 
 #endif

@@ -101,13 +101,11 @@ void load_module(Module &mod, byte *bytes, u32 byte_count) {
                         << std::endl;
               break;
             case importdesc::TABLE:
-              std::cout << "TABLE :: from "
-                        << mod.imports[i].desc.table.limits.min << " to "
-                        << mod.imports[i].desc.table.limits.max << std::endl;
+              std::cout << "TABLE :: " << mod.imports[i].desc.table.limits
+                        << std::endl;
               break;
             case importdesc::MEM:
-              std::cout << "MEM :: from " << mod.imports[i].desc.mem.limits.min
-                        << " to " << mod.imports[i].desc.mem.limits.max
+              std::cout << "MEM :: " << mod.imports[i].desc.mem.limits
                         << std::endl;
               break;
             case importdesc::GLOBAL:
@@ -140,8 +138,7 @@ void load_module(Module &mod, byte *bytes, u32 byte_count) {
 #if DEBUG
         std::cout << "----- TABLES -----\n";
         for (unsigned int i = 0; i < mod.tables.size(); i++)
-          std::cout << "TABLE :: from " << mod.tables[i].type.limits.min
-                    << " to " << mod.tables[i].type.limits.max << std::endl;
+          std::cout << "TABLE :: " << mod.tables[i].type.limits << std::endl;
         std::cout << "----- ------ -----\n";
 #endif
         break;
@@ -153,8 +150,7 @@ void load_module(Module &mod, byte *bytes, u32 byte_count) {
 #if DEBUG
         std::cout << "----- MEMORIES -----\n";
         for (unsigned int i = 0; i < mod.mems.size(); i++)
-          std::cout << "MEM :: from " << mod.mems[i].type.limits.min << " to "
-                    << mod.mems[i].type.limits.max << std::endl;
+          std::cout << "MEM :: " << mod.mems[i].type.limits << std::endl;
         std::cout << "----- -------- -----\n";
 #endif
         break;
@@ -166,9 +162,7 @@ void load_module(Module &mod, byte *bytes, u32 byte_count) {
 #if DEBUG
         std::cout << "----- GLOBALS -----\n";
         for (unsigned int i = 0; i < mod.globals.size(); i++)
-          std::cout << "GLOBAL ::  " << mod.globals[i].type.value
-                    << (mod.globals[i].type.mut ? " (mut)" : "") << " init to "
-                    << mod.globals[i].init << std::endl;
+          std::cout << "GLOBAL ::  " << mod.globals[i] << std::endl;
         std::cout << "----- ------- -----\n";
 #endif
         break;
@@ -188,28 +182,19 @@ void load_module(Module &mod, byte *bytes, u32 byte_count) {
                         << std::endl;
               break;
             case importdesc::TABLE:
-              std::cout << "TABLE :: from "
-                        << mod.tables[mod.exports[i].desc.table].type.limits.min
-                        << " to "
-                        << mod.tables[mod.exports[i].desc.table].type.limits.max
+              std::cout << "TABLE :: "
+                        << mod.tables[mod.exports[i].desc.table].type.limits
                         << std::endl;
               break;
             case importdesc::MEM:
-              std::cout << "MEM :: from "
-                        << mod.mems[mod.exports[i].desc.mem].type.limits.min
-                        << " to "
-                        << mod.mems[mod.exports[i].desc.mem].type.limits.max
+              std::cout << "MEM :: "
+                        << mod.mems[mod.exports[i].desc.mem].type.limits
                         << std::endl;
               break;
             case importdesc::GLOBAL:
               // TODO: uncomment when globals are parsed (seg fault here)
               std::cout << "GLOBAL :: "
-                        << mod.globals[mod.exports[i].desc.global].type.value
-                        << (mod.globals[mod.exports[i].desc.global].type.mut
-                                ? "(mut)"
-                                : "")
-                        << mod.globals[mod.exports[i].desc.global].init
-                        << std::endl;
+                        << mod.globals[mod.exports[i].desc.global] << std::endl;
               break;
           }
         }

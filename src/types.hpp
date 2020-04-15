@@ -91,10 +91,12 @@ inline std::ostream &operator<<(std::ostream &os, const Func &v) {
 
 struct Limits {
   u32 min;
-  u32 max = empty_u32;
+  std::optional<u32> max;
 };
 inline std::ostream &operator<<(std::ostream &os, const Limits &l) {
-  return os << "from " << l.min << " to " << l.max;
+  os << "from " << l.min;
+  if (l.max.has_value()) os << "to" << l.max.value();
+  return os;
 }
 
 struct Memory {

@@ -44,9 +44,12 @@ int main(int argc, char *argv[]) {
 
   InitContext(m);
   // PrintContext();
-  PrintModule(m);
 
-  Validate::funcs(m);
+  bool res = Validate::funcs(m);
+  res &= Validate::tables(m);
+  res &= Validate::mems(m);
+  res &= Validate::globals(m);
+  if (!res) FATAL("VALIDATION FAILED\n");
   // Validate::func(m.funcs[17]);
 
   // std::cout << "--------- COMMANDS THAT WERE NOT USED ---------\n";

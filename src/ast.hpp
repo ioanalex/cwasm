@@ -56,12 +56,14 @@ struct Memarg {
 // Globals
 struct Global {
   type::Global type;
-  Value init;
+  Expr init;
   Global(type::Global type) : type(type) {}
-  Global(type::Global type, Value init) : type(type), init(init) {}
+  // Global(type::Global type, Expr init) : type(type), init(init) {}
 };
 inline std::ostream &operator<<(std::ostream &os, const Global &g) {
-  return os << g.type << " " << g.init << std::endl;
+  os << g.type << std::endl;
+  printvec(g.init, 2);
+  return os;
 }
 
 struct Elem {

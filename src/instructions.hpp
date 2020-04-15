@@ -10,10 +10,13 @@
 class InstrImpl {
 public:
   explicit InstrImpl(u32 pos) : pos_(pos), code_(bytes[pos]) {}
+
   virtual ~InstrImpl() {}
 
   u32 pos() const { return pos_; }
   u32 code() const { return code_; }
+  bool is_const() const { return is_const_; }
+  void set_const() { is_const_ = true; }
 
   // TODO: takes a Store.
   virtual void run() = 0;
@@ -23,6 +26,7 @@ public:
 private:
   u32 pos_;  // Index in bytecode
   byte code_;
+  bool is_const_ = false;
 };
 
 class Instr {
@@ -40,9 +44,9 @@ public:
   static Instr create(byte *, u32 *);  // called when parsing
   u32 pos() const { return impl->pos(); }
   u32 code() const { return impl->code(); }
-
   // TODO: takes a Store.
   void run() { impl->run(); }
+  bool is_const() { return impl->is_const(); }
   // TODO: takes a Context.
   bool validate() {
     std::cout << "(0x" << std::hex << code() << std::dec << ") "

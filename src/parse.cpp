@@ -114,6 +114,7 @@ type::Global parse_globaltype(byte *bytes, u32 *pos) {
   // }
   // debug("<<<<<<<<<<<<<<<<\n");
   global.value = parse_valtype(bytes, pos);
+  ASSERT(bytes[*pos] < 0x02, "mut can be either 0 or 1, malformed\n");
   global.mut = (bytes[*pos] == 0x01);
   *pos = *pos + 1;
   return global;
@@ -242,11 +243,12 @@ void parse_globals(byte *bytes, u32 *pos, vec<Global> *globals) {
   u32 global_count = read_LEB(bytes, pos, 32);
   for (unsigned int i = 0; i < global_count; i++) {
     type::Global globaltype = parse_globaltype(bytes, pos);
-    // Expr e = parse_expr(bytes, pos);  TODO: should I const eval the expr,
-    // or just keep a pointer to the bytecode
-    // for later? How should we define Expr?
-    Value v = const_eval(bytes, pos, *globals);
-    globals->emplace_back(Global(globaltype, v));
+
+    // we donot const_eval anything, just store the instructions
+    // after the validation we can const eval (don't use the function
+    // above, write a better one)
+    globals->emplace_back(Global(globaltype));
+    parse_expr(globals->back().init, bytes, pos);
   }
 }
 

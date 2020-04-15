@@ -255,6 +255,76 @@ void unreachable() {
   ctrls.back().unreachable = true;
 }
 
+/* ----------------------------
+ * ---- namespace Validate ----
+ * ----------------------------
+ */
+
+bool Validate::limits(type::Limits &l, u32 range) {
+  bool min_range = l.min <= range;
+  bool min_max = true;
+  bool max_range = true;
+  if (l.max.has_value()) {
+    max_range = l.max.value() <= range;
+    min_max = l.min <= l.max.value();
+  }
+  // debug("range: %u\n", range);
+  // debug("min: %u   max:%u\n", l.min, (l.max.has_value()) ? l.max.value() :
+  // -1);
+  if (!min_range) warn("size minimum must not be greater than %u\n", range);
+  if (!max_range) warn("size maximum must not be greater than %u\n", range);
+  if (!min_max) warn("size minimum must not be greater than maximum\n");
+
+  return min_range && max_range && min_max;
+}
+
+bool Validate::tables(Module &m) {
+  if (m.tables.size() > 1) {
+    warn("multiple tables\n");
+    return false;
+  }
+  // this for loop is not needed, but it is correct
+  // keep it like this in case more tables are allowed
+  // in the futute
+  for (auto &table : m.tables)
+    return Validate::limits(table.type.limits, 0xFFFFFFFF);
+
+  return true;
+}
+
+bool Validate::mems(Module &m) {
+  if (m.mems.size() > 1) {
+    warn("multiple memories\n");
+    return false;
+  }
+  // same as tables. The loop is not needed
+  for (auto &mem : m.mems) return Validate::limits(mem.type.limits, 0x10000);
+  return true;
+}
+
+bool Validate::globals(Module &m) {
+  for (auto &g : m.globals) {
+    // 1. g.type ust be valid with type mut t -- always true
+    type::Value t = g.type.value;
+    // 2. the init expr must be valid with type t
+    type::Result r(t);
+    valtype vt = res2valtype(r);
+    push_ctrl(vec<valtype>({vt}), vec<valtype>({vt}));
+    bool is_init_valid = Validate::expr(g.init);
+    if (!is_init_valid) {
+      warn("invalid init expr in global\n");
+      return false;
+    }
+    for (auto &i : g.init) {
+      if (!i.is_const() && i.code() != 0x0b) {
+        warn("non const instruction in global\n");
+        return false;
+      }
+    }
+  }
+  return true;
+}
+
 bool Validate::funcs(Module &m) {
   iloop(m.funcs) {
     if (m.funcs[i].body.empty()) continue;  // this is an imported function
