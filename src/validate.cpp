@@ -325,6 +325,69 @@ bool Validate::globals(Module &m) {
   return true;
 }
 
+bool Validate::elems(Module &m) {
+  for (auto &e : m.elem) {
+    // 1. check that e.table is defined
+    if (e.table >= m.tables.size()) {
+      warn("uknown table\n");
+      return false;
+    }
+
+    // 2. check that offset is a valid expr with type i32
+    push_ctrl(vec<valtype>({valtype::I32}), vec<valtype>({valtype::I32}));
+    bool is_offset_valid = Validate::expr(e.offset);
+    if (!is_offset_valid) {
+      warn("type mismatch\n");
+      return false;
+    }
+
+    // 3. make sure offset is a constant expr
+    for (auto &i : e.offset) {
+      if (!i.is_const() && i.code() != 0x0b) {
+        warn("constant expression required\n");
+        return false;
+      }
+    }
+
+    // 4. make sure all funcidxs are defined
+    for (auto &y : e.init) {
+      if (y >= m.funcs.size()) {
+        warn("unknown function\n");
+        return false;
+      }
+    }
+  }
+  return true;
+}
+
+bool Validate::datas(Module &m) {
+  for (auto &d : m.data) {
+    // 1. check that the memory is defined
+    if (d.data >= m.mems.size()) {
+      warn("unknown memory\n");
+      return false;
+    }
+
+    // 2. check that offset is a valid expr with type i32
+    push_ctrl(vec<valtype>({valtype::I32}), vec<valtype>({valtype::I32}));
+    bool is_offset_valid = Validate::expr(d.offset);
+    if (!is_offset_valid) {
+      warn("type mismatch\n");
+      return false;
+    }
+
+    // 3. make sure offset is a constant expr
+    for (auto &i : d.offset) {
+      if (!i.is_const() && i.code() != 0x0b) {
+        warn("constant expression required\n");
+        return false;
+      }
+    }
+  }
+
+  return true;
+}
+
 bool Validate::funcs(Module &m) {
   iloop(m.funcs) {
     if (m.funcs[i].body.empty()) continue;  // this is an imported function

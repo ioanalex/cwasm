@@ -300,12 +300,14 @@ void parse_elems(byte *bytes, u32 *pos, vec<Elem> *elems,
   u32 elem_count = read_LEB(bytes, pos, 32);
   for (unsigned int i = 0; i < elem_count; i++) {
     tableidx x(parse_idx(bytes, pos));
-    Value v = const_eval(bytes, pos, globals);
+    elems->emplace_back(Elem(x));
+
+    parse_expr(elems->back().offset, bytes, pos);
+
     u32 func_count = read_LEB(bytes, pos, 32);
-    vec<funcidx> funcs;
+    vec<funcidx> &funcs = elems->back().init;
     for (unsigned int j = 0; j < func_count; j++)
       funcs.emplace_back(funcidx(parse_idx(bytes, pos)));
-    elems->emplace_back(Elem(x, v, funcs));
   }
 }
 
@@ -347,10 +349,13 @@ void parse_datas(byte *bytes, u32 *pos, vec<Data> *datas,
   u32 data_count = read_LEB(bytes, pos, 32);
   for (unsigned int i = 0; i < data_count; i++) {
     memidx x(parse_idx(bytes, pos));
-    Value v = const_eval(bytes, pos, globals);
+    datas->emplace_back(Data(x));
+
+    parse_expr(datas->back().offset, bytes, pos);
+
     u32 byte_count = read_LEB(bytes, pos, 32);
     vec<byte> bs(bytes + *pos, bytes + *pos + byte_count);
     *pos += byte_count;
-    datas->emplace_back(Data(x, v, bs));
+    datas->back().init = bs;
   }
 }

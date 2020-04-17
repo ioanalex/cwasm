@@ -49,6 +49,8 @@ int main(int argc, char *argv[]) {
   res &= Validate::tables(m);
   res &= Validate::mems(m);
   res &= Validate::globals(m);
+  res &= Validate::elems(m);
+  res &= Validate::datas(m);
   if (!res) FATAL("VALIDATION FAILED\n");
   // Validate::func(m.funcs[17]);
 

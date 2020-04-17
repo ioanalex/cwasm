@@ -68,20 +68,20 @@ inline std::ostream &operator<<(std::ostream &os, const Global &g) {
 
 struct Elem {
   tableidx table;  // Currently only one table is allowed so tableidx must be 0
-  Value offset;    // The offset is given by a constant expression that is
+  Expr offset;     // The offset is given by a constant expression that is
                    // evaluated to a value
   vec<funcidx> init;
-  Elem(tableidx table, Value offset, vec<funcidx> &init)
-      : table(table), offset(offset), init(init) {}
+  Elem(tableidx table) : table(table) {}
+  // Elem(tableidx table, Expr &offset, vec<funcidx> &init)
+  //     : table(table), offset(offset), init(init) {}
 };
 
 // Data Segments
 struct Data {
   memidx data;
-  Value offset;
+  Expr offset;
   vec<byte> init;
-  Data(memidx &data, Value &offset, vec<byte> &init)
-      : data(data), offset(offset), init(init) {}
+  Data(memidx &data) : data(data) {}
 };
 
 // Start Function

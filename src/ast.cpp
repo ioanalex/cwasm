@@ -224,8 +224,12 @@ void load_module(Module &mod, byte *bytes, u32 byte_count) {
 #if DEBUG
         std::cout << "----- ELEMENTS -----\n";
         for (unsigned int i = 0; i < mod.elem.size(); i++) {
-          std::cout << "ELEM :: table " << mod.elem[i].table << " at "
-                    << mod.elem[i].offset << " has funcs:" << std::endl;
+          std::cout << "ELEM :: table " << mod.elem[i].table
+                    << " offset (expr of #" << mod.elem[i].offset.size()
+                    << "): " << std::endl;
+          for (auto &of : mod.elem[i].offset)
+            std::cout << "\t\t" << of << std::endl;
+          std::cout << " has funcs:" << std::endl;
           for (unsigned int j = 0; j < mod.elem[i].init.size(); j++)
             std::cout << "\t" << mod.elem[i].init[j] << " :: "
                       << mod.types[mod.funcs[mod.elem[i].init[j]].type]
@@ -252,9 +256,14 @@ void load_module(Module &mod, byte *bytes, u32 byte_count) {
         std::cout << "----- DATAS -----\n";
         for (unsigned int i = 0; i < mod.data.size(); i++) {
           std::string content(mod.data[i].init.begin(), mod.data[i].init.end());
-          std::cout << "DATA :: mem " << mod.data[i].data << " at "
-                    << mod.data[i].offset << " has " << content.size()
-                    << " byte(s):" << std::hex << std::endl;
+          std::cout << "DATA :: mem " << mod.data[i].data
+                    << " offset (expr of #" << mod.data[i].offset.size() << ")"
+                    << std::endl;
+          for (auto &of : mod.data[i].offset)
+            std::cout << "\t\t" << of << std::endl;
+
+          std::cout << " has " << content.size() << " byte(s):" << std::hex
+                    << std::endl;
           char old_fill = std::cout.fill('0');
           for (int n = 0; n < content.size(); n += 20) {
             std::cout << "  ";

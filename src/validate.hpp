@@ -82,8 +82,10 @@ bool limits(type::Limits&, u32);
 bool func(Func&);
 bool funcs(Module&);
 bool tables(Module&);
-bool mems(Module &);
-bool globals(Module &);
+bool mems(Module&);
+bool globals(Module&);
+bool elems(Module&);
+bool datas(Module&);
 }  // namespace Validate
 
 #endif
