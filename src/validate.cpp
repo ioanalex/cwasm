@@ -388,6 +388,28 @@ bool Validate::datas(Module &m) {
   return true;
 }
 
+bool Validate::start(Module &m) {
+  auto &start = m.start;
+  // if no start function is defined all is ok!
+  if (!start.has_value()) return true;
+
+  // 1. check that the function is defined
+  if (start.value() >= m.funcs.size()) {
+    warn("unknown function\n");
+    return false;
+  }
+  auto &fidx = start.value();
+
+  // 2. check that the function has type [] -> []
+  auto &ftype = m.types[m.funcs.at(fidx).type];
+  if (!ftype.args.empty() || !ftype.result.empty()) {
+    warn("wrong return type\n");
+    return false;
+  }
+
+  return true;
+}
+
 bool Validate::funcs(Module &m) {
   iloop(m.funcs) {
     if (m.funcs[i].body.empty()) continue;  // this is an imported function

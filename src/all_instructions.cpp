@@ -1,5 +1,7 @@
 #include "all_instructions.hpp"
 
+#include <math.h>
+
 #include "validate.hpp"
 
 extern Context context;
@@ -356,12 +358,58 @@ bool GlobalSet::validate() {
   return true;
 }
 
-VALIDATE_BY_TYPE(Load)
-VALIDATE_BY_TYPE(Store)
-VALIDATE_BY_TYPE(MemorySize)
-VALIDATE_BY_TYPE(MemoryGrow)
+#define CHECK_MEM()              \
+  if (context.mems.size() < 1) { \
+    warn("unknown memory\n");    \
+    return false;                \
+  }
+#define CHECK_ALLIGN()                                                     \
+  auto &memarg = value;                                                    \
+  auto bitwidth = 32;                                                      \
+  if (type == type::Value::f64 || type == type::Value::i64) bitwidth = 64; \
+  if (opt.has_value()) {                                                   \
+    switch (opt.value().size) {                                            \
+      case _8:                                                             \
+        bitwidth = 8;                                                      \
+        break;                                                             \
+      case _16:                                                            \
+        bitwidth = 16;                                                     \
+        break;                                                             \
+      case _32:                                                            \
+        bitwidth = 32;                                                     \
+    }                                                                      \
+  }                                                                        \
+  if (pow(2, memarg.align) > bitwidth / 8) {                               \
+    warn("invalid align\n");                                               \
+    return false;                                                          \
+  }
+
+bool Load::validate() {
+  CHECK_MEM()
+  CHECK_ALLIGN()
+  return ByType(code());
+}
+
+bool Store::validate() {
+  CHECK_MEM()
+  CHECK_ALLIGN()
+  return ByType(code());
+}
+
+bool MemorySize::validate() {
+  CHECK_MEM()
+  return ByType(code());
+}
+
+bool MemoryGrow::validate() {
+  CHECK_MEM()
+  return ByType(code());
+}
+
 VALIDATE_BY_TYPE(Const)
 VALIDATE_BY_TYPE(Numeric)
 
 #undef VALIDATE_BY_TYPE
 #undef UNIMPLEMENTED
+#undef CHECK_MEM
+#undef CHECK_ALLIGN

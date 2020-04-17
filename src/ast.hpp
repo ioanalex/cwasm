@@ -154,7 +154,7 @@ struct Module {
         globals(),
         elem(),
         data(),
-        start(0),
+        start(),
         imports(),
         exports() {}
 };

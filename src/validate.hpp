@@ -86,6 +86,7 @@ bool mems(Module&);
 bool globals(Module&);
 bool elems(Module&);
 bool datas(Module&);
+bool start(Module&);
 }  // namespace Validate
 
 #endif
