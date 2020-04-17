@@ -20,8 +20,12 @@ make
 
 For the second type of tests the oficial github repo of the WebAssembly spec must cloned, because we need their interpreter implementation as well as their test files. 
 
+#### Disclaimer
+In order for the spec tests to run an older version of the spec is needed. This is what the `git checkout` command does. It creates a branch with the latest compatible version. 
+
 ```
 git clone https://github.com/WebAssembly/spec/
+git checkout -b old-state 704d9d9e9c861fdb957c3d5e928f1d046a31497e
 cd interpreter
 make
 ```
