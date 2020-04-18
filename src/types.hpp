@@ -28,7 +28,7 @@ constexpr u32 empty_u32 = u32(-1);
 
 namespace type {
 
-using Name = std::string;
+using Name = vec<byte>;
 
 enum class Value { i32, i64, f32, f64 };
 

@@ -1,5 +1,7 @@
 #include "validate.hpp"
 
+#include <algorithm>
+
 #include "util.hpp"
 
 Context context;
@@ -410,12 +412,103 @@ bool Validate::start(Module &m) {
   return true;
 }
 
+bool Validate::exports(Module &m) {
+  // store all names in this vector
+  vec<type::Name> names;
+  for (auto &ex : m.exports) {
+    auto &desc = ex.desc;
+    switch (desc.tag) {
+      case exportdesc::FUNC:
+        // check that the function is defined
+        if (desc.func >= m.funcs.size()) {
+          warn("unknown function\n");
+          return false;
+        }
+        break;
+      case exportdesc::TABLE:
+        // check that the table is defined
+        if (desc.table >= m.tables.size()) {
+          warn("unknown table\n");
+          return false;
+        }
+        break;
+      case exportdesc::MEM:
+        // check that the memory is defined
+        if (desc.mem >= m.mems.size()) {
+          warn("unknown memory\n");
+          return false;
+        }
+        break;
+      case exportdesc::GLOBAL:
+        // check that the global is defined
+        if (desc.global >= m.globals.size()) {
+          warn("unknown global\n");
+          return false;
+        }
+        break;
+    }
+
+    // add name to names
+    names.push_back(ex.name);
+  }
+
+  // sort the vector of names
+  std::sort(names.begin(), names.end());
+  auto it = std::unique(names.begin(), names.end());
+
+  bool was_unique = (it == names.end());
+  if (!was_unique) {
+    warn("duplicate export name\n");
+    for (auto &n : names) {
+      std::cout << string(n.begin(), n.end()) << std::endl;
+    }
+    return false;
+  }
+
+  return true;
+}
+
+bool Validate::imports(Module &m) {
+  for (auto &im : m.imports) {
+    auto &desc = im.desc;
+    switch (desc.tag) {
+      case importdesc::FUNC:
+        // check that the function is defined
+        if (desc.func >= m.funcs.size()) {
+          warn("unknown function\n");
+          return false;
+        }
+        break;
+      case importdesc::TABLE:
+        // validate the table type (limits)
+        if (!Validate::limits(desc.table.limits, 0xFFFFFFFF)) {
+          warn("invalid table\n");
+          return false;
+        }
+        break;
+      case importdesc::MEM:
+        // Validate the memory type
+        if (!Validate::limits(desc.mem.limits, 0x10000)) {
+          warn("invalid memory\n");
+          return false;
+        }
+        break;
+      case importdesc::GLOBAL:
+        // Validate the global type
+        // always valid, do nothing
+        break;
+    }
+  }
+
+  return true;
+}
+
 bool Validate::funcs(Module &m) {
   iloop(m.funcs) {
     if (m.funcs[i].body.empty()) continue;  // this is an imported function
-    std::cout << "Validating func " << m.funcs[i] << std::endl;
+    // std::cout << "Validating func " << m.funcs[i] << std::endl;
     bool is_ok = Validate::func(m.funcs[i]);
-    std::cout << "OK" << std::endl;
+    // std::cout << "OK" << std::endl;
     if (!is_ok) return false;
   }
   return true;
@@ -426,8 +519,10 @@ bool Validate::func(Func &f) {
   // opds.resize(0);
   // ctrls.resize(0);
   // 1. check context
-  if (f.type.value() >= context.types.size())
-    FATAL("the type %d is not defined\n", f.type.value());
+  if (f.type.value() >= context.types.size()) {
+    warn("the type %d is not defined\n", f.type.value());
+    return false;
+  }
   // 2. get the type from the context
   type::Func functype(context.types.at(f.type));
   // 3. update context (C') by getting locals, labels and return
@@ -438,20 +533,16 @@ bool Validate::func(Func &f) {
     push_ctrl(vec<valtype>(), vec<valtype>());
   } else if (functype.result.size() == 1) {
     type::Result ret(functype.result.front());
-    std::cout << "1" << std::endl;
     UpdateContext(newlocals, functype.result, ret);
-    std::cout << "1" << std::endl;
 
     // 4.1. add the initial frame to the control stack
     valtype res = res2valtype(ret);
     push_ctrl(vec<valtype>({res}), vec<valtype>({res}));
   } else {
-    FATAL("Functions can only return one value\n");
+    warn("Functions can only return one value\n");
+    return false;
   }
   // 4.2 . validate body
-  // std::cout << "changed context to:" << std::endl;
-  // PrintContext();
-
   bool res = Validate::expr(f.body);
 
   ASSERT(ctrls.empty(), "The control stack is not empty\n");
@@ -467,18 +558,19 @@ bool Validate::func(Func &f) {
     opds.pop_back();
   }
   // 5. result type of function
-  std::cout << "function validated with result type :: " << result << std::endl;
+  // std::cout << "function validated with result type :: " << result <<
+  // std::endl;
 
   return res;
 }
 
 bool Validate::expr(Expr &ex) {
-  std::cout << ex.size() << " instructions to validate" << std::endl;
+  // std::cout << ex.size() << " instructions to validate" << std::endl;
   for (auto i = 0; i < ex.size(); i++) {
     if (!(ex[i].validate())) return false;
     PrintStacks();
   }
-  debug("finished with body\n");
+  // debug("finished with body\n");
   PrintStacks();
   return true;
 }

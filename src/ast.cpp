@@ -11,7 +11,6 @@
 #include "util.hpp"
 
 u32 pos;
-
 static const char *section_names[] = {
     "Custom",    // 0
     "Type",      // 1
@@ -25,6 +24,20 @@ static const char *section_names[] = {
     "Element",   // 9 !
     "Code",      // 10 !
     "Data"       // 11 !
+};
+static bool sections[] = {
+    false,  // Custom
+    false,  // Type
+    false,  // Import
+    false,  // Function
+    false,  // Table
+    false,  // Memory
+    false,  // Global
+    false,  // Export
+    false,  // Start
+    false,  // Element
+    false,  // Code
+    false   // Data
 };
 
 void PrintModule(Module &mod) {
@@ -50,8 +63,12 @@ void load_module(Module &mod, byte *bytes, u32 byte_count) {
     u32 id = read_LEB(bytes, &pos, 7);
     u32 slen = read_LEB(bytes, &pos, 32);
 
-    debug("Reading %s section at 0x%x, length %d\n", section_names[id], pos,
-          slen);
+    warn("Reading (%d) %s section at 0x%x, length %d\n", id, section_names[id],
+         pos, slen);
+    if (sections[id]) {
+      FATAL("section repeats");
+    }
+    sections[id] = true;
     // pos += slen;
     switch (id) {
       case 0:
@@ -99,8 +116,7 @@ void load_module(Module &mod, byte *bytes, u32 byte_count) {
                     << " of type ";
           switch (mod.imports[i].desc.tag) {
             case importdesc::FUNC:
-              std::cout << "FUNC :: " << mod.types[mod.imports[i].desc.func]
-                        << std::endl;
+              std::cout << "FUNC :: @" << mod.imports[i].desc.func << std::endl;
               break;
             case importdesc::TABLE:
               std::cout << "TABLE :: " << mod.imports[i].desc.table.limits
@@ -179,24 +195,18 @@ void load_module(Module &mod, byte *bytes, u32 byte_count) {
           std::cout << "EXPORT " << mod.exports[i].name << " of type ";
           switch (mod.exports[i].desc.tag) {
             case importdesc::FUNC:
-              std::cout << "FUNC :: "
-                        << mod.types[mod.funcs[mod.exports[i].desc.func].type]
-                        << std::endl;
+              std::cout << "FUNC @ " << mod.exports[i].desc.func << std::endl;
               break;
             case importdesc::TABLE:
-              std::cout << "TABLE :: "
-                        << mod.tables[mod.exports[i].desc.table].type.limits
-                        << std::endl;
+              std::cout << "TABLE @ " << mod.exports[i].desc.table << std::endl;
               break;
             case importdesc::MEM:
-              std::cout << "MEM :: "
-                        << mod.mems[mod.exports[i].desc.mem].type.limits
-                        << std::endl;
+              std::cout << "MEM @ " << mod.exports[i].desc.mem << std::endl;
               break;
             case importdesc::GLOBAL:
               // TODO: uncomment when globals are parsed (seg fault here)
-              std::cout << "GLOBAL :: "
-                        << mod.globals[mod.exports[i].desc.global] << std::endl;
+              std::cout << "GLOBAL @ " << mod.exports[i].desc.global
+                        << std::endl;
               break;
           }
         }

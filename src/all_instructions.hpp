@@ -305,7 +305,7 @@ LOAD_STORE(Store)
 class MemorySize : public InstrImpl {
 public:
   MemorySize(u32 *pos) : InstrImpl((*pos)++) {
-    warn("MEMORYSIZEINSTR\n");
+    ASSERT(bytes[*pos] == 0x00, "memory.size reserved byte should be 0\n");
     (*pos)++;
   }
   void run() {}
@@ -315,7 +315,7 @@ public:
 class MemoryGrow : public InstrImpl {
 public:
   MemoryGrow(u32 *pos) : InstrImpl((*pos)++) {
-    warn("MEMORYGROWINSTR\n");
+    ASSERT(bytes[*pos] == 0x00, "memory.grow reserved byte should be 0\n");
     (*pos)++;
   }
   void run() {}

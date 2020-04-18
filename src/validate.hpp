@@ -87,6 +87,8 @@ bool globals(Module&);
 bool elems(Module&);
 bool datas(Module&);
 bool start(Module&);
+bool exports(Module&);
+bool imports(Module&);
 }  // namespace Validate
 
 #endif

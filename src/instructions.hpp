@@ -49,8 +49,8 @@ public:
   bool is_const() { return impl->is_const(); }
   // TODO: takes a Context.
   bool validate() {
-    std::cout << "(0x" << std::hex << code() << std::dec << ") "
-              << profiles[code()].get_name() << std::endl;
+    // std::cout << "(0x" << std::hex << code() << std::dec << ") "
+    //           << profiles[code()].get_name() << std::endl;
     bool b = impl->validate();
     return b;
   }

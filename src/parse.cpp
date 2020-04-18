@@ -142,17 +142,19 @@ Memarg parse_memarg(byte *bytes, u32 *pos) {
 }
 
 void parse_expr(Expr &e, byte *bytes, u32 *pos) {
+  warn("Enter -\n");
   unsigned int instr_count = 0;
   while (true) {
-    debug("Parsing instr[%d] at %x\n", instr_count, *pos);
+    warn("Parsing instr[%d] at %x\n", instr_count, *pos);
     e.emplace_back(Instr::create(bytes, pos));
+    warn("emplaced\n");
     if (e.back().code() == 0x0B) break;
     instr_count++;
 #if WAIT
     WaitEnter();
 #endif
   }
-
+  warn("Exit -\n");
   ASSERT(bytes[*pos - 1] == 0x0b, "Expressions end with the 0x0b code\n");
 }
 
@@ -323,12 +325,15 @@ void parse_codes(byte *bytes, u32 *pos, vec<Func> &funcs) {
     u32 size = read_LEB(bytes, pos, 32);
     USE(size);  // TODO: verification
     u32 locals_count = read_LEB(bytes, pos, 32);
-    debug("%d locals\n", locals_count);
+    warn("%d locals\n", locals_count);
     for (unsigned int j = 0; j < locals_count; j++) {
       u32 n = read_LEB(bytes, pos, 32);
+      ASSERT((int)n >= 0, "Overflow will not kill me!\n");
       type::Value t(parse_valtype(bytes, pos));
-      for (unsigned int k = 0; k < n; k++)
+      // warn("n = %d\n", (int)n);
+      for (unsigned int k = 0; k < n; k++) {
         funcs[i + imported_func_count].locals.push_back(t);
+      }
     }
 
 #if DEBUG
@@ -347,13 +352,16 @@ void parse_codes(byte *bytes, u32 *pos, vec<Func> &funcs) {
 void parse_datas(byte *bytes, u32 *pos, vec<Data> *datas,
                  vec<Global> &globals) {
   u32 data_count = read_LEB(bytes, pos, 32);
+  ASSERT((int)data_count >= 0, "Overflow will not kill me!\n");
   for (unsigned int i = 0; i < data_count; i++) {
     memidx x(parse_idx(bytes, pos));
     datas->emplace_back(Data(x));
 
     parse_expr(datas->back().offset, bytes, pos);
+    // warn("Expr, ok!\n");
 
     u32 byte_count = read_LEB(bytes, pos, 32);
+    ASSERT((int)byte_count >= 0, "Overflow will not kill me!\n");
     vec<byte> bs(bytes + *pos, bytes + *pos + byte_count);
     *pos += byte_count;
     datas->back().init = bs;

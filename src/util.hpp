@@ -17,11 +17,11 @@ std::vector<T> operator+(const std::vector<T> &a, const std::vector<T> &b) {
 template <typename T>
 inline void USE(T) {}
 
-#define DEBUG 1
+#define DEBUG 0
 #define INFO 1
 #define WARN 1
 #define WAIT 0
-#define PRINT_STACKS 1
+#define PRINT_STACKS 0
 #define FATAL(...)                                               \
   do {                                                           \
     fprintf(stderr, "Fatal Error(%s:%d): ", __FILE__, __LINE__); \

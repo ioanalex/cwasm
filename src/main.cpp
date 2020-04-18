@@ -52,8 +52,10 @@ int main(int argc, char *argv[]) {
   res &= Validate::elems(m);
   res &= Validate::datas(m);
   res &= Validate::start(m);
+  res &= Validate::exports(m);
+  res &= Validate::imports(m);
 
-  if (!res) FATAL("VALIDATION FAILED\n");
+  if (!res) FATAL("File: %s: VALIDATION FAILED\n", filename);
   // Validate::func(m.funcs[17]);
 
   // std::cout << "--------- COMMANDS THAT WERE NOT USED ---------\n";
