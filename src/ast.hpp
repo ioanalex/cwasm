@@ -11,17 +11,21 @@
 #include "util.hpp"
 #include "values.hpp"
 
-// Following the spec (Structure -> Modules)
-
 // Expressions
 using Expr = std::vector<Instr>;
 
 // Functions
 struct Func {
-  typeidx type;
-  vec<type::Value> locals;
-  Expr body;
+  //
+  const typeidx type;       // index to types array
+  vec<type::Value> locals;  // vector of locals
+  Expr body;                // the instructions
+
+  // Constructor
   Func(typeidx type) : type(type), locals(), body() {}
+
+  // Prints just the typeidx of the function, useful for development
+  inline string sDebug() const { return " D> f :: @" + type.value(); }
 };
 inline std::ostream &operator<<(std::ostream &os, const Func &f) {
   os << "func :: @" << f.type << std::endl << "\t\tlocals:" << std::endl;
@@ -33,8 +37,16 @@ inline std::ostream &operator<<(std::ostream &os, const Func &f) {
 
 // Tables
 struct Table {
-  type::Table type;
+  //
+  type::Table type;  // [min, max?] funcref
+
+  // Constructor
   Table(type::Table type) : type(type) {}
+
+  // Minimum debug string
+  inline string sDebug() const {
+    return " D> Table :: " /* TODO: add call to type::Table sDebug here */;
+  }
 };
 inline std::ostream &operator<<(std::ostream &os, const Table &t) {
   return os << t.type << std::endl;
@@ -42,12 +54,21 @@ inline std::ostream &operator<<(std::ostream &os, const Table &t) {
 
 // Memories
 struct Memory {
-  type::Memory type;
+  //
+  type::Memory type;  // [min, max?]
+
+  // Constructor
   Memory(type::Memory type) : type(type) {}
+
+  // Minimum debug string
+  inline string sDebug() const {
+    return " D> Memory :: " /* TODO: add call to type::Memory sDebug here */;
+  }
 };
 inline std::ostream &operator<<(std::ostream &os, const Memory &m) {
   return os << m.type << std::endl;
 }
+
 struct Memarg {
   u32 align;
   u32 offset;
@@ -55,10 +76,17 @@ struct Memarg {
 
 // Globals
 struct Global {
-  type::Global type;
-  Expr init;
+  //
+  type::Global type;  // (mut)Value
+  Expr init;          // the initialization expression for the global
+
+  // Constructor
   Global(type::Global type) : type(type) {}
-  // Global(type::Global type, Expr init) : type(type), init(init) {}
+
+  // Minimum debug string
+  inline string sDebug() const {
+    return " D> Global :: " /* TODO: add call to type::Global sDebug here */;
+  }
 };
 inline std::ostream &operator<<(std::ostream &os, const Global &g) {
   os << g.type << std::endl;
@@ -67,21 +95,40 @@ inline std::ostream &operator<<(std::ostream &os, const Global &g) {
 }
 
 struct Elem {
-  tableidx table;  // Currently only one table is allowed so tableidx must be 0
-  Expr offset;     // The offset is given by a constant expression that is
-                   // evaluated to a value
-  vec<funcidx> init;
+  //
+  const tableidx table;  // Index to the table vector (currently == 0)
+  Expr offset;           // The offset in the table - constant expression
+  vec<funcidx> init;     // function pointers to store in the table
+
+  // Constructor
   Elem(tableidx table) : table(table) {}
-  // Elem(tableidx table, Expr &offset, vec<funcidx> &init)
-  //     : table(table), offset(offset), init(init) {}
+
+  // Minimum debug string
+  inline string sDebug() const {
+    string s = " D> Elem :: Table#" + table.value();
+    s += "[ ";
+    for (const auto &f : init) s += std::to_string(f.value()) + " ";
+    s += "]";
+    return s;
+  }
 };
 
 // Data Segments
 struct Data {
-  memidx data;
-  Expr offset;
-  vec<byte> init;
+  //
+  const memidx data;  // Index to the memories vector (currently == 0)
+  Expr offset;        // The offset in the memory - constant expression
+  vec<byte> init;     // Initial data to store in the memory
+
+  // Constructor
   Data(memidx &data) : data(data) {}
+
+  // Minimum debug string
+  inline string sDebug() const {
+    string s = " D> Data :: Memory#" + data.value();
+    /* TODO: and the code from ast.cpp that prints the contents */
+    return s;
+  }
 };
 
 // Start Function
@@ -100,12 +147,40 @@ struct exportdesc {
   exportdesc(tableidx t) : tag(TABLE), table(t) {}
   exportdesc(memidx m) : tag(MEM), mem(m) {}
   exportdesc(globalidx g) : tag(GLOBAL), global(g) {}
+
+  // Minimum debug string
+  inline string sDebug() const {
+    string s = "";
+    switch (tag) {
+      case FUNC:
+        s += std::to_string(func.value());
+        break;
+      case TABLE:
+        s += std::to_string(table.value());
+        break;
+      case MEM:
+        s += std::to_string(mem.value());
+        break;
+      case GLOBAL:
+        s += std::to_string(global.value());
+        break;
+    }
+    return s;
+  }
 };
 
 struct Export {
-  type::Name name;
-  exportdesc desc;
+  //
+  type::Name name;  // Name of the exported item
+  exportdesc desc;  // Description
+
+  // Constructor
   Export(type::Name &name, exportdesc &desc) : name(name), desc(desc) {}
+
+  // Minimum debug string
+  inline string sDebug() const {
+    return "D> Export :: " + name2str(name) + " " + desc.sDebug();
+  }
 };
 
 // Imports
@@ -121,16 +196,45 @@ struct importdesc {
   importdesc(type::Table t) : tag(TABLE), table(t) {}
   importdesc(type::Memory m) : tag(MEM), mem(m) {}
   importdesc(type::Global g) : tag(GLOBAL), global(g) {}
+
+  // Minimum debug string
+  inline string sDebug() const {
+    string s = "";
+    switch (tag) {
+      case FUNC:
+        s += "func @" + std::to_string(func.value());
+        break;
+      case TABLE:
+        s += "table" /* TODO:call table.sDebug */;
+        break;
+      case MEM:
+        s += "memory" /* TODO:call mem.sDebug */;
+        break;
+      case GLOBAL:
+        s += "global" /* TODO:call global.sDebug */;
+        break;
+    }
+    return s;
+  }
 };
 
 struct Import {
+  //
   // Each import is labeled by a two-level name space, consisting of
   // a module name and a name for an entity within that module.
   type::Name module;
   type::Name name;
   importdesc desc;
+
+  // Constructor
   Import(type::Name &name, type::Name &mod, importdesc &desc)
       : module(mod), name(name), desc(desc) {}
+
+  // Minimum debug string
+  inline string sDebug() const {
+    return "D> Import :: " + name2str(module) + "." + name2str(name) + " " +
+           desc.sDebug();
+  }
 };
 
 // Module
@@ -159,6 +263,38 @@ struct Module {
         exports() {}
   void Load(byte *, u32);
   void Print();
+  // Minimum debug string
+  inline string sDebug() const {
+    string s = " MODULE>\n";
+    s += "  Types:\n";
+    // for (const auto &it : types) /* TODO: call the type::Func sDebug() here
+    // */
+    ;
+    s += "  Functions:\n";
+    for (const auto &it : funcs) s += "\t" + it.sDebug() + "\n";
+    s += "  Tables:\n";
+    for (const auto &it : tables) s += "\t" + it.sDebug() + "\n";
+    s += "  Memories:\n";
+    for (const auto &it : mems) s += "\t" + it.sDebug() + "\n";
+    s += "  Globals:\n";
+    for (const auto &it : globals) s += "\t" + it.sDebug() + "\n";
+    s += "  Elements:\n";
+    for (const auto &it : elem) s += "\t" + it.sDebug() + "\n";
+    s += "  Datas:\n";
+    for (const auto &it : data) s += "\t" + it.sDebug() + "\n";
+
+    s += " Start:\n";
+    if (start.has_value()) {
+      s += "starts with func :: @" + std::to_string(start.value());
+    }
+
+    s += "  Export:\n";
+    for (const auto &it : exports) s += "\t" + it.sDebug() + "\n";
+    s += "  Import:\n";
+    for (const auto &it : imports) s += "\t" + it.sDebug() + "\n";
+
+    return s;
+  }
 };
 
 #endif

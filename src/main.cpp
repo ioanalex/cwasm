@@ -26,7 +26,7 @@ int main(int argc, char *argv[]) {
   }
 
   char *filename = argv[1];
-
+  std::cout << "running > " + string(filename) << std::endl;
   fileptr = fopen(filename, "rb");
   fseek(fileptr, 0, SEEK_END);
   filelen = ftell(fileptr);

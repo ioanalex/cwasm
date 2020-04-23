@@ -28,8 +28,6 @@ constexpr u32 empty_u32 = u32(-1);
 
 namespace type {
 
-using Name = vec<byte>;
-
 enum class Value { i32, i64, f32, f64 };
 
 inline std::ostream &operator<<(std::ostream &os, const Value &v) {
@@ -132,7 +130,11 @@ struct Extern {
   };
 };
 
+using Name = vec<byte>;
 };  // namespace type
+inline string name2str(const type::Name &v) {
+  return string(v.begin(), v.end());
+}
 
 // get type::Value from the 32 bit binary code
 inline type::Value decode_type(u32 v) {
