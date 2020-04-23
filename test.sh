@@ -133,12 +133,12 @@ if [ $RUN_SPEC -eq 1 ]; then
         if [ $a -ne 0 ]; then
             b=$(ls -1 tests/bins/fail/${name}_module_* | wc -l)
             if [ ! $a -eq $b ]; then
-             echo -e "\033[31;1m👎 error:\033[0m file: ${name} has not been processed correctly"
-             exit 1
+                echo -e "\033[31;1m👎 error:\033[0m file: ${name} has not been processed correctly"
+                exit 1
             fi
         fi
     done
-    echo -e "\033[32;1m👍\033[0m all test files were processed correctly" 
+    echo -e "\033[32;1m👍\033[0m all test files were processed correctly"
 fi
 
 test $RUN_CPP -eq 0 -a $RUN_SPEC -eq 0 && exit 0
@@ -177,34 +177,34 @@ echo ""
 echo ""
 
 if [ $RUN_FAIL -eq 1 ]; then
-# run the tests that should fail
-echo "----------------------------------------------------"
-echo -e "${GREEN}Running tests that should fail:${NC}"
-echo "----------------------------------------------------"
+    # run the tests that should fail
+    echo "----------------------------------------------------"
+    echo -e "${GREEN}Running tests that should fail:${NC}"
+    echo "----------------------------------------------------"
 
     count2=0
     total2=$(ls -1 $WASM_DIR/fail/*.wasm | wc -l)
     col2=0
     for prog in $WASM_DIR/fail/*.wasm; do
-        >tempfile # truncate file
-        ./cwasm $prog &>tempfile
+        # >tempfile # truncate file
+        timeout 2 ./cwasm $prog &>/dev/null #tempfile
         EXITCODE=$?
         if [ $EXITCODE -ne 0 ]; then
-            ((col2++))
+            ((count2++))
             test $col2 -eq 51 && printf " (${count2} / ${total2})" && echo "" && col2=1
             printf '.'
         else
-            printf 'X'
+            printf '|'
             NAME=$(basename $prog)
             FAILED_TESTS="${FAILED_TESTS}\n ${NAME}"
-            echo
-            cat tempfile
+            # echo
+            # cat tempfile
             # TODO?: This would be nice in the future
             # msg=$(cat $WASM_DIR/fail/msg/$prog)
             # echo "test should fail: $msg"
-            break
+            # break
         fi
-        ((count++))
+        ((col2++))
     done
 else
     count2=0
@@ -213,13 +213,15 @@ fi
 
 # Print results
 if [ "$FAILED_TESTS" == " " ]; then
-    all_count=$(( count + count2))
-    all_total=$(( total + total2))
+    all_count=$((count + count2))
+    all_total=$((total + total2))
     echo -e "${GREEN}\u2714 All ${all_count}/${all_total} tests passed!${NC}"
 else
-    echo -e "${RED}-- 💩 FAILED TESTS 💩 --${NC}"
-    echo -e $FAILED_TESTS
-    echo -e "${RED}----------------------${NC}"
+    echo ""
+    echo -e "${GREEN}\u2714 ${count2}/${total2} tests passed!${NC}"
+    # echo -e "${RED}-- 💩 FAILED TESTS 💩 --${NC}"
+    # echo -e $FAILED_TESTS
+    # echo -e "${RED}----------------------${NC}"
 fi
 
 echo ""

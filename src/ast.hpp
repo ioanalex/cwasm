@@ -157,9 +157,8 @@ struct Module {
         start(),
         imports(),
         exports() {}
+  void Load(byte *, u32);
+  void Print();
 };
-
-void load_module(Module &, byte *, u32);
-void PrintModule(Module &);
 
 #endif

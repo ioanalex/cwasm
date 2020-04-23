@@ -38,9 +38,9 @@ int main(int argc, char *argv[]) {
   fclose(fileptr);
 
   Module m;
-  load_module(m, bytes, filelen);
+  m.Load(bytes, filelen);
 
-  PrintModule(m);
+  m.Print();
 
   InitContext(m);
   // PrintContext();

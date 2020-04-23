@@ -40,17 +40,17 @@ static bool sections[] = {
     false   // Data
 };
 
-void PrintModule(Module &mod) {
+void Module::Print() {
   std::cout << "Module:" << std::endl;
   std::cout << "  Types:" << std::endl;
-  printvec(mod.types, 2) std::cout << "  Funcs:" << std::endl;
-  printvec(mod.funcs, 2) std::cout << "  Tables:" << std::endl;
-  printvec(mod.tables, 2) std::cout << "  Memories:" << std::endl;
-  printvec(mod.mems, 2) std::cout << "  Globals" << std::endl;
-  printvec(mod.globals, 2)
+  printvec(types, 2) std::cout << "  Funcs:" << std::endl;
+  printvec(funcs, 2) std::cout << "  Tables:" << std::endl;
+  printvec(tables, 2) std::cout << "  Memories:" << std::endl;
+  printvec(mems, 2) std::cout << "  Globals" << std::endl;
+  printvec(globals, 2)
 }
 
-void load_module(Module &mod, byte *bytes, u32 byte_count) {
+void Module::Load(byte *bytes, u32 byte_count) {
   pos = 0;
   u32 word = read_u32(bytes, pos);
   ASSERT(word == 1836278016, "magic number is wrong\n");
@@ -78,32 +78,32 @@ void load_module(Module &mod, byte *bytes, u32 byte_count) {
       case 1: {
         // parse the list of types (m -> types) and return it
         warn("Parsing Type(1) section (length: 0x%x)\n", slen);
-        parse_types(bytes, &pos, &mod.types);
+        parse_types(bytes, &pos, &types);
         warn("Parsing complete\n");
 #if DEBUG
-        printvec(mod.types, 2);
+        printvec(types, 2);
 #endif
         break;
       }
       case 2: {
         warn("Parsing Import(2) section (length: 0x%x)\n", slen);
-        parse_imports(bytes, &pos, &mod.imports);
-        for (auto im : mod.imports) {
+        parse_imports(bytes, &pos, &imports);
+        for (auto im : imports) {
           switch (im.desc.tag) {
             case importdesc::FUNC: {
-              mod.funcs.emplace_back(Func(im.desc.func));
+              funcs.emplace_back(Func(im.desc.func));
               break;
             }
             case importdesc::TABLE: {
-              mod.tables.emplace_back(Table(im.desc.table));
+              tables.emplace_back(Table(im.desc.table));
               break;
             }
             case importdesc::MEM: {
-              mod.mems.emplace_back(Memory(im.desc.mem));
+              mems.emplace_back(Memory(im.desc.mem));
               break;
             }
             case importdesc::GLOBAL: {
-              mod.globals.emplace_back(Global(im.desc.global));
+              globals.emplace_back(Global(im.desc.global));
               break;
             }
           }
@@ -111,24 +111,23 @@ void load_module(Module &mod, byte *bytes, u32 byte_count) {
         warn("Parsing Imports complete\n");
 #if DEBUG
         std::cout << "----- IMPORTS -----\n";
-        for (int i = 0; i < mod.imports.size(); i++) {
-          std::cout << mod.imports[i].module << "." << mod.imports[i].name
+        for (int i = 0; i < imports.size(); i++) {
+          std::cout << imports[i].module << "." << imports[i].name
                     << " of type ";
-          switch (mod.imports[i].desc.tag) {
+          switch (imports[i].desc.tag) {
             case importdesc::FUNC:
-              std::cout << "FUNC :: @" << mod.imports[i].desc.func << std::endl;
+              std::cout << "FUNC :: @" << imports[i].desc.func << std::endl;
               break;
             case importdesc::TABLE:
-              std::cout << "TABLE :: " << mod.imports[i].desc.table.limits
+              std::cout << "TABLE :: " << imports[i].desc.table.limits
                         << std::endl;
               break;
             case importdesc::MEM:
-              std::cout << "MEM :: " << mod.imports[i].desc.mem.limits
-                        << std::endl;
+              std::cout << "MEM :: " << imports[i].desc.mem.limits << std::endl;
               break;
             case importdesc::GLOBAL:
-              std::cout << "GLOBAL :: " << mod.imports[i].desc.global.value
-                        << (mod.imports[i].desc.global.mut ? "(mut)" : "")
+              std::cout << "GLOBAL :: " << imports[i].desc.global.value
+                        << (imports[i].desc.global.mut ? "(mut)" : "")
                         << std::endl;
               break;
           }
@@ -139,74 +138,73 @@ void load_module(Module &mod, byte *bytes, u32 byte_count) {
       }
       case 3: {
         warn("Parsing Function(3) section (length: 0x%x)\n", slen);
-        parse_funcs(bytes, &pos, &mod.funcs);
+        parse_funcs(bytes, &pos, &funcs);
         warn("Parsing Functions complete\n");
 #if DEBUG
         std::cout << "----- FUNCTIONS -----\n";
-        for (unsigned int i = 0; i < mod.funcs.size(); i++)
-          std::cout << "FUNC :: " << mod.types[mod.funcs[i].type] << std::endl;
+        for (unsigned int i = 0; i < funcs.size(); i++)
+          std::cout << "FUNC :: " << types[funcs[i].type] << std::endl;
         std::cout << "----- --------- -----\n";
 #endif
         break;
       }
       case 4: {
         warn("Parsing Table(4) section (length: 0x%x)\n", slen);
-        parse_tables(bytes, &pos, &mod.tables);
+        parse_tables(bytes, &pos, &tables);
         warn("Parsing Tables complete\n");
 #if DEBUG
         std::cout << "----- TABLES -----\n";
-        for (unsigned int i = 0; i < mod.tables.size(); i++)
-          std::cout << "TABLE :: " << mod.tables[i].type.limits << std::endl;
+        for (unsigned int i = 0; i < tables.size(); i++)
+          std::cout << "TABLE :: " << tables[i].type.limits << std::endl;
         std::cout << "----- ------ -----\n";
 #endif
         break;
       }
       case 5: {
         warn("Parsing Memory(5) section (length: 0x%x)\n", slen);
-        parse_mems(bytes, &pos, &mod.mems);
+        parse_mems(bytes, &pos, &mems);
         warn("Parsing Memories complete\n");
 #if DEBUG
         std::cout << "----- MEMORIES -----\n";
-        for (unsigned int i = 0; i < mod.mems.size(); i++)
-          std::cout << "MEM :: " << mod.mems[i].type.limits << std::endl;
+        for (unsigned int i = 0; i < mems.size(); i++)
+          std::cout << "MEM :: " << mems[i].type.limits << std::endl;
         std::cout << "----- -------- -----\n";
 #endif
         break;
       }
       case 6: {
         warn("Parsing Global(6) section (length: 0x%x)\n", slen);
-        parse_globals(bytes, &pos, &mod.globals);
+        parse_globals(bytes, &pos, &globals);
         warn("Parsing Globals complete\n");
 #if DEBUG
         std::cout << "----- GLOBALS -----\n";
-        for (unsigned int i = 0; i < mod.globals.size(); i++)
-          std::cout << "GLOBAL ::  " << mod.globals[i] << std::endl;
+        for (unsigned int i = 0; i < globals.size(); i++)
+          std::cout << "GLOBAL ::  " << globals[i] << std::endl;
         std::cout << "----- ------- -----\n";
 #endif
         break;
       }
       case 7: {
         warn("Parsing Export(7) section (length: 0x%x)\n", slen);
-        parse_exports(bytes, &pos, &mod.exports);
+        parse_exports(bytes, &pos, &exports);
         warn("Parsing Exports complete\n");
 #if DEBUG
         std::cout << "----- EXPORTS -----\n";
-        for (unsigned int i = 0; i < mod.exports.size(); i++) {
-          std::cout << "EXPORT " << mod.exports[i].name << " of type ";
-          switch (mod.exports[i].desc.tag) {
+        for (unsigned int i = 0; i < exports.size(); i++) {
+          std::cout << "EXPORT " << exports[i].name << " of type ";
+          switch (exports[i].desc.tag) {
             case importdesc::FUNC:
-              std::cout << "FUNC @ " << mod.exports[i].desc.func << std::endl;
+              std::cout << "FUNC @ " << exports[i].desc.func << std::endl;
               break;
             case importdesc::TABLE:
-              std::cout << "TABLE @ " << mod.exports[i].desc.table << std::endl;
+              std::cout << "TABLE @ " << exports[i].desc.table << std::endl;
               break;
             case importdesc::MEM:
-              std::cout << "MEM @ " << mod.exports[i].desc.mem << std::endl;
+              std::cout << "MEM @ " << exports[i].desc.mem << std::endl;
               break;
             case importdesc::GLOBAL:
               // TODO: uncomment when globals are parsed (seg fault here)
-              std::cout << "GLOBAL @ " << mod.exports[i].desc.global
-                        << std::endl;
+              std::cout << "GLOBAL @ " << exports[i].desc.global << std::endl;
               break;
           }
         }
@@ -216,33 +214,31 @@ void load_module(Module &mod, byte *bytes, u32 byte_count) {
       }
       case 8: {
         warn("Parsing Start(8) section (length: 0x%x)\n", slen);
-        mod.start = funcidx(parse_idx(bytes, &pos));
-        ASSERT((mod.start < mod.funcs.size()),
+        start = funcidx(parse_idx(bytes, &pos));
+        ASSERT((start < funcs.size()),
                "Start is a funcidx so it has to be < funcs.size()\n");
         warn("Parsing Start complete\n");
 #if DEBUG
-        std::cout << "START func is " << mod.start.value()
-                  << " :: " << mod.types[mod.funcs[mod.start.value()].type]
-                  << std::endl;
+        std::cout << "START func is " << start.value()
+                  << " :: " << types[funcs[start.value()].type] << std::endl;
 #endif
         break;
       }
       case 9: {
         warn("Parsing Element(9) section (length: 0x%x)\n", slen);
-        parse_elems(bytes, &pos, &mod.elem, mod.globals);
+        parse_elems(bytes, &pos, &elem, globals);
         warn("Parsing Elements complete\n");
 #if DEBUG
         std::cout << "----- ELEMENTS -----\n";
-        for (unsigned int i = 0; i < mod.elem.size(); i++) {
-          std::cout << "ELEM :: table " << mod.elem[i].table
-                    << " offset (expr of #" << mod.elem[i].offset.size()
-                    << "): " << std::endl;
-          for (auto &of : mod.elem[i].offset)
+        for (unsigned int i = 0; i < elem.size(); i++) {
+          std::cout << "ELEM :: table " << elem[i].table << " offset (expr of #"
+                    << elem[i].offset.size() << "): " << std::endl;
+          for (auto &of : elem[i].offset)
             std::cout << "\t\t" << of << std::endl;
           std::cout << " has funcs:" << std::endl;
-          for (unsigned int j = 0; j < mod.elem[i].init.size(); j++)
-            std::cout << "\t" << mod.elem[i].init[j] << " :: "
-                      << mod.types[mod.funcs[mod.elem[i].init[j]].type]
+          for (unsigned int j = 0; j < elem[i].init.size(); j++)
+            std::cout << "\t" << elem[i].init[j]
+                      << " :: " << types[funcs[elem[i].init[j]].type]
                       << std::endl;
         }
         std::cout << "----- ------- -----\n";
@@ -254,22 +250,21 @@ void load_module(Module &mod, byte *bytes, u32 byte_count) {
 #if WAIT
         WaitEnter();
 #endif
-        parse_codes(bytes, &pos, mod.funcs);
+        parse_codes(bytes, &pos, funcs);
         warn("Parsing Code complete\n");
         break;
       }
       case 11: {
         warn("Parsing Data(11)) section (length: 0x%x)\n", slen);
-        parse_datas(bytes, &pos, &mod.data, mod.globals);
+        parse_datas(bytes, &pos, &data, globals);
         warn("Parsing Datas complete\n");
 #if DEBUG
         std::cout << "----- DATAS -----\n";
-        for (unsigned int i = 0; i < mod.data.size(); i++) {
-          std::string content(mod.data[i].init.begin(), mod.data[i].init.end());
-          std::cout << "DATA :: mem " << mod.data[i].data
-                    << " offset (expr of #" << mod.data[i].offset.size() << ")"
-                    << std::endl;
-          for (auto &of : mod.data[i].offset)
+        for (unsigned int i = 0; i < data.size(); i++) {
+          std::string content(data[i].init.begin(), data[i].init.end());
+          std::cout << "DATA :: mem " << data[i].data << " offset (expr of #"
+                    << data[i].offset.size() << ")" << std::endl;
+          for (auto &of : data[i].offset)
             std::cout << "\t\t" << of << std::endl;
 
           std::cout << " has " << content.size() << " byte(s):" << std::hex
