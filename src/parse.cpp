@@ -11,65 +11,6 @@ inline u32 parse_byte(byte *bytes, u32 *pos) { return bytes[(*pos)++]; }
 
 u32 parse_idx(byte *bytes, u32 *pos) { return read_LEB(bytes, pos, 32); }
 
-Value const_eval(byte *bytes, u32 *pos, vec<Global> &globals) {
-  Value v;
-  byte opcode = parse_byte(bytes, pos);
-  ASSERT((((opcode >= 0x41) && (opcode <= 0x44)) || opcode == 0x23),
-         "Only const expressions are allowed.\n");
-  switch (opcode) {
-    case 0x41: {
-      u32 n = read_LEB(bytes, pos, 32);
-      v = from_i32(n);
-      break;
-    }
-    case 0x42: {
-      u64 n = read_LEB(bytes, pos, 64);
-      v = from_i64(n);
-      break;
-    }
-    case 0x43: {
-      f32 f;
-      std::memcpy(&f, bytes + *pos, 4);
-      v = from_f32(f);  // std::cout << "---->" << v << "<----" << std::endl;
-      *pos = *pos + 4;
-      break;
-    }
-    case 0x44: {
-      f64 f;
-      std::memcpy(&f, bytes + *pos, 8);
-      v = from_f64(f);
-      *pos = *pos + 8;
-      break;
-    }
-    case 0x23: {
-      warn("[global.get is unimplemented] setting to 0\n");
-      globalidx gidx(parse_idx(bytes, pos));
-      ASSERT(gidx.value() < globals.size(),
-             "gidx is larger that globals.size\n");
-      // keep the types correct
-      switch (globals.at(gidx).type.value) {
-        case type::Value::i32:
-          v = from_i32(0);
-          break;
-        case type::Value::i64:
-          v = from_i64(0);
-          break;
-        case type::Value::f32:
-          v = from_f32(0);
-          break;
-        case type::Value::f64:
-          v = from_f64(0);
-          break;
-      }
-    }
-  }
-  opcode = parse_byte(
-      bytes,
-      pos);  // debug("next opcode is %x at addr: %x \n", opcode, *pos - 1);
-  ASSERT(opcode == 0x0B, "There must be an end opcode here!\n");
-  return v;
-}
-
 type::Value parse_valtype(byte *bytes, u32 *pos) {
   u32 encoded_type = parse_byte(bytes, pos);
   // debug("valtype at addr:%x -> |%x|\n", *pos - 1, encoded_type);
