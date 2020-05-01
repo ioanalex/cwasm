@@ -36,7 +36,10 @@ type::Value parse_valtype(byte *, u32 *);
 class Reader {
 public:
   // with this function we construct the singleton
-  static Reader &getInstance();
+  static Reader &getInstance(); /* {
+      static Reader instance;
+      return instance;
+  }*/
   // opens the file and does all error checking and setting up for the reading
   // to start
   void Init(std::string filename);
