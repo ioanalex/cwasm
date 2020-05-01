@@ -26,6 +26,8 @@ int main(int argc, char *argv[]) {
   }
 
   char *filename = argv[1];
+
+  // from here ---------------
   std::cout << "running > " + string(filename) << std::endl;
   fileptr = fopen(filename, "rb");
   fseek(fileptr, 0, SEEK_END);
@@ -36,12 +38,23 @@ int main(int argc, char *argv[]) {
   fread(bytes, filelen, 1, fileptr);
   bytes[filelen] = '\0';
   fclose(fileptr);
-
+  //  to here ----------------
+  // [after refactor]: just use:
+  /*
+  Reader r = Reader.getInstance();
+  r.Init(filename)
+  */
   Module m;
+
+  // [after refactor]:
+  /*
+  m.setReader(&r);
+  */
   m.Load(bytes, filelen);
 
   m.Print();
 
+  // from here: ----------------
   InitContext(m);
   // PrintContext();
 
@@ -56,6 +69,24 @@ int main(int argc, char *argv[]) {
   res &= Validate::imports(m);
 
   if (!res) FATAL("File: %s: VALIDATION FAILED\n", filename);
+
+  //  to here ----------------
+  // [after refactor]: just use:
+  /*
+  // get the validator
+  Validator v = Validator.getInstance();
+
+  // initialize it (this could be moved in m.Validate)
+  v.Init(m) // this will initialize the context and the stacks
+
+  // attach it to the module
+  m.setValidator(&v);
+
+  // validate the module
+  m.Validate();
+
+  */
+
   // Validate::func(m.funcs[17]);
 
   // std::cout << "--------- COMMANDS THAT WERE NOT USED ---------\n";
