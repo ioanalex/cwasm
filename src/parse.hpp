@@ -69,3 +69,14 @@ public:
   Reader(Reader const &) = delete;
   void operator=(Reader const &) = delete;
 };
+
+/*
+class MyReader : public Reader {
+  void ReadModule(Module *mod);
+};
+
+MyReader r = MyReader::getInstance(); //error
+
+TODO: find a way for the Reader class to be extendable
+  DON'T FORGET THE VIRTUAL DESTRUCTOR
+*/
