@@ -64,4 +64,6 @@ inline u32 read_u32(byte *bytes, u32 &pos) {
   return ((u32 *)(bytes + pos - 4))[0];
 }
 
+inline u32 parse_byte(byte *bytes, u32 *pos) { return bytes[(*pos)++]; }
+
 #endif

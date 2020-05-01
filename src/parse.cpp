@@ -7,8 +7,6 @@
 #include "util.hpp"
 #include "values.hpp"
 
-inline u32 parse_byte(byte *bytes, u32 *pos) { return bytes[(*pos)++]; }
-
 u32 parse_idx(byte *bytes, u32 *pos) { return read_LEB(bytes, pos, 32); }
 
 type::Value parse_valtype(byte *bytes, u32 *pos) {
