@@ -91,4 +91,46 @@ bool exports(Module&);
 bool imports(Module&);
 }  // namespace Validate
 
+// All the above functionality can be encapsulated in a Validator class
+// Since only one Validator is used, the class should be a singleton!
+class Validator {
+public:
+  static Validator& getInstance(); /*{
+    static Validator v;
+    return v;
+  }*/
+
+private:
+  // constructor
+  Validator();
+
+private:
+  Context c;          // the validation context
+  vec<valtype> opds;  // the operand stack
+  vec<frame> ctrls;   // the control stack
+  // add all methods used to control the above structures
+
+public:
+  bool ValidateModule(Module*);  // validates a module
+private:
+  // add all methods used to validate the module
+  // e.g. the Validate::funcs method could be included as
+  bool funcs(Module*);
+  // same for all other functions declared under namespace Validate
+
+  /*
+    In the Validate:exprs function we call each instruction to validate itself.
+    This is elegant, but it should become much cleaner.
+
+    TODO: add a way to do that
+
+    Keep in mind that the same problem exists in the Reader class, and the
+    Instr::Create method.
+  */
+public:
+  // For an explanation of these check the Reader class.
+  Validator(Validator const&) = delete;
+  void operator=(Validator const&) = delete;
+};
+
 #endif
