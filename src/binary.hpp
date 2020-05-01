@@ -1,8 +1,12 @@
+/*
+This file can read all Values from a WASM binary.
+It is used by the parser (after refactor class Reader)
+*/
+
 #ifndef __BINARY_HPP__
 #define __BINARY_HPP__
 
 #include "types.hpp"
-#include "util.hpp"
 
 /*
 TODO: after finalizing the design of the Reader class, change the
@@ -64,6 +68,6 @@ inline u32 read_u32(byte *bytes, u32 &pos) {
   return ((u32 *)(bytes + pos - 4))[0];
 }
 
-inline u32 parse_byte(byte *bytes, u32 *pos) { return bytes[(*pos)++]; }
+inline u32 read_byte(byte *bytes, u32 *pos) { return bytes[(*pos)++]; }
 
 #endif

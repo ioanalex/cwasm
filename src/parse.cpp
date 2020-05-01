@@ -10,7 +10,7 @@
 u32 parse_idx(byte *bytes, u32 *pos) { return read_LEB(bytes, pos, 32); }
 
 type::Value parse_valtype(byte *bytes, u32 *pos) {
-  u32 encoded_type = parse_byte(bytes, pos);
+  u32 encoded_type = read_byte(bytes, pos);
   // debug("valtype at addr:%x -> |%x|\n", *pos - 1, encoded_type);
   return decode_type(encoded_type);
 }
@@ -122,7 +122,7 @@ void parse_imports(byte *bytes, u32 *pos, vec<Import> *imports) {
     type::Name import_module = read_name(bytes, pos);
     type::Name import_name = read_name(bytes, pos);
     // importdesc :: = kind : {0,1,2,3}, content: depends on kind
-    u32 kind = parse_byte(bytes, pos);
+    u32 kind = read_byte(bytes, pos);
     // debug("import: %d/%d, kind: %d, %s.%s\n",im+1,import_count, kind,
     // import_module.c_str(), import_name.c_str());
 
@@ -199,7 +199,7 @@ void parse_exports(byte *bytes, u32 *pos, vec<Export> *exports) {
   for (unsigned int i = 0; i < export_count; i++) {
     type::Name export_name = read_name(bytes, pos);
 
-    byte kind = parse_byte(
+    byte kind = read_byte(
         bytes,
         pos);  // TODO: this should be in the binary file as read_byte(..)
     exportdesc *desc;
