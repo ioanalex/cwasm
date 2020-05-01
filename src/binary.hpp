@@ -1,9 +1,6 @@
 #ifndef __BINARY_HPP__
 #define __BINARY_HPP__
 
-#include <cstring>
-#include <iostream>
-
 #include "types.hpp"
 #include "util.hpp"
 
@@ -57,12 +54,8 @@ inline u64 read_LEB_signed(byte *bytes, u32 *pos, u32 maxbits) {
 
 inline type::Name read_name(byte *bytes, u32 *pos) {
   u32 namelen = read_LEB(bytes, pos, 32);
-  byte *name_c = new byte[namelen + 1]();
-  std::memcpy(name_c, bytes + *pos, namelen);
+  type::Name name(bytes + *pos, bytes + *pos + namelen);
   *pos += namelen;
-  name_c[namelen] = '\0';
-  type::Name name{name_c, name_c + namelen};
-  delete[] name_c;
   return name;
 }
 
