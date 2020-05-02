@@ -47,14 +47,8 @@ struct frame {
 inline std::ostream& operator<<(std::ostream& os, const frame& f) {
   os << "h:" << f.height << " unr:" << f.unreachable << " labels"
      << " end_types" << std::endl;
-  iloop(f.label_types) {
-    tabs(3);
-    os << "  " << f.label_types[i] << std::endl;
-  }
-  iloop(f.end_types) {
-    tabs(4);
-    os << "  " << f.end_types[i] << std::endl;
-  }
+  iloop(f.label_types) os << indent(3) << "  " << f.label_types[i] << std::endl;
+  iloop(f.end_types) os << indent(4) << "  " << f.end_types[i] << std::endl;
   return os;
 }
 

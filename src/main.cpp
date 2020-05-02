@@ -52,7 +52,7 @@ int main(int argc, char *argv[]) {
   */
   m.Load(bytes, filelen);
 
-  m.Print();
+  std::cout << m;
 
   // from here: ----------------
   InitContext(m);

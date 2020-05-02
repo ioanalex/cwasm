@@ -2,6 +2,7 @@
 #define __UTIL_HPP__
 
 #include <cstdio>
+#include <iostream>
 #include <vector>
 
 template <typename T>
@@ -78,17 +79,35 @@ inline void USE(T) {}
   } while (0)
 #endif
 
-inline void tabs(int n) {
-  for (int i = 0; i < n; i++) std::cout << "\t";
-}
-
-#define iloop(vec) for (int i = 0; i < vec.size(); i++)
-
-#define printvec(vec, ntabs)             \
-  for (int i = 0; i < vec.size(); i++) { \
-    tabs(ntabs);                         \
-    std::cout << vec[i] << std::endl;    \
+class indent {
+public:
+  explicit indent(int n, char c = '\t') : depth(n), prefix(c) {}
+  friend std::ostream &operator<<(std::ostream &out, const indent &ind) {
+    for (int i = 0; i < ind.depth; ++i) out << ind.prefix;
+    return out;
   }
+
+private:
+  int depth;
+  char prefix;
+};
+
+#define iloop(vec) for (unsigned i = 0; i < vec.size(); ++i)
+
+template <typename T>
+class printvec {
+public:
+  explicit printvec(const std::vector<T> &v, int n, char c = '\t')
+      : vec(v), ind(n, c) {}
+  friend std::ostream &operator<<(std::ostream &out, const printvec &pv) {
+    for (const auto &t : pv.vec) out << pv.ind << t << std::endl;
+    return out;
+  }
+
+private:
+  const std::vector<T> &vec;
+  indent ind;
+};
 
 /*****************************************************************************/
 

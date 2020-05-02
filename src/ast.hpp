@@ -1,6 +1,7 @@
 #ifndef __AST_HPP__
 #define __AST_HPP__
 
+#include <iostream>
 #include <optional>
 #include <variant>
 #include <vector>
@@ -30,9 +31,9 @@ struct Func {
 };
 inline std::ostream &operator<<(std::ostream &os, const Func &f) {
   os << "func :: @" << f.type << std::endl << "\t\tlocals:" << std::endl;
-  printvec(f.locals, 3);
+  os << printvec(f.locals, 3);
   os << "\t\t" << f.body.size() << " instructions" << std::endl;
-  printvec(f.body, 3);
+  os << printvec(f.body, 3);
   return os;
 }
 
@@ -91,7 +92,7 @@ struct Global {
 };
 inline std::ostream &operator<<(std::ostream &os, const Global &g) {
   os << g.type << std::endl;
-  printvec(g.init, 2);
+  os << printvec(g.init, 2);
   return os;
 }
 
@@ -272,8 +273,19 @@ struct Module {
         start(),
         imports(),
         exports() {}
+
   void Load(byte *, u32);
-  void Print();
+
+  friend std::ostream &operator<<(std::ostream &out, const Module &m) {
+    out << "Module:" << std::endl;
+    out << "  Types:" << std::endl << printvec(m.types, 2);
+    out << "  Funcs:" << std::endl << printvec(m.funcs, 2);
+    out << "  Tables:" << std::endl << printvec(m.tables, 2);
+    out << "  Memories:" << std::endl << printvec(m.mems, 2);
+    out << "  Globals" << std::endl << printvec(m.globals, 2);
+    return out;
+  }
+
   // Minimum debug string
   inline string sDebug() const {
     string s = " MODULE>\n";

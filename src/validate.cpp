@@ -49,16 +49,15 @@ void InitContext(Module &mod) {
 
 void PrintContext() {
   // std::cout << "Validation Context:" << std::endl;
-  // std::cout << "  Types:" << std::endl;
-  // printvec(*(context.types), 2) std::cout << "  Funcs:" << std::endl;
-  // printvec(context.funcs, 2) std::cout << "  Tables:" << std::endl;
-  // printvec(context.tables, 2) std::cout << "  Memories:" << std::endl;
-  // printvec(context.mems, 2) std::cout << "  Globals" << std::endl;
-  // printvec(context.globals, 2) std::cout << "  Locals:" << std::endl;
-  // printvec(context.locals, 2)
-  std::cout << "  Labels:" << std::endl;
-  printvec(context.labels, 2)  // std::cout << "  Return:" << std::endl <<
-  // "\t\t"; std::cout << context.return_ << std::endl;
+  // std::cout << "  Types:" << std::endl << printvec(*(context.types), 2);
+  // std::cout << "  Funcs:" << std::endl << printvec(context.funcs, 2);
+  // std::cout << "  Tables:" << std::endl << printvec(context.tables, 2);
+  // std::cout << "  Memories:" << std::endl << printvec(context.mems, 2);
+  // std::cout << "  Globals" << std::endl << printvec(context.globals, 2);
+  // std::cout << "  Locals:" << std::endl << printvec(context.locals, 2);
+  std::cout << "  Labels:" << std::endl << printvec(context.labels, 2);
+  // std::cout << "  Return:" << std::endl;
+  // std::cout << "\t\t" << context.return_ << std::endl;
 }
 
 void UpdateContext(vec<type::Value> &locals, vec<type::Value> &labels) {
@@ -179,10 +178,11 @@ vec<valtype> gettypes(const vec<type::Value> &v) {
 
 vec<valtype> opds;  // value or unknown
 vec<frame> ctrls;
+
 void PrintStacks() {
 #if PRINT_STACKS
-  printvec(ctrls, 2);
-  printvec(opds, 1);
+  std::cout << printvec(ctrls, 2);
+  std::cout << printvec(opds, 1);
   // WaitEnter();
 #endif
 }
