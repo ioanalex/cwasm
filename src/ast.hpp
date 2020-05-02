@@ -2,6 +2,7 @@
 #define __AST_HPP__
 
 #include <optional>
+#include <variant>
 #include <vector>
 
 #include "indices.hpp"
@@ -184,25 +185,32 @@ struct Export {
 };
 
 // Imports
-struct importdesc {
-  enum { FUNC, TABLE, MEM, GLOBAL } tag;
-  union {
-    typeidx func;
-    type::Table table;
-    type::Memory mem;
-    type::Global global;
-  };
-  importdesc(typeidx f) : tag(FUNC), func(f) {}
-  importdesc(type::Table t) : tag(TABLE), table(t) {}
-  importdesc(type::Memory m) : tag(MEM), mem(m) {}
-  importdesc(type::Global g) : tag(GLOBAL), global(g) {}
+class importdesc {
+public:
+  importdesc(typeidx f) : var(f) {}
+  importdesc(type::Table t) : var(t) {}
+  importdesc(type::Memory m) : var(m) {}
+  importdesc(type::Global g) : var(g) {}
+
+  enum tag_type { FUNC, TABLE, MEM, GLOBAL };
+  tag_type tag() const { return tag_type(var.index()); }
+
+  typeidx &func() { return std::get<FUNC>(var); }
+  type::Table &table() { return std::get<TABLE>(var); }
+  type::Memory &mem() { return std::get<MEM>(var); }
+  type::Global &global() { return std::get<GLOBAL>(var); }
+
+  const typeidx &func() const { return std::get<FUNC>(var); }
+  const type::Table &table() const { return std::get<TABLE>(var); }
+  const type::Memory &mem() const { return std::get<MEM>(var); }
+  const type::Global &global() const { return std::get<GLOBAL>(var); }
 
   // Minimum debug string
   inline string sDebug() const {
     string s = "";
-    switch (tag) {
+    switch (tag()) {
       case FUNC:
-        s += "func @" + std::to_string(func.value());
+        s += "func @" + std::to_string(func().value());
         break;
       case TABLE:
         s += "table" /* TODO:call table.sDebug */;
@@ -216,6 +224,9 @@ struct importdesc {
     }
     return s;
   }
+
+private:
+  std::variant<typeidx, type::Table, type::Memory, type::Global> var;
 };
 
 struct Import {

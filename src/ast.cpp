@@ -91,21 +91,21 @@ void Module::Load(byte *bytes, u32 byte_count) {
         warn("Parsing Import(2) section (length: 0x%x)\n", slen);
         parse_imports(bytes, &pos, &imports);
         for (auto im : imports) {
-          switch (im.desc.tag) {
+          switch (im.desc.tag()) {
             case importdesc::FUNC: {
-              funcs.emplace_back(Func(im.desc.func));
+              funcs.emplace_back(Func(im.desc.func()));
               break;
             }
             case importdesc::TABLE: {
-              tables.emplace_back(Table(im.desc.table));
+              tables.emplace_back(Table(im.desc.table()));
               break;
             }
             case importdesc::MEM: {
-              mems.emplace_back(Memory(im.desc.mem));
+              mems.emplace_back(Memory(im.desc.mem()));
               break;
             }
             case importdesc::GLOBAL: {
-              globals.emplace_back(Global(im.desc.global));
+              globals.emplace_back(Global(im.desc.global()));
               break;
             }
           }

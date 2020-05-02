@@ -471,24 +471,24 @@ bool Validate::exports(Module &m) {
 bool Validate::imports(Module &m) {
   for (auto &im : m.imports) {
     auto &desc = im.desc;
-    switch (desc.tag) {
+    switch (desc.tag()) {
       case importdesc::FUNC:
         // check that the function is defined
-        if (desc.func >= m.funcs.size()) {
+        if (desc.func() >= m.funcs.size()) {
           warn("unknown function\n");
           return false;
         }
         break;
       case importdesc::TABLE:
         // validate the table type (limits)
-        if (!Validate::limits(desc.table.limits, 0xFFFFFFFF)) {
+        if (!Validate::limits(desc.table().limits, 0xFFFFFFFF)) {
           warn("invalid table\n");
           return false;
         }
         break;
       case importdesc::MEM:
         // Validate the memory type
-        if (!Validate::limits(desc.mem.limits, 0x10000)) {
+        if (!Validate::limits(desc.mem().limits, 0x10000)) {
           warn("invalid memory\n");
           return false;
         }
