@@ -18,7 +18,7 @@ std::vector<T> operator+(const std::vector<T> &a, const std::vector<T> &b) {
 template <typename T>
 inline void USE(T) {}
 
-#define DEBUG 0
+#define DEBUG 1
 #define INFO 1
 #define WARN 1
 #define WAIT 0

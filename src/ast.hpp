@@ -4,11 +4,9 @@
 #include <iostream>
 #include <optional>
 #include <variant>
-#include <vector>
 
 #include "indices.hpp"
 #include "instructions.hpp"
-#include "named.hpp"
 #include "types.hpp"
 #include "util.hpp"
 #include "values.hpp"
@@ -17,7 +15,7 @@
 class Reader;
 
 // Expressions
-using Expr = std::vector<Instr>;
+using Expr = vec<Instr>;
 
 // Functions
 struct Func {

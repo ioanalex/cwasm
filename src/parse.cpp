@@ -1,153 +1,146 @@
+#include "parse.hpp"
+
 #include <cstring>
+#include <iomanip>
 
 #include "ast.hpp"
-#include "binary.hpp"
-#include "global.hpp"
 #include "types.hpp"
 #include "util.hpp"
 #include "values.hpp"
 
-u32 parse_idx(byte *bytes, u32 *pos) { return read_LEB(bytes, pos, 32); }
+u32 Reader::parse_idx() { return read_LEB(32); }
 
-type::Value parse_valtype(byte *bytes, u32 *pos) {
-  u32 encoded_type = read_byte(bytes, pos);
-  // debug("valtype at addr:%x -> |%x|\n", *pos - 1, encoded_type);
+type::Value Reader::parse_valtype() {
+  u32 encoded_type = read_byte();  // TODO: this is a byte, dont use u32
   return decode_type(encoded_type);
 }
 
-type::Elem parse_elemtype(byte *bytes, u32 *pos) {
-  ASSERT(read_LEB(bytes, pos, 7) == 0x70, "elemtype can only be funcref\n");
+type::Elem Reader::parse_elemtype() {
+  // TODO: use read_byte
+  ASSERT(read_LEB(7) == 0x70, "elemtype can only be funcref\n");
   return type::Elem::funcref;
 }
 
-type::Limits parse_limits(byte *bytes, u32 *pos) {
+type::Limits Reader::parse_limits() {
   type::Limits limits;
-  u32 has_max = bytes[*pos];
-  *pos = *pos + 1;
-  ASSERT(has_max <= 1, "has_max is either 0x00 or 0x01\n");
-  limits.min = read_LEB(bytes, pos, 32);
+  byte has_max = read_byte();
+  pos = pos + 1;
+  ASSERT(has_max <= 0x01, "has_max is either 0x00 or 0x01\n");
+  limits.min = read_LEB(32);
   if (has_max) {
-    limits.max = read_LEB(bytes, pos, 32);
+    limits.max = read_LEB(32);
   }
   return limits;
 }
 
-type::Table parse_tabletype(byte *bytes, u32 *pos) {
+type::Table Reader::parse_tabletype() {
   type::Table table;
-  table.elem = parse_elemtype(bytes, pos);
-  table.limits = parse_limits(bytes, pos);
+  table.elem = parse_elemtype();
+  table.limits = parse_limits();
   return table;
 }
 
-type::Memory parse_memtype(byte *bytes, u32 *pos) {
+type::Memory Reader::parse_memtype() {
   type::Memory mem;
-  mem.limits = parse_limits(bytes, pos);
+  mem.limits = parse_limits();
   return mem;
 }
 
-type::Global parse_globaltype(byte *bytes, u32 *pos) {
+type::Global Reader::parse_globaltype() {
   type::Global global;
-  // debug(">>>>>>>>>>>>>>>>>\n");
-  // for(int i = 0; i < 20; i++){
-  //      debug("addr: %x -> |%x|\n", *pos + i, bytes[*pos + i]);
-  // }
-  // debug("<<<<<<<<<<<<<<<<\n");
-  global.value = parse_valtype(bytes, pos);
-  ASSERT(bytes[*pos] < 0x02, "mut can be either 0 or 1, malformed\n");
-  global.mut = (bytes[*pos] == 0x01);
-  *pos = *pos + 1;
+  global.value = parse_valtype();
+  ASSERT(bytes[pos] < 0x02, "mut can be either 0 or 1, malformed\n");
+  global.mut = (read_byte() == 0x01);
   return global;
 }
 
-type::Block parse_blocktype(byte *bytes, u32 *pos) {
+type::Block Reader::parse_blocktype() {
   type::Block block;
-  byte check = bytes[*pos];
+  byte check = peek_byte();
   if (check == 0x40) {
-    *pos = *pos + 1;
+    skip(1);
     // by default empty type
     return block;
   } else {
     block.has_type = true;
-    block.type = parse_valtype(bytes, pos);
+    block.type = parse_valtype();
     return block;
   }
 }
 
-Memarg parse_memarg(byte *bytes, u32 *pos) {
+Memarg Reader::parse_memarg() {
   Memarg memarg;
-  memarg.align = read_LEB(bytes, pos, 32);
-  memarg.offset = read_LEB(bytes, pos, 32);
+  memarg.align = read_LEB(32);
+  memarg.offset = read_LEB(32);
   return memarg;
 }
 
-void parse_expr(Expr &e, byte *bytes, u32 *pos) {
-  warn("Enter -\n");
+void Reader::parse_expr(Expr &e) {
   unsigned int instr_count = 0;
   while (true) {
-    warn("Parsing instr[%d] at %x\n", instr_count, *pos);
-    e.emplace_back(Instr::create(bytes, pos));
-    warn("emplaced\n");
+    warn("Parsing instr[%d] at %x\n", instr_count, pos);
+    e.emplace_back(Instr::create(bytes, &pos));
     if (e.back().code() == 0x0B) break;
     instr_count++;
 #if WAIT
     WaitEnter();
 #endif
   }
-  warn("Exit -\n");
-  ASSERT(bytes[*pos - 1] == 0x0b, "Expressions end with the 0x0b code\n");
+  ASSERT(bytes[pos - 1] == 0x0b, "Expressions end with the 0x0b code\n");
 }
 
-void parse_types(byte *bytes, u32 *pos, vec<type::Func> *types) {
-  u32 type_count = read_LEB(bytes, pos, 32);
+void Reader::parse_types(vec<type::Func> &types) {
+  u32 type_count = read_LEB(32);
   for (u32 t = 0; t < type_count; t++) {
     type::Func newtype;
-    ASSERT(read_LEB(bytes, pos, 7) == 0x60,
-           "Functions are encoded with the 0x60 code\n");
-    u32 arg_count = read_LEB(bytes, pos, 32);
+    ASSERT(read_LEB(7) == 0x60,
+           "Functions are encoded with the 0x60 code\n");  // TODO: use
+                                                           // read_byte here
+    u32 arg_count = read_LEB(32);
     for (u32 a = 0; a < arg_count; a++)
-      newtype.args.emplace_back(parse_valtype(bytes, pos));
-    u32 res_count = read_LEB(bytes, pos, 32);
+      newtype.args.emplace_back(parse_valtype());
+    u32 res_count = read_LEB(32);
     for (u32 r = 0; r < res_count; r++)
-      newtype.result.emplace_back(parse_valtype(bytes, pos));
+      newtype.result.emplace_back(parse_valtype());
     // std::cout << types[t] << std::endl;
-    types->push_back(newtype);
+    types.push_back(newtype);
   }
 }
 
-void parse_imports(byte *bytes, u32 *pos, vec<Import> *imports) {
-  u32 import_count = read_LEB(bytes, pos, 32);
+void Reader::parse_imports(vec<Import> &imports) {
+  u32 import_count = read_LEB(32);
   for (u32 im = 0; im < import_count; im++) {
     // parse each import
     // import ::= {mod : Name, name : Name, d : importdesc}
-    type::Name import_module = read_name(bytes, pos);
-    type::Name import_name = read_name(bytes, pos);
+    type::Name import_module = read_name();
+    type::Name import_name = read_name();
     // importdesc :: = kind : {0,1,2,3}, content: depends on kind
-    u32 kind = read_byte(bytes, pos);
+    u32 kind = read_byte();
     // debug("import: %d/%d, kind: %d, %s.%s\n",im+1,import_count, kind,
     // import_module.c_str(), import_name.c_str());
 
     importdesc *desc;
     switch (kind) {
       case 0: {
-        typeidx func(parse_idx(bytes, pos));
+        typeidx func(parse_idx());
         desc = new importdesc(func);
         break;
       }
       case 1: {
         type::Table table;
-        table = parse_tabletype(bytes, pos);
+        table = parse_tabletype();
         desc = new importdesc(table);
         break;
       }
       case 2: {
         type::Memory mem;
-        mem = parse_memtype(bytes, pos);
+        mem = parse_memtype();
         desc = new importdesc(mem);
         break;
       }
       case 3: {
         type::Global global;
-        global = parse_globaltype(bytes, pos);
+        global = parse_globaltype();
         desc = new importdesc(global);
         break;
       }
@@ -155,55 +148,49 @@ void parse_imports(byte *bytes, u32 *pos, vec<Import> *imports) {
         FATAL("You imported something with kind %d, that I cannot understand\n",
               kind);
     }
-    imports->emplace_back(Import(import_name, import_module, *desc));
+    imports.emplace_back(Import(import_name, import_module, *desc));
     delete desc;
   }
 }
 
-void parse_funcs(byte *bytes, u32 *pos, vec<Func> *funcs) {
-  u32 func_count = read_LEB(bytes, pos, 32);
+void Reader::parse_funcs(vec<Func> &funcs) {
+  u32 func_count = read_LEB(32);
   for (unsigned int i = 0; i < func_count; i++) {
-    typeidx tid(parse_idx(bytes, pos));
-    funcs->emplace_back(Func(tid));
+    typeidx tid(parse_idx());
+    funcs.emplace_back(Func(tid));
   }
 }
 
-void parse_tables(byte *bytes, u32 *pos, vec<Table> *tables) {
-  u32 table_count = read_LEB(bytes, pos, 32);
+void Reader::parse_tables(vec<Table> &tables) {
+  u32 table_count = read_LEB(32);
   for (unsigned int i = 0; i < table_count; i++)
-    tables->emplace_back(parse_tabletype(bytes, pos));
+    tables.emplace_back(parse_tabletype());
 }
 
-void parse_mems(byte *bytes, u32 *pos, vec<Memory> *mems) {
-  u32 table_count = read_LEB(bytes, pos, 32);
+void Reader::parse_mems(vec<Memory> &mems) {
+  u32 table_count = read_LEB(32);
   for (unsigned int i = 0; i < table_count; i++)
-    mems->emplace_back(parse_memtype(bytes, pos));
+    mems.emplace_back(parse_memtype());
 }
 
-void parse_globals(byte *bytes, u32 *pos, vec<Global> *globals) {
-  u32 global_count = read_LEB(bytes, pos, 32);
+void Reader::parse_globals(vec<Global> &globals) {
+  u32 global_count = read_LEB(32);
   for (unsigned int i = 0; i < global_count; i++) {
-    type::Global globaltype = parse_globaltype(bytes, pos);
-
-    // we donot const_eval anything, just store the instructions
-    // after the validation we can const eval (don't use the function
-    // above, write a better one)
-    globals->emplace_back(Global(globaltype));
-    parse_expr(globals->back().init, bytes, pos);
+    type::Global globaltype = parse_globaltype();
+    globals.emplace_back(Global(globaltype));
+    parse_expr(globals.back().init);
   }
 }
 
-void parse_exports(byte *bytes, u32 *pos, vec<Export> *exports) {
-  u32 export_count = read_LEB(bytes, pos, 32);
+void Reader::parse_exports(vec<Export> &exports) {
+  u32 export_count = read_LEB(32);
 
   for (unsigned int i = 0; i < export_count; i++) {
-    type::Name export_name = read_name(bytes, pos);
+    type::Name export_name = read_name();
 
-    byte kind = read_byte(
-        bytes,
-        pos);  // TODO: this should be in the binary file as read_byte(..)
+    byte kind = read_byte();
     exportdesc *desc;
-    u32 x = parse_idx(bytes, pos);
+    u32 x = parse_idx();
     switch (kind) {
       case 0x00: {
         funcidx func(x);
@@ -231,29 +218,28 @@ void parse_exports(byte *bytes, u32 *pos, vec<Export> *exports) {
             "understand\n",
             kind);
     }
-    exports->emplace_back(Export(export_name, *desc));
+    exports.emplace_back(Export(export_name, *desc));
     delete desc;
   }
 }
 
-void parse_elems(byte *bytes, u32 *pos, vec<Elem> *elems,
-                 vec<Global> &globals) {
-  u32 elem_count = read_LEB(bytes, pos, 32);
+void Reader::parse_elems(vec<Elem> &elems) {
+  u32 elem_count = read_LEB(32);
   for (unsigned int i = 0; i < elem_count; i++) {
-    tableidx x(parse_idx(bytes, pos));
-    elems->emplace_back(Elem(x));
+    tableidx x(parse_idx());
+    elems.emplace_back(Elem(x));
 
-    parse_expr(elems->back().offset, bytes, pos);
+    parse_expr(elems.back().offset);
 
-    u32 func_count = read_LEB(bytes, pos, 32);
-    vec<funcidx> &funcs = elems->back().init;
+    u32 func_count = read_LEB(32);
+    vec<funcidx> &funcs = elems.back().init;
     for (unsigned int j = 0; j < func_count; j++)
-      funcs.emplace_back(funcidx(parse_idx(bytes, pos)));
+      funcs.emplace_back(funcidx(parse_idx()));
   }
 }
 
-void parse_codes(byte *bytes, u32 *pos, vec<Func> &funcs) {
-  u32 code_count = read_LEB(bytes, pos, 32);
+void Reader::parse_codes(vec<Func> &funcs) {
+  u32 code_count = read_LEB(32);
   u32 imported_func_count = funcs.size() - code_count;
   debug("imported: %u    code for: %u    total: %lu\n", imported_func_count,
         code_count, funcs.size());
@@ -261,14 +247,14 @@ void parse_codes(byte *bytes, u32 *pos, vec<Func> &funcs) {
          funcs.size(), code_count);
 
   for (unsigned int i = 0; i < code_count; i++) {
-    u32 size = read_LEB(bytes, pos, 32);
-    USE(size);  // TODO: verification
-    u32 locals_count = read_LEB(bytes, pos, 32);
+    u32 _size = read_LEB(32);
+    USE(_size);
+    u32 locals_count = read_LEB(32);
     warn("%d locals\n", locals_count);
     for (unsigned int j = 0; j < locals_count; j++) {
-      u32 n = read_LEB(bytes, pos, 32);
+      u32 n = read_LEB(32);
       ASSERT((int)n >= 0, "Overflow will not kill me!\n");
-      type::Value t(parse_valtype(bytes, pos));
+      type::Value t(parse_valtype());
       // warn("n = %d\n", (int)n);
       for (unsigned int k = 0; k < n; k++) {
         funcs[i + imported_func_count].locals.push_back(t);
@@ -277,32 +263,205 @@ void parse_codes(byte *bytes, u32 *pos, vec<Func> &funcs) {
 
 #if DEBUG
     for (unsigned int i = imported_func_count; i < funcs.size(); ++i) {
-      for (auto l : funcs[i].locals) {
+      for (const auto &l : funcs[i].locals) {
         std::cout << l << std::endl;
       }
     }
 #endif
     debug("About to parse_expr\n");
-    parse_expr(funcs[i + imported_func_count].body, bytes, pos);
+    parse_expr(funcs[i + imported_func_count].body);
     debug("OK parse_expr\n");
   }
 }
 
-void parse_datas(byte *bytes, u32 *pos, vec<Data> *datas,
-                 vec<Global> &globals) {
-  u32 data_count = read_LEB(bytes, pos, 32);
+void Reader::parse_datas(vec<Data> &datas) {
+  u32 data_count = read_LEB(32);
   ASSERT((int)data_count >= 0, "Overflow will not kill me!\n");
   for (unsigned int i = 0; i < data_count; i++) {
-    memidx x(parse_idx(bytes, pos));
-    datas->emplace_back(Data(x));
+    memidx x(parse_idx());
+    datas.emplace_back(Data(x));
 
-    parse_expr(datas->back().offset, bytes, pos);
-    // warn("Expr, ok!\n");
+    parse_expr(datas.back().offset);
 
-    u32 byte_count = read_LEB(bytes, pos, 32);
+    u32 byte_count = read_LEB(32);
     ASSERT((int)byte_count >= 0, "Overflow will not kill me!\n");
-    vec<byte> bs(bytes + *pos, bytes + *pos + byte_count);
-    *pos += byte_count;
-    datas->back().init = bs;
+    vec<byte> bs(byte_count);
+    std::copy(bytes.begin() + pos, bytes.begin() + pos + byte_count,
+              bs.begin());
+    skip(byte_count);
+    datas.back().init = bs;
+  }
+}
+
+#if DEBUG
+#define debugVec(some_vec) \
+  for (const auto &it : some_vec) std::cout << it.sDebug() << std::endl;
+#else
+#define debugVec(some_vec)
+#endif
+
+void Reader::parse_module(Module &m) {
+  u32 word = read_u32();
+  ASSERT(word == 1836278016, "magic number is wrong\n");
+  std::cout << "module magic word is " << word << std::endl;
+  word = read_u32();
+  ASSERT(word == 1, "version is wrong\n");
+  std::cout << "module version is " << word << std::endl;
+
+  while (pos < length) {
+    u32 id = read_LEB(7);  // TODO: change that to read_byte
+    u32 slen = read_LEB(32);
+
+    switch (id) {
+      case 0:
+        // custom section, do nothing
+        skip(slen);
+        break;
+      case 1: {
+        // parse the list of types (m -> types) and return it
+        warn("Parsing Type(1) section (length: 0x%x)\n", slen);
+        parse_types(m.types);
+        warn("Parsing complete\n");
+#if DEBUG
+        // TODO:
+        // for (const auto &it : types) std::cout << it.sDebug() <<
+        // std::endl;
+#endif
+        break;
+      }
+      case 2: {
+        warn("Parsing Import(2) section (length: 0x%x)\n", slen);
+        parse_imports(m.imports);
+        for (auto im : m.imports) {
+          switch (im.desc.tag()) {
+            case importdesc::FUNC: {
+              m.funcs.emplace_back(Func(im.desc.func()));
+              break;
+            }
+            case importdesc::TABLE: {
+              m.tables.emplace_back(Table(im.desc.table()));
+              break;
+            }
+            case importdesc::MEM: {
+              m.mems.emplace_back(Memory(im.desc.mem()));
+              break;
+            }
+            case importdesc::GLOBAL: {
+              m.globals.emplace_back(Global(im.desc.global()));
+              break;
+            }
+          }
+        }
+        warn("Parsing Imports complete\n");
+        debugVec(m.imports);
+        break;
+      }
+      case 3: {
+        warn("Parsing Function(3) section (length: 0x%x)\n", slen);
+        parse_funcs(m.funcs);
+        warn("Parsing Functions complete\n");
+        debugVec(m.funcs);
+        break;
+      }
+      case 4: {
+        warn("Parsing Table(4) section (length: 0x%x)\n", slen);
+        parse_tables(m.tables);
+        warn("Parsing Tables complete\n");
+        debugVec(m.tables);
+        break;
+      }
+      case 5: {
+        warn("Parsing Memory(5) section (length: 0x%x)\n", slen);
+        parse_mems(m.mems);
+        warn("Parsing Memories complete\n");
+        debugVec(m.mems);
+        break;
+      }
+      case 6: {
+        warn("Parsing Global(6) section (length: 0x%x)\n", slen);
+        parse_globals(m.globals);
+        warn("Parsing Globals complete\n");
+        debugVec(m.globals);
+        break;
+      }
+      case 7: {
+        warn("Parsing Export(7) section (length: 0x%x)\n", slen);
+        parse_exports(m.exports);
+        warn("Parsing Exports complete\n");
+        debugVec(m.exports);
+        break;
+      }
+      case 8: {
+        warn("Parsing Start(8) section (length: 0x%x)\n", slen);
+        m.start = funcidx(parse_idx());
+        ASSERT((m.start < m.funcs.size()),
+               "Start is a funcidx so it has to be < funcs.size()\n");
+        warn("Parsing Start complete\n");
+#if DEBUG
+        // this can cause a segmentation fault!
+        std::cout << "START func is " << m.start.value()
+                  << " :: " << m.types[m.funcs[m.start.value()].type]
+                  << std::endl;
+#endif
+        break;
+      }
+      case 9: {
+        warn("Parsing Element(9) section (length: 0x%x)\n", slen);
+        parse_elems(m.elem);
+        warn("Parsing Elements complete\n");
+        debugVec(m.elem);
+        break;
+      }
+      case 10: {
+        warn("Parsing Code(10) section (length: 0x%x)\n", slen);
+        parse_codes(m.funcs);
+        warn("Parsing Code complete\n");
+        break;
+      }
+      case 11: {
+        warn("Parsing Data(11)) section (length: 0x%x)\n", slen);
+        parse_datas(m.data);
+        warn("Parsing Datas complete\n");
+
+// TODO: move this in ast.hpp -> Dat::sDebug()
+#if DEBUG
+        std::cout << "----- DATAS -----\n";
+        for (unsigned int i = 0; i < m.data.size(); i++) {
+          std::string content(m.data[i].init.begin(), m.data[i].init.end());
+          std::cout << "DATA :: mem " << m.data[i].data << " offset (expr of #"
+                    << m.data[i].offset.size() << ")" << std::endl;
+          for (auto &of : m.data[i].offset)
+            std::cout << "\t\t" << of << std::endl;
+
+          std::cout << " has " << content.size() << " byte(s):" << std::hex
+                    << std::endl;
+          char old_fill = std::cout.fill('0');
+          for (int n = 0; n < content.size(); n += 20) {
+            std::cout << "  ";
+            for (int k = n; k < n + 20; k++)
+              if (k < content.size())
+                std::cout << std::setw(2)
+                          << int(static_cast<unsigned char>(content[k]));
+              else
+                std::cout << "  ";
+            std::cout << "    ";
+            for (int k = n; k < n + 20; k++)
+              if (k < content.size())
+                std::cout << (std::isprint(content[k]) ? content[k] : '.');
+              else
+                std::cout << " ";
+            std::cout << std::endl;
+          }
+          std::cout << std::dec;
+          std::cout.fill(old_fill);
+        }
+        std::cout << "----- ----- -----\n";
+#endif
+        break;
+      }
+      default:  // unimplemented cases
+        pos += slen;
+        break;
+    }
   }
 }
