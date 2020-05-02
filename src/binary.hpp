@@ -63,11 +63,4 @@ inline type::Name read_name(byte *bytes, u32 *pos) {
   return name;
 }
 
-inline u32 read_u32(byte *bytes, u32 &pos) {
-  pos += 4;
-  return ((u32 *)(bytes + pos - 4))[0];
-}
-
-inline u32 read_byte(byte *bytes, u32 *pos) { return bytes[(*pos)++]; }
-
 #endif

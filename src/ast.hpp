@@ -13,6 +13,9 @@
 #include "util.hpp"
 #include "values.hpp"
 
+// This is defined in parse.hpp, just declared here.
+class Reader;
+
 // Expressions
 using Expr = std::vector<Instr>;
 
@@ -273,8 +276,6 @@ struct Module {
         start(),
         imports(),
         exports() {}
-
-  void Load(byte *, u32);
 
   friend std::ostream &operator<<(std::ostream &out, const Module &m) {
     out << "Module:" << std::endl;

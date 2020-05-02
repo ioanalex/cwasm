@@ -3,13 +3,11 @@
 #include "InstrProfile.hpp"
 #include "ast.hpp"
 #include "global.hpp"
+#include "parse.hpp"
 #include "types.hpp"
 #include "util.hpp"
 #include "validate.hpp"
 #include "values.hpp"
-
-byte *bytes;
-long filelen;
 
 vec<InstrProfile> profiles;
 
@@ -18,40 +16,15 @@ int main(int argc, char *argv[]) {
   for (byte i = 0; i < (0xBF + 0x01); ++i)
     profiles.emplace_back(InstrProfile(i));
 
-  // get the module as bytes in an array
-  FILE *fileptr;
-
   if (argc != 2) {
     FATAL("give me a file\n");
   }
 
-  char *filename = argv[1];
-
   // from here ---------------
-  std::cout << "running > " + string(filename) << std::endl;
-  fileptr = fopen(filename, "rb");
-  fseek(fileptr, 0, SEEK_END);
-  filelen = ftell(fileptr);
-  rewind(fileptr);
-
-  bytes = new byte[filelen + 1];
-  fread(bytes, filelen, 1, fileptr);
-  bytes[filelen] = '\0';
-  fclose(fileptr);
-  //  to here ----------------
-  // [after refactor]: just use:
-  /*
-  Reader r = Reader.getInstance();
-  r.Init(filename)
-  */
+  std::cout << "running > " << argv[1] << std::endl;
+  Reader reader(argv[1]);
   Module m;
-
-  // [after refactor]:
-  /*
-  m.setReader(&r);
-  */
-  m.Load(bytes, filelen);
-
+  reader.parse_module(m);
   std::cout << m;
 
   // from here: ----------------
@@ -93,5 +66,4 @@ int main(int argc, char *argv[]) {
   // for (auto instr : profiles) {
   //   if (!instr.is_used()) std::cout << instr << std::endl;
   // }
-  delete[] bytes;
 }

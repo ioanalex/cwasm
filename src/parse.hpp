@@ -1,4 +1,5 @@
 #include <fstream>
+#include <vector>
 
 #include "ast.hpp"
 #include "types.hpp"
@@ -18,65 +19,60 @@ u32 parse_idx(byte *, u32 *);
 Memarg parse_memarg(byte *, u32 *);
 type::Value parse_valtype(byte *, u32 *);
 
-/* This class should be able to read a module from a file
- * It is also a singleton.
- *
- * How it should be used in my main:
- *
- * // get the object
- * Reader reader = Reader.getInstance();
- *
- * // initialize it
- * reader.Init(filename);
- *
- * // when you want to Load a module just use
- * reader.ReadModule(module);
- *
- */
 class Reader {
 public:
-  // with this function we construct the singleton
-  static Reader &getInstance(); /* {
-      static Reader instance;
-      return instance;
-  }*/
-  // opens the file and does all error checking and setting up for the reading
-  // to start
-  void Init(std::string filename);
+  Reader(const char *fname) : filename(fname), pos(0) { load(); }
+
+  u32 read_u32() {
+    u32 u = *reinterpret_cast<u32 *>(&bytes[pos]);
+    pos += sizeof(u32);
+    return u;
+  }
+
+  byte read_byte() { return bytes[pos++]; }
+
+  u64 read_LEB(u32 maxbits, bool sign = false) {
+    u64 result = 0;
+    u32 shift = 0;
+    u32 bcnt = 0;
+    u32 startpos = pos;
+    u64 byte;
+
+    while (true) {
+      byte = bytes[pos++];
+      result |= ((byte & 0x7f) << shift);
+      shift += 7;
+      if ((byte & 0x80) == 0) break;
+      bcnt += 1;
+      if (bcnt > (maxbits + 7 - 1) / 7) {
+        std::cerr << "Unsigned LEB at byte " << startpos << "overflow"
+                  << std::endl;
+      }
+    }
+    if (sign && (shift < maxbits) && (byte & 0x40)) {
+      // Sign extend
+      result |= -(1 << shift);
+    }
+    return result;
+  }
+
+  void skip(u32 k) { pos += k; }
+  std::streamsize get_pos() const { return pos; }
 
 private:
-  // Constuctor
-  Reader();
-
-  // the file
-  std::ifstream file;
   std::string filename;
+  std::vector<byte> bytes;
+  std::streamsize pos;
 
-  // the position in the file
-  int pos;
-
-public:
-  // Read a module
-  // Takes an empty module and feels it
-  void ReadModule(Module *mod);
-
-public:
-  /* Delete copy constructor and asignment operator so that no copying is
-   * happening. Since this is a singleton we need to tell the compiler that if
-   * at any point this object is copied, something is wrong. This provides
-   * safety and alerts us if anything unexpected is happening.
-   */
-  Reader(Reader const &) = delete;
-  void operator=(Reader const &) = delete;
+  void load() {
+    std::ifstream f(filename, std::ios::binary);
+    if (!f) return;
+    f.seekg(0, f.end);
+    std::streamsize length = f.tellg();
+    f.seekg(0, f.beg);
+    bytes.resize(length + 1);
+    f.read(reinterpret_cast<char *>(&bytes[0]), length);
+    bytes[length] = '\0';
+    pos = 0;
+  }
 };
-
-/*
-class MyReader : public Reader {
-  void ReadModule(Module *mod);
-};
-
-MyReader r = MyReader::getInstance(); //error
-
-TODO: find a way for the Reader class to be extendable
-  DON'T FORGET THE VIRTUAL DESTRUCTOR
-*/

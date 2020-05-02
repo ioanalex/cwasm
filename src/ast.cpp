@@ -40,8 +40,7 @@ static bool sections[] = {
     false   // Data
 };
 
-void Module::Load(byte *bytes, u32 byte_count) {
-  pos = 0;
+void Reader::parse_module(Module &m) {
   u32 word = read_u32(bytes, pos);
   ASSERT(word == 1836278016, "magic number is wrong\n");
   std::cout << "module magic word is " << word << std::endl;
