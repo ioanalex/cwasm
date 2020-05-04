@@ -2,7 +2,6 @@
 
 #include "InstrProfile.hpp"
 #include "ast.hpp"
-#include "global.hpp"
 #include "parse.hpp"
 #include "types.hpp"
 #include "util.hpp"
