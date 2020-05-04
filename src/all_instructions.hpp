@@ -1,3 +1,9 @@
+/*
+  This file defines the hierarchy of Instructions and their constructors.
+  Each constructor gets a pointer to the reader and parses itself.
+  Macros are used for code that is repeating due to similarities in the spec.
+*/
+
 #ifndef __ALL_INSTRUCTIONS_HPP__
 #define __ALL_INSTRUCTIONS_HPP__
 
@@ -5,10 +11,7 @@
 #include <optional>
 #include <utility>
 
-#include "binary.hpp"
-#include "indices.hpp"
 #include "instructions.hpp"
-#include "named.hpp"
 #include "parse.hpp"
 
 namespace Instruction {
@@ -19,7 +22,7 @@ public:                                 \
 
 #define DUMMY_INSTR_IMPL(SpecialInstrImpl) \
 public:                                    \
-  SpecialInstrImpl(byte *bytes, u32 *pos) : InstrImpl((*pos)++) {}
+  SpecialInstrImpl(Reader *reader) : InstrImpl(reader) {}
 
 /* This class is used to abstract all instructions
  * that have an immediate argument
@@ -27,9 +30,8 @@ public:                                    \
 template <typename T>
 class ImmediateImpl : public InstrImpl {
 public:
-  ImmediateImpl(u32 pos) : InstrImpl(pos) {}
-  ImmediateImpl(u32 pos, const T &imm) : InstrImpl(pos), value(imm) {}
-  ImmediateImpl(u32 pos, T &&imm) : InstrImpl(pos), value(std::move(imm)) {}
+  ImmediateImpl(Reader *reader) : InstrImpl(reader) {}
+  void setImmediate(T &imm) { value = std::move(imm); }
 
 protected:
   T value;
@@ -39,7 +41,7 @@ protected:
 
 class Unreachable : public InstrImpl {
 public:
-  Unreachable(byte *bytes, u32 *pos) : InstrImpl((*pos)++) {}
+  Unreachable(Reader *reader) : InstrImpl(reader) {}
   void run() {}
   bool validate();
 };
@@ -52,16 +54,16 @@ class Nop : public InstrImpl {
 
 class Block : public InstrImpl {
 public:
-  Block(byte *bytes, u32 *pos) : InstrImpl((*pos)++) {
+  Block(Reader *reader) : InstrImpl(reader) {
     debug("BLOCK\n");
-    if (bytes[*pos] != 0x40) {
-      blocktype = parse_valtype(bytes, pos);
+    if (reader->peek_byte() != 0x40) {
+      blocktype = reader->parse_valtype();
     } else
-      (*pos)++;  // to skip 0x40
-    while (bytes[*pos] != 0x0B) {
-      instrs.emplace_back(Instr::create(bytes, pos));
+      reader->skip(1);  // to skip 0x40
+    while (reader->peek_byte() != 0x0B) {
+      instrs.emplace_back(Instr::create(reader));
     }
-    (*pos)++;  // to skip the END(0x0B) instruction
+    reader->skip(1);  // to skip the END(0x0B) instruction
     debug("ENDBLOCK\n");
   }
 
@@ -76,17 +78,17 @@ public:
 // (we could use the SAME_CONSTR macro)
 class Loop : public InstrImpl {
 public:
-  Loop(byte *bytes, u32 *pos) : InstrImpl((*pos)++) {
+  Loop(Reader *reader) : InstrImpl(reader) {
     debug("LOOP\n");
 
-    if (bytes[*pos] != 0x40) {
-      blocktype = parse_valtype(bytes, pos);
+    if (reader->peek_byte() != 0x40) {
+      blocktype = reader->parse_valtype();
     } else
-      (*pos)++;  // to skip 0x40
-    while (bytes[*pos] != 0x0B) {
-      instrs.emplace_back(Instr::create(bytes, pos));
+      reader->skip(1);  // to skip 0x40
+    while (reader->peek_byte() != 0x0B) {
+      instrs.emplace_back(Instr::create(reader));
     }
-    (*pos)++;  // to skip the END(0x0B) instruction
+    reader->skip(1);  // to skip the END(0x0B) instruction
     debug("ENDLOOP\n");
   }
 
@@ -99,27 +101,27 @@ public:
 
 class If : public InstrImpl {
 public:
-  If(byte *bytes, u32 *pos) : InstrImpl((*pos)++), has_else(false) {
+  If(Reader *reader) : InstrImpl(reader), has_else(false) {
     debug("IF\n");
-    if (bytes[*pos] != 0x40) {
-      blocktype = parse_valtype(bytes, pos);
+    if (reader->peek_byte() != 0x40) {
+      blocktype = reader->parse_valtype();
     } else
-      (*pos)++;  // to skip 0x40
+      reader->skip(1);  // to skip 0x40
 
-    while (bytes[*pos] != 0x0B && bytes[*pos] != 0x05) {
-      ifinstrs.emplace_back(Instr::create(bytes, pos));
+    while (reader->peek_byte() != 0x0B && reader->peek_byte() != 0x05) {
+      ifinstrs.emplace_back(Instr::create(reader));
     }
-    if (bytes[*pos] == 0x05) {
+    if (reader->peek_byte() == 0x05) {
       debug("ELSE\n");
       has_else = true;
-      (*pos)++;
+      reader->skip(1);
 
-      while (bytes[*pos] != 0x0B) {
-        elseinstrs.emplace_back(Instr::create(bytes, pos));
+      while (reader->peek_byte() != 0x0B) {
+        elseinstrs.emplace_back(Instr::create(reader));
       }
       debug("ENDELSE\n");
     }
-    (*pos)++;  // to skip the END(0x0B) instruction
+    reader->skip(1);  // to skip the END(0x0B) instruction
     debug("ENDIF\n");
   }
 
@@ -135,7 +137,7 @@ public:
 // TODO: maybe this should be removed
 class End : public InstrImpl {
 public:
-  End(byte *bytes, u32 *pos) : InstrImpl((*pos)++) { debug("END\n"); }
+  End(Reader *reader) : InstrImpl(reader) { debug("END\n"); }
   void run() {}
   bool validate();
 };
@@ -143,28 +145,32 @@ public:
 // ---------------------- BRANCH --------------------
 class Br : public ImmediateImpl<labelidx> {
 public:
-  Br(byte *bytes, u32 *pos)
-      : ImmediateImpl<labelidx>{(*pos)++, labelidx(parse_idx(bytes, pos))} {}
+  Br(Reader *reader) : ImmediateImpl<labelidx>(reader) {
+    labelidx imm(reader->parse_idx());
+    setImmediate(imm);
+  }
   void run() {}
   bool validate();
 };
 
 class Br_If : public ImmediateImpl<labelidx> {
 public:
-  Br_If(byte *bytes, u32 *pos)
-      : ImmediateImpl<labelidx>{(*pos)++, labelidx(parse_idx(bytes, pos))} {}
+  Br_If(Reader *reader) : ImmediateImpl<labelidx>(reader) {
+    labelidx imm(reader->parse_idx());
+    setImmediate(imm);
+  }
   void run() {}
   bool validate();
 };
 
 class Br_Table : public InstrImpl {
 public:
-  Br_Table(byte *bytes, u32 *pos) : InstrImpl((*pos)++), labels(), labelN(0) {
-    u32 count = read_LEB(bytes, pos, 32);
+  Br_Table(Reader *reader) : InstrImpl(reader), labels(), labelN(0) {
+    u32 count = reader->read_LEB(32);
     for (auto i = 0; i < count; i++) {
-      labels.emplace_back(labelidx(parse_idx(bytes, pos)));
+      labels.emplace_back(labelidx(reader->parse_idx()));
     }
-    labelN = labelidx(parse_idx(bytes, pos));
+    labelN = labelidx(reader->parse_idx());
   }
   void run() {}
   bool validate();
@@ -182,18 +188,21 @@ class Return : public InstrImpl {
 // ---------------------- CALL ----------------------
 class Call : public ImmediateImpl<funcidx> {
 public:
-  Call(byte *bytes, u32 *pos)
-      : ImmediateImpl<funcidx>{(*pos)++, funcidx(parse_idx(bytes, pos))} {}
+  Call(Reader *reader) : ImmediateImpl<funcidx>(reader) {
+    funcidx f(reader->parse_idx());
+    setImmediate(f);
+  }
   void run() {}
   bool validate();
 };
 
 class CallIndirect : public ImmediateImpl<typeidx> {
 public:
-  CallIndirect(byte *bytes, u32 *pos)
-      : ImmediateImpl<typeidx>{(*pos)++, typeidx(parse_idx(bytes, pos))} {
-    ASSERT(bytes[*pos] == 0x00, "Call indirect must have a 0x00 in the end\n");
-    (*pos)++;  // to skip the 0x00
+  CallIndirect(Reader *reader) : ImmediateImpl<typeidx>(reader) {
+    typeidx t(reader->parse_idx());
+    setImmediate(t);
+    ASSERT(reader->read_byte() == 0x00,
+           "Call indirect must have a 0x00 in the end\n");
   }
   void run() {}
   bool validate();
@@ -213,16 +222,17 @@ class Select : public InstrImpl {
 };
 
 // define useful macro for classes that have the same constructor
-#define SAME_CONSTR(derived, base) \
-  derived(byte *bytes, u32 *pos) : base(bytes, pos)
+#define SAME_CONSTR(derived, base) derived(Reader *reader) : base(reader)
 // end of macro
 
 // ---------------------- LOCAL ----------------------
 // class that abstracts all local.<something> instructions
 class Local : public ImmediateImpl<localidx> {
 public:
-  Local(byte *bytes, u32 *pos)
-      : ImmediateImpl<localidx>{(*pos)++, localidx(parse_idx(bytes, pos))} {}
+  Local(Reader *reader) : ImmediateImpl<localidx>(reader) {
+    localidx l(reader->parse_idx());
+    setImmediate(l);
+  }
   DUMMY_VIRTUAL(Local)
 };
 
@@ -252,8 +262,10 @@ public:
 // class that abstracts all local.<something> instructions
 class Global : public ImmediateImpl<globalidx> {
 public:
-  Global(byte *bytes, u32 *pos)
-      : ImmediateImpl<globalidx>{(*pos)++, globalidx(parse_idx(bytes, pos))} {}
+  Global(Reader *reader) : ImmediateImpl<globalidx>(reader) {
+    globalidx g(reader->parse_idx());
+    setImmediate(g);
+  }
   DUMMY_VIRTUAL(Global)
 };
 
@@ -280,23 +292,26 @@ struct opt_st_size {
   _opt_sign sign;
 };
 
-#define LOAD_STORE(name)                                             \
-  class name : public ImmediateImpl<Memarg> {                        \
-  public:                                                            \
-    name(byte *bytes, u32 *pos, type::Value type)                    \
-        : ImmediateImpl<Memarg>{(*pos)++, parse_memarg(bytes, pos)}, \
-          type(type) {}                                              \
-    name(byte *bytes, u32 *pos, type::Value type, opt_st_size opt)   \
-        : ImmediateImpl<Memarg>{(*pos)++, parse_memarg(bytes, pos)}, \
-          type(type),                                                \
-          opt(opt) {}                                                \
-    type::Value getType() const { return type; }                     \
-    void run() {}                                                    \
-    bool validate();                                                 \
-                                                                     \
-  private:                                                           \
-    type::Value type;                                                \
-    std::optional<opt_st_size> opt;                                  \
+#define LOAD_STORE(name)                                        \
+  class name : public ImmediateImpl<Memarg> {                   \
+  public:                                                       \
+    name(Reader *reader, type::Value type)                      \
+        : ImmediateImpl<Memarg>(reader), type(type) {           \
+      Memarg marg(reader->parse_memarg());                      \
+      setImmediate(marg);                                       \
+    }                                                           \
+    name(Reader *reader, type::Value type, opt_st_size opt)     \
+        : ImmediateImpl<Memarg>(reader), type(type), opt(opt) { \
+      Memarg marg(reader->parse_memarg());                      \
+      setImmediate(marg);                                       \
+    }                                                           \
+    type::Value getType() const { return type; }                \
+    void run() {}                                               \
+    bool validate();                                            \
+                                                                \
+  private:                                                      \
+    type::Value type;                                           \
+    std::optional<opt_st_size> opt;                             \
   };
 
 LOAD_STORE(Load)
@@ -304,9 +319,9 @@ LOAD_STORE(Store)
 
 class MemorySize : public InstrImpl {
 public:
-  MemorySize(u32 *pos) : InstrImpl((*pos)++) {
-    ASSERT(bytes[*pos] == 0x00, "memory.size reserved byte should be 0\n");
-    (*pos)++;
+  MemorySize(Reader *reader) : InstrImpl(reader) {
+    ASSERT(reader->read_byte() == 0x00,
+           "memory.size reserved byte should be 0\n");
   }
   void run() {}
   bool validate();
@@ -314,9 +329,9 @@ public:
 
 class MemoryGrow : public InstrImpl {
 public:
-  MemoryGrow(u32 *pos) : InstrImpl((*pos)++) {
-    ASSERT(bytes[*pos] == 0x00, "memory.grow reserved byte should be 0\n");
-    (*pos)++;
+  MemoryGrow(Reader *reader) : InstrImpl(reader) {
+    ASSERT(reader->read_byte() == 0x00,
+           "memory.grow reserved byte should be 0\n");
   }
   void run() {}
   bool validate();
@@ -328,33 +343,10 @@ public:
 
 class Const : public ImmediateImpl<Value> {
 public:
-  Const(byte *bytes, u32 *pos, type::Value type)
-      : ImmediateImpl<Value>((*pos)++) {
+  Const(Reader *reader, type::Value type) : ImmediateImpl<Value>(reader) {
     set_const();
-    // TODO: write read_value function based on type..
-    // This code repeats (parse.cpp:const_eval)
-    switch (type) {
-      case type::Value::i32:
-        v = from_i32(read_LEB(bytes, pos, 32));
-        break;
-      case type::Value::i64:
-        v = from_i64(read_LEB(bytes, pos, 64));
-        break;
-      case type::Value::f32: {
-        f32 f;
-        std::memcpy(&f, bytes + *pos, 4);
-        v = from_f32(f);
-        *pos = *pos + 4;
-        break;
-      }
-      case type::Value::f64: {
-        f64 f;
-        std::memcpy(&f, bytes + *pos, 8);
-        v = from_f64(f);
-        *pos = *pos + 8;
-        break;
-      }
-    }
+    v = reader->parse_value(type);
+    setImmediate(v);
   }
   void run() {}
   bool validate();
@@ -377,5 +369,10 @@ class Numeric : public InstrImpl {
 #undef LOAD_STORE
 
 }  // namespace Instruction
+
+#undef DUMMY_VIRTUAL
+#undef DUMMY_INSTR_IMPL
+#undef SAME_CONSTR
+#undef LOAD_STORE
 
 #endif

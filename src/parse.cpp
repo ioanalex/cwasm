@@ -10,6 +10,33 @@
 
 u32 Reader::parse_idx() { return read_LEB(32); }
 
+Value Reader::parse_value(type::Value vt) {
+  Value v;
+  switch (vt) {
+    case type::Value::i32:
+      v = from_i32(read_LEB(32));
+      break;
+    case type::Value::i64:
+      v = from_i64(read_LEB(64));
+      break;
+    case type::Value::f32: {
+      f32 f;
+      std::copy(bytes.begin() + pos, bytes.begin() + pos + 4, &f);
+      v = from_f32(f);
+      skip(4);
+      break;
+    }
+    case type::Value::f64: {
+      f64 f;
+      std::copy(bytes.begin() + pos, bytes.begin() + pos + 8, &f);
+      v = from_f64(f);
+      skip(8);
+      break;
+    }
+  }
+  return v;
+}
+
 type::Value Reader::parse_valtype() {
   u32 encoded_type = read_byte();  // TODO: this is a byte, dont use u32
   return decode_type(encoded_type);
@@ -24,7 +51,6 @@ type::Elem Reader::parse_elemtype() {
 type::Limits Reader::parse_limits() {
   type::Limits limits;
   byte has_max = read_byte();
-  pos = pos + 1;
   ASSERT(has_max <= 0x01, "has_max is either 0x00 or 0x01\n");
   limits.min = read_LEB(32);
   if (has_max) {
@@ -49,7 +75,7 @@ type::Memory Reader::parse_memtype() {
 type::Global Reader::parse_globaltype() {
   type::Global global;
   global.value = parse_valtype();
-  ASSERT(bytes[pos] < 0x02, "mut can be either 0 or 1, malformed\n");
+  ASSERT(peek_byte() < 0x02, "mut can be either 0 or 1, malformed\n");
   global.mut = (read_byte() == 0x01);
   return global;
 }
@@ -79,7 +105,7 @@ void Reader::parse_expr(Expr &e) {
   unsigned int instr_count = 0;
   while (true) {
     warn("Parsing instr[%d] at %x\n", instr_count, pos);
-    e.emplace_back(Instr::create(bytes, &pos));
+    e.emplace_back(Instr::create(this));
     if (e.back().code() == 0x0B) break;
     instr_count++;
 #if WAIT

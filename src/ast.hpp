@@ -1,3 +1,10 @@
+/*
+  In this file we define all substructures of a Module, as we as the Module
+  itself. We also overload the operator<< to be able to print those structures.
+  Each structure has an sDebug() function that produces minimum debug
+  information about it.
+*/
+
 #ifndef __AST_HPP__
 #define __AST_HPP__
 

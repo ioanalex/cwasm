@@ -3,13 +3,17 @@
 #include <memory>
 
 #include "InstrProfile.hpp"
-#include "global.hpp"
 #include "types.hpp"
+
+extern vec<InstrProfile>
+    profiles;  // the profiles array is used when printing the instructions
+
+class Reader;
 
 // This is the abstract class for all different types of instructions.
 class InstrImpl {
 public:
-  explicit InstrImpl(u32 pos) : pos_(pos), code_(bytes[pos]) {}
+  explicit InstrImpl(Reader *reader);
 
   virtual ~InstrImpl() {}
 
@@ -39,9 +43,9 @@ public:
   // static factory method
   // checks byte[*pos]
   // desides which sub-class to use as an InstrImpl
-  // initializes the impl onject
+  // initializes the impl object
   // initializes the instr object using basic constructor
-  static Instr create(byte *, u32 *);  // called when parsing
+  static Instr create(Reader *);  // called when parsing
   u32 pos() const { return impl->pos(); }
   u32 code() const { return impl->code(); }
   // TODO: takes a Store.

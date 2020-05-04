@@ -1,3 +1,7 @@
+/*
+  Here we define all index types as described in the specification.
+*/
+
 #ifndef __INDICES_HPP
 #define __INDICES_HPP
 
@@ -14,9 +18,7 @@ using labelidx = Named<u32, struct labelidx_>;
 
 #define PRINTABLE_INDEX(idx)                                        \
   inline std::ostream &operator<<(std::ostream &os, const idx &i) { \
-    idx a(i);                                                       \
-    u32 b = a.value();                                              \
-    return os << b;                                                 \
+    return os << i.value();                                         \
   }
 
 PRINTABLE_INDEX(typeidx)

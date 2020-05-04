@@ -41,7 +41,7 @@ int main(int argc, char *argv[]) {
   res &= Validate::exports(m);
   res &= Validate::imports(m);
 
-  if (!res) FATAL("File: %s: VALIDATION FAILED\n", filename);
+  if (!res) FATAL("File: %s: VALIDATION FAILED\n", argv[1]);
 
   //  to here ----------------
   // [after refactor]: just use:
