@@ -71,8 +71,8 @@ public:
     return u;
   }
 
-  byte peek_byte() { return bytes[pos]; }
-  byte read_byte() { return bytes[pos++]; }
+  byte peek_byte() { return bytes.at(pos); }
+  byte read_byte() { return bytes.at(pos++); }
 
   u64 read_LEB(u32 maxbits, bool sign = false) {
     u64 result = 0;
@@ -82,7 +82,7 @@ public:
     u64 byte;
 
     while (true) {
-      byte = bytes[pos++];
+      byte = bytes.at(pos++);
       result |= ((byte & 0x7f) << shift);
       shift += 7;
       if ((byte & 0x80) == 0) break;
