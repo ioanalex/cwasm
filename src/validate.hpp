@@ -5,6 +5,7 @@
 
 #include "ast.hpp"
 
+// The validation Context
 struct Context {
   vec<type::Func> types;
   vec<type::Func> funcs;
@@ -16,34 +17,29 @@ struct Context {
   type::Result return_;
 };
 
-void InitContext(Module&);
-void PrintContext();
-void UpdateContext(vec<type::Value>&, vec<type::Value>&);
-void UpdateContext(vec<type::Value>&, vec<type::Value>&, type::Result);
-void AddLabel(type::Result);
-void RemoveLabel(type::Result);
-
-// define the data structures needed for the body validation
+// The operand values inserted in the operand stack
 enum valtype { I32, I64, F32, F64, Unknown };
-
-const char* val2str(valtype v);
-
-inline std::ostream& operator<<(std::ostream& os, const valtype& v) {
+inline const char* val2str(valtype v) {
   static const char* valtype2str[]{"i32", "i64", "f32", "f64", "Unknown"};
-  return os << valtype2str[v];
+  return valtype2str[v];
+}
+inline std::ostream& operator<<(std::ostream& os, const valtype& v) {
+  return os << val2str(v);
 }
 
+// TODO:
+// These methods can produce bugs and should be refined
 valtype res2valtype(const type::Result&);
 valtype gettype(std::optional<type::Value>);
 vec<valtype> gettypes(const vec<type::Value>&);
 
+// The control frames inserted in the control stack
 struct frame {
   vec<valtype> label_types;  // this should have a size of 1
   vec<valtype> end_types;    // this should have a size of 1
   u32 height;
   bool unreachable;
 };
-
 inline std::ostream& operator<<(std::ostream& os, const frame& f) {
   os << "h:" << f.height << " unr:" << f.unreachable << " labels"
      << " end_types" << std::endl;
@@ -52,65 +48,60 @@ inline std::ostream& operator<<(std::ostream& os, const frame& f) {
   return os;
 }
 
-void PrintStacks();
-// functions to access the stacks
-void push_opd(valtype);
-valtype pop_opd();
-valtype pop_opd(valtype);
-
-void push_opds(vec<valtype>);
-void pop_opds(vec<valtype>);
-
-void push_ctrl(vec<valtype>, vec<valtype>);
-vec<valtype> pop_ctrl();
-void unreachable();
-
-long unsigned int ctrls_size();
-frame n_frame(int n);
-
-// end of body validation
-
-namespace Validate {
-bool expr(Expr&);
-bool limits(type::Limits&, u32);
-bool func(Func&);
-bool funcs(Module&);
-bool tables(Module&);
-bool mems(Module&);
-bool globals(Module&);
-bool elems(Module&);
-bool datas(Module&);
-bool start(Module&);
-bool exports(Module&);
-bool imports(Module&);
-}  // namespace Validate
-
-// All the above functionality can be encapsulated in a Validator class
-// Since only one Validator is used, the class should be a singleton!
 class Validator {
 public:
-  static Validator& getInstance(); /*{
-    static Validator v;
-    return v;
-  }*/
-
-private:
   // constructor
   Validator();
 
 private:
-  Context c;          // the validation context
+  Context c;  // the validation context
+public:
+  void InitContext(Module&);
+  void PrintContext();
+  void UpdateContext(vec<type::Value>&, vec<type::Value>&);
+  void UpdateContext(vec<type::Value>&, vec<type::Value>&, type::Result);
+  void AddLabel(type::Result);
+  void RemoveLabel(type::Result);
+
+private:
   vec<valtype> opds;  // the operand stack
   vec<frame> ctrls;   // the control stack
   // add all methods used to control the above structures
+public:
+  // a helper function to print the operand and control stacks
+  void PrintStacks();
+  // functions to access the stacks
+  void push_opd(valtype);
+  valtype pop_opd();
+  valtype pop_opd(valtype);
+
+  void push_opds(vec<valtype>);
+  void pop_opds(vec<valtype>);
+
+  void push_ctrl(vec<valtype>, vec<valtype>);
+  vec<valtype> pop_ctrl();
+  void unreachable();
+
+  long unsigned int ctrls_size();
+  frame n_frame(int n);
 
 public:
   bool ValidateModule(Module*);  // validates a module
 private:
   // add all methods used to validate the module
   // e.g. the Validate::funcs method could be included as
-  bool funcs(Module*);
-  // same for all other functions declared under namespace Validate
+  bool expr(Expr&);
+  bool limits(type::Limits&, u32);
+  bool func(Func&);
+  bool funcs(Module&);
+  bool tables(Module&);
+  bool mems(Module&);
+  bool globals(Module&);
+  bool elems(Module&);
+  bool datas(Module&);
+  bool start(Module&);
+  bool exports(Module&);
+  bool imports(Module&);
 
   /*
     In the Validate:exprs function we call each instruction to validate itself.
