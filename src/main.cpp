@@ -1,8 +1,8 @@
 #include <iostream>
 
 #include "InstrProfile.hpp"
+#include "Reader.hpp"
 #include "ast.hpp"
-#include "parse.hpp"
 #include "types.hpp"
 #include "util.hpp"
 #include "validate.hpp"

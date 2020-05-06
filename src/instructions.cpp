@@ -1,5 +1,5 @@
+#include "Reader.hpp"
 #include "all_instructions.hpp"
-#include "parse.hpp"
 #include "util.hpp"
 
 #define UNIMPLEMENTED FATAL("Instruction is unimplemented, exiting\n")
@@ -13,7 +13,7 @@ using namespace Instruction;
 
 Instr Instr::create(Reader *reader) {
   byte opcode = reader->peek_byte();
-  debug("Instr::create, reading OPCODE: %hhx <-- %x\n", opcode,
+  debug("Instr::create, reading OPCODE: %hhx <-- %lx\n", opcode,
         reader->get_pos());
   profiles.at(opcode).use();
   switch (opcode) {

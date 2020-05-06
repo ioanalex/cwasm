@@ -1,4 +1,4 @@
-#include "parse.hpp"
+#include "Reader.hpp"
 
 #include <cstring>
 #include <iomanip>
@@ -104,7 +104,7 @@ Memarg Reader::parse_memarg() {
 void Reader::parse_expr(Expr &e) {
   unsigned int instr_count = 0;
   while (true) {
-    warn("Parsing instr[%d] at %x\n", instr_count, pos);
+    warn("Parsing instr[%d] at %lx\n", instr_count, pos);
     e.emplace_back(Instr::create(this));
     if (e.back().code() == 0x0B) break;
     instr_count++;

@@ -11,8 +11,8 @@
 #include <optional>
 #include <utility>
 
+#include "Reader.hpp"
 #include "instructions.hpp"
-#include "parse.hpp"
 
 namespace Instruction {
 #define DUMMY_VIRTUAL(SpecialInstrImpl) \
