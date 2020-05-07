@@ -76,7 +76,7 @@ public:
     return u;
   }
 
-  byte peek_byte(int offset = 0) { return bytes.at(pos + offset); }
+  byte peek_byte(int offset = 0) const { return bytes.at(pos + offset); }
   byte read_byte() { return bytes.at(pos++); }
 
   u64 read_LEB(u32 maxbits, bool sign = false) {
