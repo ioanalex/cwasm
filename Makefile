@@ -2,7 +2,7 @@
 
 CXX=c++
 ifeq ($(CXX),c++)
-CXXFLAGS=-std=c++17 -Wall -Wno-sign-compare -g 
+CXXFLAGS=-std=c++17 -Wall -Wno-sign-compare -g -fno-stack-protector
 else
 CXXFLAGS=-std=c++17 -Wall -g
 endif

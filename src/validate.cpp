@@ -28,6 +28,7 @@ void InitContext(Module &mod) {
   // }
   context.funcs.resize(mod.funcs.size());
   for (auto i = 0; i < mod.funcs.size(); i++) {
+    ASSERT(mod.funcs[i].type < mod.types.size(), "unknown type");
     context.funcs[i] = mod.types[mod.funcs[i].type];
   }
 

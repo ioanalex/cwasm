@@ -13,7 +13,12 @@ public:
   Reader(const char *fname) : filename(fname), pos(0) { load(); }
 
   // Use this method to advance the position on the file
-  void skip(u32 k) { pos += k; }
+  std::streamsize skip(u32 k = 1) {
+    std::streamsize p = pos;
+    pos += k;
+    if (pos > length) FATAL("trying to skip outside of the buffer");
+    return p;
+  }
 
   // Use this method if you want the value pos.
   std::streamsize get_pos() const { return pos; }
@@ -49,7 +54,7 @@ public:
   void parse_globals(vec<Global> &);
   void parse_exports(vec<Export> &);
   void parse_elems(vec<Elem> &);
-  void parse_codes(vec<Func> &);
+  void parse_codes(vec<Func> &, int);
   void parse_datas(vec<Data> &);
 
   // Methods for parsing other, more basic constructs
@@ -71,7 +76,7 @@ public:
     return u;
   }
 
-  byte peek_byte() { return bytes.at(pos); }
+  byte peek_byte(int offset = 0) { return bytes.at(pos + offset); }
   byte read_byte() { return bytes.at(pos++); }
 
   u64 read_LEB(u32 maxbits, bool sign = false) {
@@ -101,8 +106,8 @@ public:
 
   type::Name read_name() {
     u32 namelen = read_LEB(32);
-    type::Name name(bytes.begin() + pos, bytes.begin() + pos + namelen);
-    skip(namelen);
+    int p = skip(namelen);
+    type::Name name(bytes.begin() + p, bytes.begin() + pos);
     return name;
   }
 };

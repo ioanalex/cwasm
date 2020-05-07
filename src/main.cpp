@@ -29,7 +29,6 @@ int main(int argc, char *argv[]) {
   // from here: ----------------
   InitContext(m);
   // PrintContext();
-
   bool res = Validate::funcs(m);
   res &= Validate::tables(m);
   res &= Validate::mems(m);

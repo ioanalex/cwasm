@@ -59,11 +59,11 @@ public:
     if (reader->peek_byte() != 0x40) {
       blocktype = reader->parse_valtype();
     } else
-      reader->skip(1);  // to skip 0x40
+      reader->skip();  // to skip 0x40
     while (reader->peek_byte() != 0x0B) {
       instrs.emplace_back(Instr::create(reader));
     }
-    reader->skip(1);  // to skip the END(0x0B) instruction
+    reader->skip();  // to skip the END(0x0B) instruction
     debug("ENDBLOCK\n");
   }
 
@@ -84,11 +84,11 @@ public:
     if (reader->peek_byte() != 0x40) {
       blocktype = reader->parse_valtype();
     } else
-      reader->skip(1);  // to skip 0x40
+      reader->skip();  // to skip 0x40
     while (reader->peek_byte() != 0x0B) {
       instrs.emplace_back(Instr::create(reader));
     }
-    reader->skip(1);  // to skip the END(0x0B) instruction
+    reader->skip();  // to skip the END(0x0B) instruction
     debug("ENDLOOP\n");
   }
 
@@ -106,7 +106,7 @@ public:
     if (reader->peek_byte() != 0x40) {
       blocktype = reader->parse_valtype();
     } else
-      reader->skip(1);  // to skip 0x40
+      reader->skip();  // to skip 0x40
 
     while (reader->peek_byte() != 0x0B && reader->peek_byte() != 0x05) {
       ifinstrs.emplace_back(Instr::create(reader));
@@ -114,14 +114,14 @@ public:
     if (reader->peek_byte() == 0x05) {
       debug("ELSE\n");
       has_else = true;
-      reader->skip(1);
+      reader->skip();
 
       while (reader->peek_byte() != 0x0B) {
         elseinstrs.emplace_back(Instr::create(reader));
       }
       debug("ENDELSE\n");
     }
-    reader->skip(1);  // to skip the END(0x0B) instruction
+    reader->skip();  // to skip the END(0x0B) instruction
     debug("ENDIF\n");
   }
 
@@ -345,14 +345,11 @@ class Const : public ImmediateImpl<Value> {
 public:
   Const(Reader *reader, type::Value type) : ImmediateImpl<Value>(reader) {
     set_const();
-    v = reader->parse_value(type);
+    Value v = reader->parse_value(type);
     setImmediate(v);
   }
   void run() {}
   bool validate();
-
-private:
-  Value v;
 };
 
 // TODO: add some abstraction here
