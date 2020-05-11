@@ -19,18 +19,14 @@ int main(int argc, char *argv[]) {
     FATAL("give me a file\n");
   }
 
-  // from here ---------------
   std::cout << "running > " << argv[1] << std::endl;
   Reader reader(argv[1]);
   Module m;
   reader.parse_module(m);
   std::cout << m;
 
-  // get the validator
   Validator validator = Validator();
-
-  // initialize it (this could be moved in m.Validate)
-  validator.InitContext(m);  // this will initialize the context and the stacks
+  validator.InitContext(m);
 
   // validate the module
   bool res = validator.validate_module(m);
