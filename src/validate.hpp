@@ -3,7 +3,12 @@
 
 #include <stack>
 
-#include "ast.hpp"
+#include "types.hpp"
+
+// things we need from ast.hpp
+class Module;
+class Func;
+class Expr;
 
 // The validation Context
 struct Context {
@@ -102,20 +107,6 @@ private:
   bool start(Module&);
   bool exports(Module&);
   bool imports(Module&);
-
-  /*
-    In the Validate:exprs function we call each instruction to validate itself.
-    This is elegant, but it should become much cleaner.
-
-    TODO: add a way to do that
-
-    Keep in mind that the same problem exists in the Reader class, and the
-    Instr::Create method.
-  */
-public:
-  // For an explanation of these check the Reader class.
-  Validator(Validator const&) = delete;
-  void operator=(Validator const&) = delete;
 };
 
 #endif
