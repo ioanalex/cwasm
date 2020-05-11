@@ -52,7 +52,7 @@ inline std::ostream& operator<<(std::ostream& os, const frame& f) {
 class Validator {
 public:
   // constructor
-  Validator();
+  Validator(){};
 
 private:
   Context c;  // the validation context
@@ -88,7 +88,7 @@ public:
   frame n_frame(int n);
 
 public:
-  bool ValidateModule(Module*);  // validates a module
+  bool validate_module(Module&);  // validates a module
 private:
   // add all methods used to validate the module
   // e.g. the Validate::funcs method could be included as

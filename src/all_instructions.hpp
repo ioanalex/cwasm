@@ -21,7 +21,7 @@ namespace Instruction {
 #define DUMMY_VIRTUAL(SpecialInstrImpl) \
 public:                                 \
   virtual void run() {}                 \
-  virtual bool validate(Validator *);
+  virtual bool validate(Validator *) { return true; }
 
 #define DUMMY_INSTR_IMPL(SpecialInstrImpl) \
 public:                                    \
@@ -34,6 +34,7 @@ template <typename T>
 class ImmediateImpl : public InstrImpl {
 public:
   ImmediateImpl(Reader *reader) : InstrImpl(reader) {}
+  virtual ~ImmediateImpl() {}
   void setImmediate(T &imm) { value = std::move(imm); }
 
 protected:

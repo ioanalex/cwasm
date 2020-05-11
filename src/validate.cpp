@@ -156,21 +156,6 @@ void Validator::unreachable() {
 0 ---------  Helper Methods  -------- 0
 0 ----------------------------------- 0
 */
-const char *val2str(valtype v) {
-  switch (v) {
-    case valtype::I32:
-      return "I32";
-    case valtype::I64:
-      return "I64";
-    case valtype::F32:
-      return "F32";
-    case valtype::F64:
-      return "F64";
-    case valtype::Unknown:
-      return "Unknown";
-  }
-  return "";  // this is so that the compiler doesn't produce a warning;
-}
 
 // TODO: delete this!
 valtype res2valtype(const type::Result &res) {
@@ -230,6 +215,18 @@ vec<valtype> gettypes(const vec<type::Value> &v) {
  * ---- namespace Validate ----
  * ----------------------------
  */
+bool Validator::validate_module(Module &m) {
+  bool res = Validator::funcs(m);
+  res &= Validator::tables(m);
+  res &= Validator::mems(m);
+  res &= Validator::globals(m);
+  res &= Validator::elems(m);
+  res &= Validator::datas(m);
+  res &= Validator::start(m);
+  res &= Validator::exports(m);
+  res &= Validator::imports(m);
+  return res;
+}
 
 bool Validator::limits(type::Limits &l, u32 range) {
   bool min_range = l.min <= range;
@@ -528,7 +525,7 @@ bool Validator::func(Func &f) {
 bool Validator::expr(Expr &ex) {
   // std::cout << ex.size() << " instructions to validate" << std::endl;
   for (auto i = 0; i < ex.size(); i++) {
-    if (!(ex[i].validate())) return false;
+    if (!(ex[i].validate(this))) return false;
     PrintStacks();
   }
   // debug("finished with body\n");

@@ -25,8 +25,7 @@ public:
 
   // TODO: takes a Store.
   virtual void run() = 0;
-  // TODO: takes a Context.
-  virtual bool validate(Validator *);
+  virtual bool validate(Validator *) = 0;
 
 private:
   u32 pos_;  // Index in bytecode
