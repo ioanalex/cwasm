@@ -9,6 +9,7 @@ extern vec<InstrProfile>
     profiles;  // the profiles array is used when printing the instructions
 
 class Reader;
+class Validator;
 
 // This is the abstract class for all different types of instructions.
 class InstrImpl {
@@ -25,7 +26,7 @@ public:
   // TODO: takes a Store.
   virtual void run() = 0;
   // TODO: takes a Context.
-  virtual bool validate() = 0;
+  virtual bool validate(Validator *);
 
 private:
   u32 pos_;  // Index in bytecode
@@ -52,10 +53,10 @@ public:
   void run() { impl->run(); }
   bool is_const() { return impl->is_const(); }
   // TODO: takes a Context.
-  bool validate() {
+  bool validate(Validator *validator) {
     // std::cout << "(0x" << std::hex << code() << std::dec << ") "
     //           << profiles[code()].get_name() << std::endl;
-    bool b = impl->validate();
+    bool b = impl->validate(validator);
     return b;
   }
 

@@ -14,11 +14,14 @@
 #include "Reader.hpp"
 #include "instructions.hpp"
 
+// the validator defined in validate.hpp
+class Validator;
+
 namespace Instruction {
 #define DUMMY_VIRTUAL(SpecialInstrImpl) \
 public:                                 \
   virtual void run() {}                 \
-  virtual bool validate() { return true; }
+  virtual bool validate(Validator *);
 
 #define DUMMY_INSTR_IMPL(SpecialInstrImpl) \
 public:                                    \
@@ -43,13 +46,13 @@ class Unreachable : public InstrImpl {
 public:
   Unreachable(Reader *reader) : InstrImpl(reader) {}
   void run() {}
-  bool validate();
+  bool validate(Validator *);
 };
 
 class Nop : public InstrImpl {
   DUMMY_INSTR_IMPL(Nop);
   void run() {}
-  bool validate();
+  bool validate(Validator *);
 };
 
 class Block : public InstrImpl {
@@ -68,7 +71,7 @@ public:
   }
 
   void run() {}
-  bool validate();
+  bool validate(Validator *);
 
   vec<Instr> instrs;
   std::optional<type::Value> blocktype;
@@ -93,7 +96,7 @@ public:
   }
 
   void run() {}
-  bool validate();
+  bool validate(Validator *);
 
   vec<Instr> instrs;
   std::optional<type::Value> blocktype;
@@ -126,7 +129,7 @@ public:
   }
 
   void run() {}
-  bool validate();
+  bool validate(Validator *);
 
   bool has_else;
   vec<Instr> ifinstrs;
@@ -139,7 +142,7 @@ class End : public InstrImpl {
 public:
   End(Reader *reader) : InstrImpl(reader) { debug("END\n"); }
   void run() {}
-  bool validate();
+  bool validate(Validator *);
 };
 
 // ---------------------- BRANCH --------------------
@@ -150,7 +153,7 @@ public:
     setImmediate(imm);
   }
   void run() {}
-  bool validate();
+  bool validate(Validator *);
 };
 
 class Br_If : public ImmediateImpl<labelidx> {
@@ -160,7 +163,7 @@ public:
     setImmediate(imm);
   }
   void run() {}
-  bool validate();
+  bool validate(Validator *);
 };
 
 class Br_Table : public InstrImpl {
@@ -173,7 +176,7 @@ public:
     labelN = labelidx(reader->parse_idx());
   }
   void run() {}
-  bool validate();
+  bool validate(Validator *);
   vec<labelidx> labels;
   labelidx labelN;
 };
@@ -182,7 +185,7 @@ public:
 class Return : public InstrImpl {
   DUMMY_INSTR_IMPL(Return)
   void run() {}
-  bool validate();
+  bool validate(Validator *);
 };
 
 // ---------------------- CALL ----------------------
@@ -193,7 +196,7 @@ public:
     setImmediate(f);
   }
   void run() {}
-  bool validate();
+  bool validate(Validator *);
 };
 
 class CallIndirect : public ImmediateImpl<typeidx> {
@@ -205,20 +208,20 @@ public:
            "Call indirect must have a 0x00 in the end\n");
   }
   void run() {}
-  bool validate();
+  bool validate(Validator *);
 };
 // ---------------------------------------------------
 
 class Drop : public InstrImpl {
   DUMMY_INSTR_IMPL(Drop);
   void run() {}
-  bool validate();
+  bool validate(Validator *);
 };
 
 class Select : public InstrImpl {
   DUMMY_INSTR_IMPL(Select);
   void run() {}
-  bool validate();
+  bool validate(Validator *);
 };
 
 // define useful macro for classes that have the same constructor
@@ -240,21 +243,21 @@ class LocalGet : public Local {
 public:
   SAME_CONSTR(LocalGet, Local) {}
   void run() {}
-  bool validate();
+  bool validate(Validator *);
 };
 
 class LocalSet : public Local {
 public:
   SAME_CONSTR(LocalSet, Local) {}
   void run() {}
-  bool validate();
+  bool validate(Validator *);
 };
 
 class LocalTee : public Local {
 public:
   SAME_CONSTR(LocalTee, Local) {}
   void run() {}
-  bool validate();
+  bool validate(Validator *);
 };
 // -------------------------------------------------
 
@@ -273,14 +276,14 @@ class GlobalGet : public Global {
 public:
   SAME_CONSTR(GlobalGet, Global) { set_const(); }
   void run() {}
-  bool validate();
+  bool validate(Validator *);
 };
 
 class GlobalSet : public Global {
 public:
   SAME_CONSTR(GlobalSet, Global) {}
   void run() {}
-  bool validate();
+  bool validate(Validator *);
 };
 // --------------------------------------------------
 
@@ -307,7 +310,7 @@ struct opt_st_size {
     }                                                           \
     type::Value getType() const { return type; }                \
     void run() {}                                               \
-    bool validate();                                            \
+    bool validate(Validator *);                                 \
                                                                 \
   private:                                                      \
     type::Value type;                                           \
@@ -324,7 +327,7 @@ public:
            "memory.size reserved byte should be 0\n");
   }
   void run() {}
-  bool validate();
+  bool validate(Validator *);
 };
 
 class MemoryGrow : public InstrImpl {
@@ -334,7 +337,7 @@ public:
            "memory.grow reserved byte should be 0\n");
   }
   void run() {}
-  bool validate();
+  bool validate(Validator *);
 };
 
 //---------------------------------------------------------
@@ -349,7 +352,7 @@ public:
     setImmediate(v);
   }
   void run() {}
-  bool validate();
+  bool validate(Validator *);
 
 private:
   Value v;
@@ -359,7 +362,7 @@ private:
 class Numeric : public InstrImpl {
   DUMMY_INSTR_IMPL(Numeric);
   void run() {}
-  bool validate();
+  bool validate(Validator *);
 };
 // --------------------------------------------------
 

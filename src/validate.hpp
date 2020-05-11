@@ -3,12 +3,8 @@
 
 #include <stack>
 
+#include "ast.hpp"
 #include "types.hpp"
-
-// things we need from ast.hpp
-class Module;
-class Func;
-class Expr;
 
 // The validation Context
 struct Context {
@@ -61,6 +57,7 @@ public:
 private:
   Context c;  // the validation context
 public:
+  const Context context() const { return c; }
   void InitContext(Module&);
   void PrintContext();
   void UpdateContext(vec<type::Value>&, vec<type::Value>&);

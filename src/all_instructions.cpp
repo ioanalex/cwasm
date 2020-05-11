@@ -4,14 +4,12 @@
 
 #include "validate.hpp"
 
-extern Context context;
-
 // NOTE: this is a clean (?) way to validate instructions based on their type
 // right now it only works for instructions with no parametric types, but it
 // can be generalized. Insted of doing this at runtime it would be better if
 // code was generated here and labeled for goto commands.
 // TODO: This should be implemented as a basic optimization.
-bool ByType(byte opcode) {
+bool ByType(byte opcode, Validator *validator) {
   instr_type type = profiles[opcode].get_type();
   vec<valtype> args;  //, ret;
   iloop(type.args) {
@@ -20,136 +18,136 @@ bool ByType(byte opcode) {
       return true;
     }
     args.push_back(gettype(std::get<type::Value>(type.args[i])));
-    // pop_opd(gettype(std::get<type::Value>(type.args[i])));
+    // validator->pop_opd(gettype(std::get<type::Value>(type.args[i])));
   }
-  pop_opds(args);
+  validator->pop_opds(args);
   iloop(type.ret) {
     if (type.ret[i].index() == 1) FATAL("i am not that smart yet\n");
-    push_opd(gettype(std::get<type::Value>(type.ret[i])));
+    validator->push_opd(gettype(std::get<type::Value>(type.ret[i])));
   }
   return true;
 }
 
 #define VALIDATE_BY_TYPE(i) \
-  bool i::validate() { return ByType(code()); }
+  bool i::validate(Validator *validator) { return ByType(code(), validator); }
 
 // Unimplemented things
 #define UNIMPLEMENTED(i) \
-  bool i::validate() { return true; }
+  bool i::validate(Validator *validator) { return true; }
 
 using namespace Instruction;
 
-bool Unreachable::validate() {
-  unreachable();
+bool Unreachable::validate(Validator *validator) {
+  validator->unreachable();
   return true;
 }
 
-bool Nop::validate() { return true; }
+bool Nop::validate(Validator *validator) { return true; }
 
 // NOTE: this is not finished
 // TODO: finish this (:
-bool Block::validate() {
+bool Block::validate(Validator *validator) {
   valtype type = gettype(blocktype);
-  AddLabel(blocktype);
+  validator->AddLabel(blocktype);
   if (blocktype.has_value())
-    push_ctrl(vec<valtype>({type}), vec<valtype>({type}));
+    validator->push_ctrl(vec<valtype>({type}), vec<valtype>({type}));
   else
-    push_ctrl(vec<valtype>(), vec<valtype>());
+    validator->push_ctrl(vec<valtype>(), vec<valtype>());
   std::cout << "ENTER BLOCK" << std::endl;
   // validate the instructions enclosed by the block
   iloop(instrs) {
-    instrs[i].validate();
-    PrintStacks();
+    instrs[i].validate(validator);
+    validator->PrintStacks();
   }
   std::cout << "EXIT BLOCK" << std::endl;
 
-  RemoveLabel(blocktype);
+  validator->RemoveLabel(blocktype);
   // simulate END instr (remember that blocks eat up their END opcode)
-  auto results = pop_ctrl();
-  push_opds(results);
+  auto results = validator->pop_ctrl();
+  validator->push_opds(results);
 
   return true;
 }
 // NOTE: this is not finished
 // TODO: finish this (:
-bool Loop::validate() {
+bool Loop::validate(Validator *validator) {
   valtype type = gettype(blocktype);
-  AddLabel(type::Result());
+  validator->AddLabel(type::Result());
   if (blocktype.has_value())
-    push_ctrl(vec<valtype>(), vec<valtype>({type}));
+    validator->push_ctrl(vec<valtype>(), vec<valtype>({type}));
   else
-    push_ctrl(vec<valtype>(), vec<valtype>());
+    validator->push_ctrl(vec<valtype>(), vec<valtype>());
   std::cout << "ENTER LOOP" << std::endl;
   // validate the instructions enclosed by the loop
   iloop(instrs) {
-    instrs[i].validate();
-    PrintStacks();
+    instrs[i].validate(validator);
+    validator->PrintStacks();
   }
   std::cout << "EXIT LOOP" << std::endl;
 
-  RemoveLabel(type::Result());
+  validator->RemoveLabel(type::Result());
   // simulate END instr (remember that loops eat up their END opcode)
-  auto results = pop_ctrl();
-  push_opds(results);
+  auto results = validator->pop_ctrl();
+  validator->push_opds(results);
 
   return true;
 }
 
-bool If::validate() {
+bool If::validate(Validator *validator) {
   valtype type = gettype(blocktype);
-  AddLabel(blocktype);
+  validator->AddLabel(blocktype);
 
-  pop_opd(valtype::I32);
+  validator->pop_opd(valtype::I32);
   if (blocktype.has_value())
-    push_ctrl(vec<valtype>({type}), vec<valtype>({type}));
+    validator->push_ctrl(vec<valtype>({type}), vec<valtype>({type}));
   else
-    push_ctrl(vec<valtype>(), vec<valtype>());
+    validator->push_ctrl(vec<valtype>(), vec<valtype>());
 
   std::cout << "ENTER IF" << std::endl;
   // validate the instructions in if body
   iloop(ifinstrs) {
-    ifinstrs[i].validate();
-    PrintStacks();
+    ifinstrs[i].validate(validator);
+    validator->PrintStacks();
   }
 
   std::cout << "EXIT IF" << ((has_else) ? " expect else " : "") << std::endl;
 
   if (has_else) {
-    auto results = pop_ctrl();
-    push_ctrl(results, results);
+    auto results = validator->pop_ctrl();
+    validator->push_ctrl(results, results);
     std::cout << "ENTER ELSE" << std::endl;
 
     // validate the instructions in else body
     iloop(elseinstrs) {
-      elseinstrs[i].validate();
-      PrintStacks();
+      elseinstrs[i].validate(validator);
+      validator->PrintStacks();
     }
 
     std::cout << "EXIT ELSE" << std::endl;
   }
 
-  RemoveLabel(blocktype);
+  validator->RemoveLabel(blocktype);
   // simulate END instr (remember that ifs eat up their END opcode)
-  auto results = pop_ctrl();
-  push_opds(results);
+  auto results = validator->pop_ctrl();
+  validator->push_opds(results);
 
   return true;
 }
 
-bool Br::validate() {
+bool Br::validate(Validator *validator) {
   // 1. check context
-  if (context.labels.size() <= this->value) {
+  if (validator->context().labels.size() <= this->value) {
     warn("Label %d is not defined\n", this->value.value());
   }
   // The following statement performs the same check as above, but based on the
   // control stack. This is redundant but is a good sanity check for our
   // datastructures (this is why the first if just warns)
-  if (ctrls_size() <= this->value) FATAL("Label index is too big\n");
+  if (validator->ctrls_size() <= this->value) FATAL("Label index is too big\n");
   // 2. get labeltype
-  // valtype labeltype = res2valtype(context.labels[this->value]);
+  // valtype labeltype = res2valtype(validator->context()labels[this->value]);
   // std::cout << labeltype << std::endl;
   // PrintContext();
-  vec<valtype> temp = n_frame(this->value).label_types;
+  vec<valtype> temp = validator->n_frame(this->value).label_types;
   // ASSERT(labeltype == temp,
   //        "Labeltypes from context and ctrls must much. Got %s from context
   //        and "
@@ -158,22 +156,23 @@ bool Br::validate() {
 
   // 3. then
 
-  PrintContext();
-  pop_opds(temp);
-  unreachable();
+  validator->PrintContext();
+  validator->pop_opds(temp);
+  validator->unreachable();
   return true;
 }
 
-bool Br_If::validate() {
+bool Br_If::validate(Validator *validator) {
   // 1. check context
-  if (context.labels.size() <= this->value) warn("Label is not defined\n");
+  if (validator->context().labels.size() <= this->value)
+    warn("Label is not defined\n");
   // The following statement performs the same check as above, but based on the
   // control stack. This is redundant but is a good sanity check for our
   // datastructures (this is why the first if just warns)
-  if (ctrls_size() <= this->value) FATAL("Label index is too big\n");
+  if (validator->ctrls_size() <= this->value) FATAL("Label index is too big\n");
   // 2. get labeltype
-  // valtype labeltype = res2valtype(context.labels[this->value]);
-  vec<valtype> temp = n_frame(this->value).label_types;
+  // valtype labeltype = res2valtype(validator->context()labels[this->value]);
+  vec<valtype> temp = validator->n_frame(this->value).label_types;
   // ASSERT(labeltype == temp,
   //        "Labeltypes from context and ctrls must much. Got %s from context
   //        and "
@@ -181,24 +180,25 @@ bool Br_If::validate() {
   //        val2str(labeltype), val2str(temp));
 
   // 3. then
-  pop_opd(valtype::I32);
-  pop_opds(temp);
-  push_opds(temp);
+  validator->pop_opd(valtype::I32);
+  validator->pop_opds(temp);
+  validator->push_opds(temp);
 
   return true;
 }
 
-bool Br_Table::validate() {
+bool Br_Table::validate(Validator *validator) {
   // 1. check context
-  if (context.labels.size() <= this->labelN)
-    warn("Label is not defined size:%ld\n", context.labels.size());
+  if (validator->context().labels.size() <= this->labelN)
+    warn("Label is not defined size:%ld\n", validator->context().labels.size());
   // The following statement performs the same check as above, but based on the
   // control stack. This is redundant but is a good sanity check for our
   // datastructures (this is why the first if just warns)
-  if (ctrls_size() <= this->labelN) FATAL("Label index is too big\n");
+  if (validator->ctrls_size() <= this->labelN)
+    FATAL("Label index is too big\n");
   // 2. get labelNtype
-  // valtype labelNtype = res2valtype(context.labels[this->labelN]);
-  vec<valtype> temp = n_frame(this->labelN).label_types;
+  // valtype labelNtype = res2valtype(validator->context()labels[this->labelN]);
+  vec<valtype> temp = validator->n_frame(this->labelN).label_types;
   // ASSERT(labelNtype == temp,
   //        "Labeltypes from context and ctrls must much. Got %s from context
   //        and "
@@ -210,158 +210,164 @@ bool Br_Table::validate() {
     // This is the redundant check
     // if(ctrls_size() < this->labels[i] ||
     // n_frame(this->labels[i]).label_types.front() !=  ....)
-    if (context.labels.size() <= this->labels[i])
+    if (validator->context().labels.size() <= this->labels[i])
       FATAL("The %d labels (idx: %d) is not defined\n", i,
             this->labels[i].value());
-    // valtype labeltype = res2valtype(context.labels[this->labels[i]]);
-    if (n_frame(this->labels[i].value()).label_types != temp)
+    // valtype labeltype =
+    // res2valtype(validator->context()labels[this->labels[i]]);
+    if (validator->n_frame(this->labels[i].value()).label_types != temp)
       FATAL("Label mismatch\n");
   }
   // 4. then
-  pop_opd(valtype::I32);
-  pop_opds(temp);
-  unreachable();
+  validator->pop_opd(valtype::I32);
+  validator->pop_opds(temp);
+  validator->unreachable();
 
   return true;
 }
 
-bool End::validate() {
-  auto results = pop_ctrl();
-  push_opds(results);
+bool End::validate(Validator *validator) {
+  auto results = validator->pop_ctrl();
+  validator->push_opds(results);
   return true;
 }
 
-bool Return::validate() {
+bool Return::validate(Validator *validator) {
   // 1. check that return_ is defined, that is true
   // 2. get return type
-  type::Result ret = context.return_;
+  type::Result ret = validator->context().return_;
   vec<valtype> rets;
   if (ret.has_type) {
     valtype ret_ = res2valtype(ret);
     rets.push_back(ret_);
   }
   // 3. then
-  pop_opds(rets);
-  unreachable();
+  validator->pop_opds(rets);
+  validator->unreachable();
 
   return true;
 }
 
-bool Call::validate() {
+bool Call::validate(Validator *validator) {
   // 1. check context
-  if (this->value >= context.funcs.size())
+  if (this->value >= validator->context().funcs.size())
     FATAL("called a function that is not defined\n");
   // 2. get the type
-  type::Func ftype = context.funcs.at(this->value);
+  type::Func ftype = validator->context().funcs.at(this->value);
 
   vec<valtype> args = gettypes(ftype.args);
   vec<valtype> ret = gettypes(
       ftype.result);  // NOTE: when validating types check size of result
-  pop_opds(args);
-  push_opds(ret);
+  validator->pop_opds(args);
+  validator->push_opds(ret);
   return true;
 }
 
-bool CallIndirect::validate() {
+bool CallIndirect::validate(Validator *validator) {
   // 1.check context (C.tables[0])
-  if (context.tables.size() < 1) FATAL("C.tables[0] is not defined\n");
+  if (validator->context().tables.size() < 1)
+    FATAL("C.tables[0] is not defined\n");
   // 2. get C.tables[0]
-  // type::Table t = context.tables[0];
+  // type::Table t = validator->context()tables[0];
   // 3. check that elemtype is funcref (not needed since there is no alternative
   // yet)
 
   // 4. Check context for type
-  if (this->value >= context.types.size()) FATAL("The type is not defined\n");
+  if (this->value >= validator->context().types.size())
+    FATAL("The type is not defined\n");
   // 5. get function type
-  type::Func ftype = context.types.at(this->value);
+  type::Func ftype = validator->context().types.at(this->value);
   vec<valtype> args = gettypes(ftype.args);
   vec<valtype> ret = gettypes(ftype.result);
 
   // then
   args.push_back(valtype::I32);
-  pop_opds(args);
-  push_opds(ret);
+  validator->pop_opds(args);
+  validator->push_opds(ret);
 
   return true;
 }
 
-bool Drop::validate() {
-  pop_opd();
+bool Drop::validate(Validator *validator) {
+  validator->pop_opd();
   return true;
 }
-bool Select::validate() {
-  pop_opd(valtype::I32);
-  valtype t1 = pop_opd();
-  valtype t2 = pop_opd(t1);
-  push_opd(t2);
+bool Select::validate(Validator *validator) {
+  validator->pop_opd(valtype::I32);
+  valtype t1 = validator->pop_opd();
+  valtype t2 = validator->pop_opd(t1);
+  validator->push_opd(t2);
   return true;
 }
 
-bool LocalGet::validate() {
+bool LocalGet::validate(Validator *validator) {
   // 1. check the context
-  if (this->value >= context.locals.size()) FATAL("The local is not defined\n");
+  if (this->value >= validator->context().locals.size())
+    FATAL("The local is not defined\n");
   // 2. get the type from context
-  valtype type = gettype(context.locals.at(this->value));
+  valtype type = gettype(validator->context().locals.at(this->value));
   // 3. push it in the operand stack
-  push_opd(type);
+  validator->push_opd(type);
   // 4. return
   return true;
 }
 
-bool LocalSet::validate() {
+bool LocalSet::validate(Validator *validator) {
   // 1. check the context
-  if (this->value >= context.locals.size()) FATAL("The local is not defined\n");
+  if (this->value >= validator->context().locals.size())
+    FATAL("The local is not defined\n");
   // 2. get the type from context
-  valtype type = gettype(context.locals.at(this->value));
+  valtype type = gettype(validator->context().locals.at(this->value));
   // 3. pop it from the operand stack
-  pop_opd(type);
+  validator->pop_opd(type);
   // 4. return
   return true;
 }
 
-bool LocalTee::validate() {
+bool LocalTee::validate(Validator *validator) {
   // 1. check the context
-  if (this->value >= context.locals.size()) FATAL("The local is not defined\n");
+  if (this->value >= validator->context().locals.size())
+    FATAL("The local is not defined\n");
   // 2. get the type from context
-  valtype type = gettype(context.locals.at(this->value));
+  valtype type = gettype(validator->context().locals.at(this->value));
   // 3. pop it from the operand stack and the push it
-  pop_opd(type);
-  push_opd(type);
+  validator->pop_opd(type);
+  validator->push_opd(type);
   // 4. return
   return true;
 }
 
-bool GlobalGet::validate() {
+bool GlobalGet::validate(Validator *validator) {
   // 1. check the context
-  if (this->value >= context.globals.size())
+  if (this->value >= validator->context().globals.size())
     FATAL("The global is not defined\n");
   // 2. get the type from context
-  valtype type = gettype(context.globals.at(this->value).value);
+  valtype type = gettype(validator->context().globals.at(this->value).value);
   // 3. push it to the operand stack
-  push_opd(type);
+  validator->push_opd(type);
   // 4. return
   return true;
 }
 
-bool GlobalSet::validate() {
+bool GlobalSet::validate(Validator *validator) {
   // 1. check the context
-  if (this->value >= context.globals.size())
+  if (this->value >= validator->context().globals.size())
     FATAL("The global is not defined\n");
   // 2. get the type from context
-  type::Global gtype = context.globals.at(this->value);
+  type::Global gtype = validator->context().globals.at(this->value);
   valtype type = gettype(gtype.value);
   // 3. check if global is mutable
   if (!gtype.mut) FATAL("The global is not mutable\n");
   // 4. pop it from the operand stack
-  pop_opd(type);
+  validator->pop_opd(type);
   // 5. return
   return true;
 }
 
-#define CHECK_MEM()              \
-  if (context.mems.size() < 1) { \
-    warn("unknown memory\n");    \
-    return false;                \
+#define CHECK_MEM()                           \
+  if (validator->context().mems.size() < 1) { \
+    warn("unknown memory\n");                 \
+    return false;                             \
   }
 #define CHECK_ALLIGN()                                                     \
   auto &memarg = value;                                                    \
@@ -384,26 +390,26 @@ bool GlobalSet::validate() {
     return false;                                                          \
   }
 
-bool Load::validate() {
+bool Load::validate(Validator *validator) {
   CHECK_MEM()
   CHECK_ALLIGN()
-  return ByType(code());
+  return ByType(code(), validator);
 }
 
-bool Store::validate() {
+bool Store::validate(Validator *validator) {
   CHECK_MEM()
   CHECK_ALLIGN()
-  return ByType(code());
+  return ByType(code(), validator);
 }
 
-bool MemorySize::validate() {
+bool MemorySize::validate(Validator *validator) {
   CHECK_MEM()
-  return ByType(code());
+  return ByType(code(), validator);
 }
 
-bool MemoryGrow::validate() {
+bool MemoryGrow::validate(Validator *validator) {
   CHECK_MEM()
-  return ByType(code());
+  return ByType(code(), validator);
 }
 
 VALIDATE_BY_TYPE(Const)
