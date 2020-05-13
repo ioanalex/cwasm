@@ -1,7 +1,7 @@
 #ifndef __VALIDATE_HPP__
 #define __VALIDATE_HPP__
 
-#include <stack>
+#include <optional>
 
 #include "ast.hpp"
 #include "types.hpp"
