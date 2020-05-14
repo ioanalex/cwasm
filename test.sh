@@ -166,8 +166,17 @@ if [ $RUN_SPEC -eq 1 ]; then
 
     if [ "${ans}" == "y" ]; then
         printf "absolute path to SPEC WASM interpreter: " && read WASMI
-        printf "specify commit (Enter = latest): " && read commit
 
+        commit=
+        # read the commit in wasmCommit file if it exists
+        if [ -f $TEST_DIR/wasmCommit ]; then
+            commit=$(head -n 1 $TEST_DIR/wasmCommit)
+        fi
+        if [ "${commit}" == "" ]; then
+            commit=
+        fi
+
+        echo "commit is ${commit}"
         # create a temporary dir to store the wasts
         WAST_DIR=$(mktemp -d)
         if [ ! -d $WAST_DIR ]; then
