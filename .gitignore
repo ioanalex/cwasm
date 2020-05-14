@@ -13,6 +13,9 @@
 /tempfile
 /.vscode
 
+# ignore this directory as it contains some local utility scripts
+/local
+
 /help.sh
 
 # Backup files etc.

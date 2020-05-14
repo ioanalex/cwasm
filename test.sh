@@ -264,6 +264,7 @@ for prog in $WASM_DIR/*.wasm; do
         break
     fi
 done
+rm $tempfile
 echo
 
 col2=0
