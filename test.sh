@@ -1,7 +1,5 @@
 #! /bin/bash
 
-# set -v
-
 print_usage() {
     echo "Usage: $0 [OPTIONS]"
     echo "  OPTIONS:"
@@ -15,9 +13,73 @@ print_usage() {
     echo ""
 }
 
+# gets the wast files from the web and stores them in the provided directory
+# usage: getTheWasts <target-dir> <commit-id>?
+getTheWasts() {
+    if [ "$#" -eq 0 ]; then
+        echo "no target dir passed"
+        exit 1
+    fi
+
+    target="${1}"
+    if [ ! -d $target ]; then
+        echo "error: ${target} no such directory"
+    fi
+
+    # get the commit id
+    printf "commit:"
+    if [ "$#" -eq 1 ]; then
+        echo "latest"
+        commit="/master"
+    else
+        commit="/${2}"
+        # curl returns a lot of stuff but we only care the image that
+        # displays the 404 message
+        stringToFind="<img alt=\"404"
+        ret=$(curl -s "https://github.com/WebAssembly/spec/tree${commit}/test/core" | egrep -o "${stringToFind}")
+        if [ "${ret}" == "${stringToFind}" ]; then
+            echo "Invalid commit id"
+            exit 1
+        fi
+        echo "${commit}"
+    fi
+
+    # create a temporary directory and navigate to it
+    work_dir=$(mktemp -d)
+    if [ ! -d $work_dir ]; then
+        echo "failed to create tmp dir"
+        exit 1
+    fi
+    cd $work_dir
+
+    # get all Wast filenames
+    stringToFind="/WebAssembly/spec/blob$commit"
+    if [ commit!="/master" ]; then
+        stringToFind=$stringToFind"[0-9abcdef]*"
+    fi
+    stringToFind=$stringToFind"/test/core/[^ >]*wast"
+
+    curl -s https://github.com/WebAssembly/spec/tree${commit}/test/core |
+        egrep -o "${stringToFind}" |
+        sed 's/blob\///g' |
+        sed -e 's/^/raw.githubusercontent.com/g' |
+        xargs wget -q --show-progress
+
+    echo $(ls -1 | grep .wast | wc -l) files downloaded
+
+    # clean old wast files
+    rm $target/*.wast >/dev/null 2>&1
+
+    # move the wast files to the target dir
+    mv *.wast $target/
+
+    rmdir $work_dir
+}
+
 RUN_CPP=1
 RUN_SPEC=1
 RUN_FAIL=0
+VERBOSE=0
 
 # check options
 while [[ $# -gt 0 ]]; do
@@ -28,13 +90,14 @@ while [[ $# -gt 0 ]]; do
         exit 0
         ;;
     "-r" | "--run")
-        test $2 == cpp && RUN_SPEC=0
-        test $2 == spec && RUN_CPP=0
+        test $2 = cpp && RUN_SPEC=0
+        test $2 = spec && RUN_CPP=0
         shift
         shift
         ;;
     "-v" | "--verbose")
         set -v
+        VERBOSE=1
         shift
         ;;
     "-f" | "--fail")
@@ -74,10 +137,6 @@ if [ ! -d "$WASM_DIR/fail" ]; then
     mkdir "$WASM_DIR/fail"
 fi
 
-# clea bins dir
-rm $WASM_DIR/*.wasm &>/dev/null
-rm $WASM_DIR/fail/*.wasm &>/dev/null
-
 if [ $RUN_CPP -eq 1 ]; then
     # check for emscripten compiler
     em++ -v &>/dev/null
@@ -89,6 +148,10 @@ if [ $RUN_CPP -eq 1 ]; then
         exit $EXITCODE
     fi
 
+    # cleaning up older wasm files
+    rm $WASM_DIR/*_module_*.wasm &>/dev/null
+    rm $WASM_DIR/fail/*.wasm &>/dev/null
+
     # compile all cpp files to wasm
     echo -e "⚒ ${YELLOW}Generating cpp (emscripten) tests${NC}"
     cd $CPP_DIR
@@ -97,33 +160,49 @@ if [ $RUN_CPP -eq 1 ]; then
     cd $ROOT_DIR
 fi
 if [ $RUN_SPEC -eq 1 ]; then
-    # compile all core-tests (2 steps)
-    # Step 1: *.wast -> *.bin.wast
-    # This step needs two env variables
-    # WASMI=/absolute/path/to/wasm/interpreter
-    # SPEC_CORE_DIR=/absolute/path/to/spec/test/core
 
-    # There are 74 tests (which expand to more later).
-    # Let's count the number of .wast files
-    num=$(ls -1 $CORE_TEST_DIR/ | grep .wast | wc -l)
-    if [ $num != "74" ]; then
-        printf "${YELLOW}The bin.wast files need a refresh fou you want to remake them?[y/N](default: N):${NC}"
-        read -r ans
-        if [ $ans == 'y' ]; then
-            printf "absolute path to SPEC WASM interpreter: " && read WASMI
-            printf "absolute path to spec tests (core): " && read SPEC_CORE_DIR
+    printf "${YELLOW}Do you want to refresh the binaries?[y/N](default: N):${NC}"
+    read -r ans
 
-            echo -e "⚒ Generating .bin.wast files"
-            cd $CORE_TEST_DIR
-            WASMI=$WASMI SPEC_CORE_DIR=$SPEC_CORE_DIR make clean
-            WASMI=$WASMI SPEC_CORE_DIR=$SPEC_CORE_DIR make
-            cd $ROOT_DIR
+    if [ "${ans}" == "y" ]; then
+        printf "absolute path to SPEC WASM interpreter: " && read WASMI
+        printf "specify commit (Enter = latest): " && read commit
+
+        # create a temporary dir to store the wasts
+        WAST_DIR=$(mktemp -d)
+        if [ ! -d $WAST_DIR ]; then
+            echo "failed to create tmp dir"
+            exit 1
         fi
-    fi
 
-    # Step 2: get the hex code from each .bin.wast file
-    echo -e "⚒ ${YELLOW}Generating spec core tests${NC} $PWD"
-    ./specTests.py
+        # Step 1: get the wast files from the web
+        echo -e "⬇ ${YELLOW}Getting the .wast files${NC}"
+        getTheWasts $WAST_DIR $commit
+
+        # Step 2: use the interpreter to convert them to .bin.wast
+        echo -e "⚒ ${YELLOW}Generating .bin.wast files${NC}"
+
+        # cleaning up older wasm files
+        if [ $RUN_CPP -eq 0 ]; then
+            rm $WASM_DIR/*.wasm &>/dev/null
+        else
+            rm $WASM_DIR/*_module_*.wasm &>/dev/null
+        fi
+        rm $WASM_DIR/fail/*.wasm &>/dev/null
+
+        cd $CORE_TEST_DIR
+        WASMI=$WASMI SPEC_CORE_DIR=$WAST_DIR make
+        cd $ROOT_DIR
+
+        # Step 3: get the hex code from each .bin.wast file
+        echo -e "⚒ ${YELLOW}Generating spec core tests${NC} $PWD"
+        ./specTests.py
+
+        # delete the WAST_DIR
+        rm $WAST_DIR/*
+        rmdir $WAST_DIR
+
+    fi
 
     # check that all is good
     # script that checks that all failed tests are under bins/fail
@@ -150,17 +229,22 @@ echo "----------------------------------------------------"
 
 FAILED_TESTS=" "
 
+col=0
+passed=0
 count=0
 total=$(ls -1 $WASM_DIR/*.wasm | wc -l)
-col=0
+
 tempfile=$(mktemp)
 for prog in $WASM_DIR/*.wasm; do
-    >tempfile # truncate file
+    ((col++))
+    test $col -eq 51 && printf " (${count} / ${total})" && echo "" && col=1
+
+    ((count++))
+
     ./cwasm $prog &>tempfile
     EXITCODE=$?
     if [ $EXITCODE -eq 0 ]; then
-        ((col++))
-        test $col -eq 51 && printf " (${count} / ${total})" && echo "" && col=1
+        ((passed++))
         printf '.'
     else
         printf 'X'
@@ -170,31 +254,33 @@ for prog in $WASM_DIR/*.wasm; do
         cat tempfile
         break
     fi
-    ((count++))
 done
+echo
 
-echo ""
-echo ""
-
-if [ $RUN_FAIL -eq 1 ]; then
+col2=0
+passed2=0
+count2=0
+total2=0
+if [ $RUN_FAIL -eq 1 ] && [ $(ls -1 $WASM_DIR/fail | wc -l) -ne 0 ]; then
     # run the tests that should fail
     echo "----------------------------------------------------"
     echo -e "${GREEN}Running tests that should fail:${NC}"
     echo "----------------------------------------------------"
 
-    count2=0
     total2=$(ls -1 $WASM_DIR/fail/*.wasm | wc -l)
-    col2=0
     for prog in $WASM_DIR/fail/*.wasm; do
-        # >tempfile # truncate file
-        timeout 2 ./cwasm $prog &>/dev/null #tempfile
+        ((col2++))
+        test $col2 -eq 51 && printf " (${count2} / ${total2})" && echo && col2=1
+
+        ((count2++))
+
+        timeout 2 ./cwasm $prog &>/dev/null
         EXITCODE=$?
         if [ $EXITCODE -ne 0 ]; then
-            ((count2++))
-            test $col2 -eq 51 && printf " (${count2} / ${total2})" && echo "" && col2=1
+            ((passed2++))
             printf '.'
         else
-            printf '|'
+            printf 'X'
             NAME=$(basename $prog)
             FAILED_TESTS="${FAILED_TESTS}\n ${NAME}"
             # echo
@@ -204,24 +290,26 @@ if [ $RUN_FAIL -eq 1 ]; then
             # echo "test should fail: $msg"
             # break
         fi
-        ((col2++))
     done
-else
-    count2=0
-    total2=0
+    echo
 fi
 
 # Print results
-if [ "$FAILED_TESTS" == " " ]; then
-    all_count=$((count + count2))
-    all_total=$((total + total2))
-    echo -e "${GREEN}\u2714 All ${all_count}/${all_total} tests passed!${NC}"
-else
-    echo ""
-    echo -e "${GREEN}\u2714 ${count2}/${total2} tests passed!${NC}"
-    # echo -e "${RED}-- 💩 FAILED TESTS 💩 --${NC}"
-    # echo -e $FAILED_TESTS
-    # echo -e "${RED}----------------------${NC}"
+all_passed=$((passed + passed2))
+all_total=$((total + total2))
+
+if [ $all_passed -ne $all_total ] && [ $VERBOSE -eq 1 ]; then
+    printf "show the failed tests?[y/N](default: N) " && read ans
+    if [ -n $ans ]; then
+        if [ "${ans}" == "y" ]; then
+            echo -e $FAILED_TESTS
+        fi
+    fi
 fi
 
-echo ""
+echo
+printf "\t %4d /%4d correct tests passed  \n" $passed $total
+printf "\t %4d /%4d incorrect tests passed\n" $passed2 $total2
+echo
+echo -e "${GREEN}\u2714 ${all_passed}/${all_total} tests passed!${NC}"
+echo
