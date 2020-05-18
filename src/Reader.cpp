@@ -21,16 +21,17 @@ Value Reader::parse_value(type::Value vt) {
       break;
     case type::Value::f32: {
       f32 f;
-      int p = skip(4);
-      std::copy(bytes.begin() + p, bytes.begin() + pos, &f);
+      auto p = skip(4);
+      std::copy(bytes.begin() + p, bytes.begin() + p + 4,
+                reinterpret_cast<byte *>(&f));
       v = from_f32(f);
       break;
     }
     case type::Value::f64: {
       f64 f;
-      int p = skip(8);
-      int lol = pos - p;
-      std::copy(bytes.begin() + p, bytes.begin() + pos, &f);
+      auto p = skip(8);
+      std::copy(bytes.begin() + p, bytes.begin() + p + 8,
+                reinterpret_cast<byte *>(&f));
       v = from_f64(f);
       break;
     }
@@ -463,16 +464,16 @@ void Reader::parse_module(Module &m) {
           std::cout << " has " << content.size() << " byte(s):" << std::hex
                     << std::endl;
           char old_fill = std::cout.fill('0');
-          for (int n = 0; n < content.size(); n += 20) {
+          for (unsigned n = 0; n < content.size(); n += 20) {
             std::cout << "  ";
-            for (int k = n; k < n + 20; k++)
+            for (unsigned k = n; k < n + 20; k++)
               if (k < content.size())
                 std::cout << std::setw(2)
                           << int(static_cast<unsigned char>(content[k]));
               else
                 std::cout << "  ";
             std::cout << "    ";
-            for (int k = n; k < n + 20; k++)
+            for (unsigned k = n; k < n + 20; k++)
               if (k < content.size())
                 std::cout << (std::isprint(content[k]) ? content[k] : '.');
               else

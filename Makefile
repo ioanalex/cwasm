@@ -1,11 +1,7 @@
 .PHONY: default all clean distclean
 
 CXX=c++
-ifeq ($(CXX),c++)
-CXXFLAGS=-std=c++17 -Wall -Wno-sign-compare -g
-else
 CXXFLAGS=-std=c++17 -Wall -g
-endif
 LDFLAGS=
 
 SRCDIR=src

@@ -2,6 +2,7 @@
 #define __INSTRPROFILE_HPP__
 
 #include <iostream>
+#include <tuple>
 
 #include "types.hpp"
 #include "values.hpp"

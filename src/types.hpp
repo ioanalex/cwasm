@@ -76,12 +76,12 @@ struct Func {
 
 inline std::ostream &operator<<(std::ostream &os, const Func &v) {
   os << "[";
-  for (int i = 0; i < v.args.size(); i++) {
-    os << " " << v.args[i];
+  for (const auto &arg: v.args) {
+    os << " " << arg;
   }
   os << " ] -> [";
-  for (int i = 0; i < v.result.size(); i++) {
-    os << " " << v.result[i];
+  for (const auto &res: v.result) {
+    os << " " << res;
   }
   os << " ]";
   return os;

@@ -27,23 +27,23 @@ void InitContext(Module &mod) {
   //   context.globals.emplace_back(globaltype);
   // }
   context.funcs.resize(mod.funcs.size());
-  for (auto i = 0; i < mod.funcs.size(); i++) {
+  for (unsigned i = 0; i < mod.funcs.size(); ++i) {
     ASSERT(mod.funcs[i].type < mod.types.size(), "unknown type");
     context.funcs[i] = mod.types[mod.funcs[i].type];
   }
 
   context.tables.resize(mod.tables.size());
-  for (auto i = 0; i < mod.tables.size(); i++) {
+  for (unsigned i = 0; i < mod.tables.size(); ++i) {
     context.tables[i] = mod.tables[i].type;
   }
 
   context.mems.resize(mod.mems.size());
-  for (auto i = 0; i < mod.mems.size(); i++) {
+  for (unsigned i = 0; i < mod.mems.size(); ++i) {
     context.mems[i] = mod.mems[i].type;
   }
 
   context.globals.resize(mod.globals.size());
-  for (auto i = 0; i < mod.globals.size(); i++) {
+  for (unsigned i = 0; i < mod.globals.size(); ++i) {
     context.globals[i] = mod.globals[i].type;
   }
 }
@@ -567,7 +567,7 @@ bool Validate::func(Func &f) {
 
 bool Validate::expr(Expr &ex) {
   // std::cout << ex.size() << " instructions to validate" << std::endl;
-  for (auto i = 0; i < ex.size(); i++) {
+  for (unsigned i = 0; i < ex.size(); ++i) {
     if (!(ex[i].validate())) return false;
     PrintStacks();
   }

@@ -159,7 +159,7 @@ class Br_Table : public InstrImpl {
 public:
   Br_Table(Reader *reader) : InstrImpl(reader), labels(), labelN(0) {
     u32 count = reader->read_LEB(32);
-    for (auto i = 0; i < count; i++) {
+    while (count-- > 0) {
       labels.emplace_back(labelidx(reader->parse_idx()));
     }
     labelN = labelidx(reader->parse_idx());
