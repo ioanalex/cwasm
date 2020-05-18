@@ -5,8 +5,9 @@
 #include "InstrProfile.hpp"
 #include "types.hpp"
 
-extern vec<InstrProfile>
+extern vec<std::unique_ptr<InstrProfile>>
     profiles;  // the profiles array is used when printing the instructions
+extern vec<InstrProfile *> p_profiles;
 
 class Reader;
 
@@ -65,7 +66,7 @@ private:
 
 inline std::ostream &operator<<(std::ostream &os, const Instr &i) {
   return os << "(0x" << std::hex << i.code() << std::dec << ") "
-            << profiles[i.code()].get_name();
+            << profiles[i.code()]->get_name();
 }
 
 #endif

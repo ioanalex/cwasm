@@ -12,7 +12,7 @@ extern Context context;
 // code was generated here and labeled for goto commands.
 // TODO: This should be implemented as a basic optimization.
 bool ByType(byte opcode) {
-  instr_type type = profiles[opcode].get_type();
+  instr_type type = profiles[opcode]->get_type();
   vec<valtype> args;  //, ret;
   iloop(type.args) {
     if (type.args[i].index() == 1) {
