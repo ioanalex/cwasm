@@ -9,12 +9,11 @@
 // can be generalized. Insted of doing this at runtime it would be better if
 // code was generated here and labeled for goto commands.
 // TODO: This should be implemented as a basic optimization.
-bool ByType(byte opcode, Validator *validator) {
-  instr_type type = profiles[opcode].get_type();
+bool ByType(instr_type &type, Validator *validator) {
   vec<valtype> args;  //, ret;
   iloop(type.args) {
     if (type.args[i].index() == 1) {
-      FATAL("i am not that smart yet (0x%x)\n", opcode);
+      FATAL("i am not that smart yet\n");
       return true;
     }
     args.push_back(gettype(std::get<type::Value>(type.args[i])));
@@ -28,8 +27,11 @@ bool ByType(byte opcode, Validator *validator) {
   return true;
 }
 
-#define VALIDATE_BY_TYPE(i) \
-  bool i::validate(Validator *validator) { return ByType(code(), validator); }
+#define VALIDATE_BY_TYPE(i)                           \
+  bool i::validate(Validator *validator) {            \
+    instr_type theType = profiles[code()].get_type(); \
+    return ByType(theType, validator);                \
+  }
 
 // Unimplemented things
 #define UNIMPLEMENTED(i) \
@@ -393,23 +395,27 @@ bool GlobalSet::validate(Validator *validator) {
 bool Load::validate(Validator *validator) {
   CHECK_MEM()
   CHECK_ALLIGN()
-  return ByType(code(), validator);
+  instr_type theType = profiles[code()].get_type();
+  return ByType(theType, validator);
 }
 
 bool Store::validate(Validator *validator) {
   CHECK_MEM()
   CHECK_ALLIGN()
-  return ByType(code(), validator);
+  instr_type theType = profiles[code()].get_type();
+  return ByType(theType, validator);
 }
 
 bool MemorySize::validate(Validator *validator) {
   CHECK_MEM()
-  return ByType(code(), validator);
+  instr_type theType = profiles[code()].get_type();
+  return ByType(theType, validator);
 }
 
 bool MemoryGrow::validate(Validator *validator) {
   CHECK_MEM()
-  return ByType(code(), validator);
+  instr_type theType = profiles[code()].get_type();
+  return ByType(theType, validator);
 }
 
 VALIDATE_BY_TYPE(Const)
