@@ -13,6 +13,7 @@
 /tempfile
 /.vscode
 
+/local
 /help.sh
 
 # Backup files etc.
