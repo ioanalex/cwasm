@@ -107,7 +107,7 @@ if [ $RUN_SPEC -eq 1 ]; then
     # Let's count the number of .wast files
     num=$(ls -1 $CORE_TEST_DIR/ | grep .wast | wc -l)
     if [ $num != "74" ]; then
-        printf "${YELLOW}The bin.wast files need a refresh fou you want to remake them?[y/N](default: N):${NC}"
+        printf "${YELLOW}The bin.wast files need a refresh. Do you want to remake them? [y/N] ${NC}"
         read -r ans
         if [ $ans == 'y' ]; then
             printf "absolute path to SPEC WASM interpreter: " && read WASMI

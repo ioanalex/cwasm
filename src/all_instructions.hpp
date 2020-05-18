@@ -56,14 +56,12 @@ class Block : public InstrImpl {
 public:
   Block(Reader *reader) : InstrImpl(reader) {
     debug("BLOCK\n");
-    if (reader->peek_byte() != 0x40) {
+    if (reader->unless(0x40)) {
       blocktype = reader->parse_valtype();
-    } else
-      reader->skip();  // to skip 0x40
-    while (reader->peek_byte() != 0x0B) {
+    }
+    while (reader->unless(0x0B)) {
       instrs.emplace_back(Instr::create(reader));
     }
-    reader->skip();  // to skip the END(0x0B) instruction
     debug("ENDBLOCK\n");
   }
 
@@ -80,15 +78,12 @@ class Loop : public InstrImpl {
 public:
   Loop(Reader *reader) : InstrImpl(reader) {
     debug("LOOP\n");
-
-    if (reader->peek_byte() != 0x40) {
+    if (reader->unless(0x40)) {
       blocktype = reader->parse_valtype();
-    } else
-      reader->skip();  // to skip 0x40
-    while (reader->peek_byte() != 0x0B) {
+    }
+    while (reader->unless(0x0B)) {
       instrs.emplace_back(Instr::create(reader));
     }
-    reader->skip();  // to skip the END(0x0B) instruction
     debug("ENDLOOP\n");
   }
 
@@ -103,25 +98,22 @@ class If : public InstrImpl {
 public:
   If(Reader *reader) : InstrImpl(reader), has_else(false) {
     debug("IF\n");
-    if (reader->peek_byte() != 0x40) {
+    if (reader->unless(0x40)) {
       blocktype = reader->parse_valtype();
-    } else
-      reader->skip();  // to skip 0x40
-
-    while (reader->peek_byte() != 0x0B && reader->peek_byte() != 0x05) {
+    }
+    while (reader->upto(0x0B, 0x05)) {
       ifinstrs.emplace_back(Instr::create(reader));
     }
-    if (reader->peek_byte() == 0x05) {
+    if (reader->maybe(0x05)) {
       debug("ELSE\n");
       has_else = true;
-      reader->skip();
 
-      while (reader->peek_byte() != 0x0B) {
+      while (reader->upto(0x0B)) {
         elseinstrs.emplace_back(Instr::create(reader));
       }
       debug("ENDELSE\n");
     }
-    reader->skip();  // to skip the END(0x0B) instruction
+    reader->expect(0x0B);
     debug("ENDIF\n");
   }
 

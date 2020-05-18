@@ -20,6 +20,21 @@ public:
     return p;
   }
 
+  void expect(byte b) {
+    byte next = bytes[pos++];
+    ASSERT(next == b, "Expected 0x%02x instead of 0x%02x\n", b, next);
+  }
+
+  bool upto(byte b) { return peek_byte() != b; }
+  bool upto(byte b1, byte b2) { return peek_byte() != b1 && peek_byte() != b2; }
+
+  bool maybe(byte b) {
+    if (bytes[pos] != b) return false;
+    ++pos;
+    return true;
+  }
+  bool unless(byte b) { return !maybe(b); }
+
   // Use this method if you want the value pos.
   std::streamsize get_pos() const { return pos; }
 
