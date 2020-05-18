@@ -27,10 +27,10 @@ bool ByType(instr_type &type, Validator *validator) {
   return true;
 }
 
-#define VALIDATE_BY_TYPE(i)                           \
-  bool i::validate(Validator *validator) {            \
-    instr_type theType = profiles[code()].get_type(); \
-    return ByType(theType, validator);                \
+#define VALIDATE_BY_TYPE(i)                            \
+  bool i::validate(Validator *validator) {             \
+    instr_type theType = profiles[code()]->get_type(); \
+    return ByType(theType, validator);                 \
   }
 
 // Unimplemented things
@@ -371,7 +371,7 @@ bool GlobalSet::validate(Validator *validator) {
     warn("unknown memory\n");                 \
     return false;                             \
   }
-#define CHECK_ALLIGN()                                                     \
+#define CHECK_ALIGN()                                                      \
   auto &memarg = value;                                                    \
   auto bitwidth = 32;                                                      \
   if (type == type::Value::f64 || type == type::Value::i64) bitwidth = 64; \
@@ -394,27 +394,27 @@ bool GlobalSet::validate(Validator *validator) {
 
 bool Load::validate(Validator *validator) {
   CHECK_MEM()
-  CHECK_ALLIGN()
-  instr_type theType = profiles[code()].get_type();
+  CHECK_ALIGN()
+  instr_type theType = profiles[code()]->get_type();
   return ByType(theType, validator);
 }
 
 bool Store::validate(Validator *validator) {
   CHECK_MEM()
-  CHECK_ALLIGN()
-  instr_type theType = profiles[code()].get_type();
+  CHECK_ALIGN()
+  instr_type theType = profiles[code()]->get_type();
   return ByType(theType, validator);
 }
 
 bool MemorySize::validate(Validator *validator) {
   CHECK_MEM()
-  instr_type theType = profiles[code()].get_type();
+  instr_type theType = profiles[code()]->get_type();
   return ByType(theType, validator);
 }
 
 bool MemoryGrow::validate(Validator *validator) {
   CHECK_MEM()
-  instr_type theType = profiles[code()].get_type();
+  instr_type theType = profiles[code()]->get_type();
   return ByType(theType, validator);
 }
 
@@ -424,4 +424,4 @@ VALIDATE_BY_TYPE(Numeric)
 #undef VALIDATE_BY_TYPE
 #undef UNIMPLEMENTED
 #undef CHECK_MEM
-#undef CHECK_ALLIGN
+#undef CHECK_ALIGN

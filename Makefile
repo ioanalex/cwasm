@@ -1,20 +1,16 @@
-.PHONY: default all autogen clean distclean
+.PHONY: default all clean distclean
 
 CXX=c++
-ifeq ($(CXX),c++)
-CXXFLAGS=-std=c++17 -Wall -Wno-sign-compare -g 
-else
 CXXFLAGS=-std=c++17 -Wall -g
-endif
 LDFLAGS=
 
 SRCDIR=src
 OBJDIR=obj
 BINDIR=.
 
-SRCS ::= $(wildcard $(SRCDIR)/*.cpp)
-OBJS ::= $(patsubst $(SRCDIR)/%.cpp,$(OBJDIR)/%.o,$(SRCS))
-DEPS ::= $(patsubst %.cpp,%.d,$(SRCS))
+SRCS=$(wildcard $(SRCDIR)/*.cpp)
+OBJS=$(patsubst $(SRCDIR)/%.cpp,$(OBJDIR)/%.o,$(SRCS))
+DEPS=$(patsubst %.cpp,%.d,$(SRCS))
 
 EXEC=$(BINDIR)/cwasm
 
@@ -25,10 +21,6 @@ $(EXEC): $(OBJS)
 	@echo "LINK  "$@
 	@$(CXX) $(CXXFLAGS) -o $(EXEC) $(OBJS) $(LDFLAGS)
 	@echo Compilation complete. Run the thing named "$@"...
-
-autogen:
-	@echo "AUTOGEN"
-	./instrs.py > opcode_switch.inc
 
 $(OBJS): | $(OBJDIR)
 
@@ -49,13 +41,7 @@ distclean: clean
 	$(RM) $(EXEC)
 
 # We don't need to clean up when we're making these targets
-NODEPS:=clean distclean autogen
-
-# Autogeneated switch in instructions.cpp
-# src/instructions.cpp: opcode_switch.inc
-
-# opcode_switch.inc: instrs.py
-# 	$(./instrs.py > opcode_switch.inc)
+NODEPS=clean distclean
 
 # Don't create dependencies when we're cleaning, for instance
 ifeq (0, $(words $(findstring $(MAKECMDGOALS), $(NODEPS))))

@@ -35,7 +35,9 @@ struct Func {
   Func(typeidx type) : type(type), locals(), body() {}
 
   // Prints just the typeidx of the function, useful for development
-  inline string sDebug() const { return " D> f :: @" + type.value(); }
+  inline string sDebug() const {
+    return " D> f :: @" + std::to_string(type.value());
+  }
 };
 inline std::ostream &operator<<(std::ostream &os, const Func &f) {
   os << "func :: @" << f.type << std::endl << "\t\tlocals:" << std::endl;
@@ -115,7 +117,7 @@ struct Elem {
 
   // Minimum debug string
   inline string sDebug() const {
-    string s = " D> Elem :: Table#" + table.value();
+    string s = " D> Elem :: Table#" + std::to_string(table.value());
     s += "[ ";
     for (const auto &f : init) s += std::to_string(f.value()) + " ";
     s += "]";
@@ -135,7 +137,7 @@ struct Data {
 
   // Minimum debug string
   inline string sDebug() const {
-    string s = " D> Data :: Memory#" + data.value();
+    string s = " D> Data :: Memory#" + std::to_string(data.value());
     /* TODO: and the code from ast.cpp that prints the contents */
     return s;
   }

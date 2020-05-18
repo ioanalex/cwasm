@@ -16,22 +16,23 @@ void Validator::InitContext(Module &mod) {
   std::copy(mod.types.begin(), mod.types.end(), c.types.begin());
 
   c.funcs.resize(mod.funcs.size());
-  for (auto i = 0; i < mod.funcs.size(); i++) {
+  for (unsigned i = 0; i < mod.funcs.size(); ++i) {
+    ASSERT(mod.funcs[i].type < mod.types.size(), "unknown type");
     c.funcs[i] = mod.types[mod.funcs[i].type];
   }
 
   c.tables.resize(mod.tables.size());
-  for (auto i = 0; i < mod.tables.size(); i++) {
+  for (unsigned i = 0; i < mod.tables.size(); ++i) {
     c.tables[i] = mod.tables[i].type;
   }
 
   c.mems.resize(mod.mems.size());
-  for (auto i = 0; i < mod.mems.size(); i++) {
+  for (unsigned i = 0; i < mod.mems.size(); ++i) {
     c.mems[i] = mod.mems[i].type;
   }
 
   c.globals.resize(mod.globals.size());
-  for (auto i = 0; i < mod.globals.size(); i++) {
+  for (unsigned i = 0; i < mod.globals.size(); ++i) {
     c.globals[i] = mod.globals[i].type;
   }
 }
@@ -524,7 +525,8 @@ bool Validator::func(Func &f) {
 
 bool Validator::expr(Expr &ex) {
   // std::cout << ex.size() << " instructions to validate" << std::endl;
-  for (auto i = 0; i < ex.size(); i++) {
+
+  for (unsigned i = 0; i < ex.size(); i++) {
     if (!(ex[i].validate(this))) return false;
     PrintStacks();
   }

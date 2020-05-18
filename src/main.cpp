@@ -8,12 +8,12 @@
 #include "validate.hpp"
 #include "values.hpp"
 
-vec<InstrProfile> profiles;
-
 int main(int argc, char *argv[]) {
   // create all instruction profiles
-  for (byte i = 0; i < (0xBF + 0x01); ++i)
-    profiles.emplace_back(InstrProfile(i));
+  profiles.resize(0xBF + 1);
+  for (InstrProfile *p : p_profiles)
+    profiles.emplace(profiles.begin() + p->get_code(),
+                     std::unique_ptr<InstrProfile>(p));
 
   if (argc != 2) {
     FATAL("give me a file\n");

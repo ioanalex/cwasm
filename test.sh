@@ -160,7 +160,6 @@ if [ $RUN_CPP -eq 1 ]; then
     cd $ROOT_DIR
 fi
 if [ $RUN_SPEC -eq 1 ]; then
-
     printf "${YELLOW}Do you want to refresh the binaries?[y/N](default: N):${NC}"
     read -r ans
 
@@ -174,6 +173,7 @@ if [ $RUN_SPEC -eq 1 ]; then
         fi
         if [ "${commit}" == "" ]; then
             commit=
+
         fi
 
         echo "commit is ${commit}"

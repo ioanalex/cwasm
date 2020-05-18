@@ -21,16 +21,18 @@ Value Reader::parse_value(type::Value vt) {
       break;
     case type::Value::f32: {
       f32 f;
-      std::copy(bytes.begin() + pos, bytes.begin() + pos + 4, &f);
+      auto p = skip(4);
+      std::copy(bytes.begin() + p, bytes.begin() + p + 4,
+                reinterpret_cast<byte *>(&f));
       v = from_f32(f);
-      skip(4);
       break;
     }
     case type::Value::f64: {
       f64 f;
-      std::copy(bytes.begin() + pos, bytes.begin() + pos + 8, &f);
+      auto p = skip(8);
+      std::copy(bytes.begin() + p, bytes.begin() + p + 8,
+                reinterpret_cast<byte *>(&f));
       v = from_f64(f);
-      skip(8);
       break;
     }
   }
@@ -82,9 +84,8 @@ type::Global Reader::parse_globaltype() {
 
 type::Block Reader::parse_blocktype() {
   type::Block block;
-  byte check = peek_byte();
-  if (check == 0x40) {
-    skip(1);
+  if (peek_byte() == 0x40) {
+    skip();
     // by default empty type
     return block;
   } else {
@@ -112,20 +113,21 @@ void Reader::parse_expr(Expr &e) {
     WaitEnter();
 #endif
   }
-  ASSERT(bytes[pos - 1] == 0x0b, "Expressions end with the 0x0b code\n");
 }
 
 void Reader::parse_types(vec<type::Func> &types) {
   u32 type_count = read_LEB(32);
   for (u32 t = 0; t < type_count; t++) {
     type::Func newtype;
-    ASSERT(read_LEB(7) == 0x60,
+    auto check = read_LEB(7);
+    ASSERT(check == 0x60,
            "Functions are encoded with the 0x60 code\n");  // TODO: use
                                                            // read_byte here
     u32 arg_count = read_LEB(32);
     for (u32 a = 0; a < arg_count; a++)
       newtype.args.emplace_back(parse_valtype());
     u32 res_count = read_LEB(32);
+    ASSERT(res_count <= 1, "invalid result arity\n");
     for (u32 r = 0; r < res_count; r++)
       newtype.result.emplace_back(parse_valtype());
     // std::cout << types[t] << std::endl;
@@ -264,13 +266,12 @@ void Reader::parse_elems(vec<Elem> &elems) {
   }
 }
 
-void Reader::parse_codes(vec<Func> &funcs) {
+void Reader::parse_codes(vec<Func> &funcs, int imported_func_count) {
   u32 code_count = read_LEB(32);
-  u32 imported_func_count = funcs.size() - code_count;
   debug("imported: %u    code for: %u    total: %lu\n", imported_func_count,
         code_count, funcs.size());
-  ASSERT(code_count <= funcs.size(), "Mismatch in number of codes: %lu vs %u\n",
-         funcs.size(), code_count);
+  ASSERT(code_count == funcs.size() - imported_func_count,
+         "Mismatch in number of codes: %lu vs %u\n", funcs.size(), code_count);
 
   for (unsigned int i = 0; i < code_count; i++) {
     u32 _size = read_LEB(32);
@@ -281,7 +282,6 @@ void Reader::parse_codes(vec<Func> &funcs) {
       u32 n = read_LEB(32);
       ASSERT((int)n >= 0, "Overflow will not kill me!\n");
       type::Value t(parse_valtype());
-      // warn("n = %d\n", (int)n);
       for (unsigned int k = 0; k < n; k++) {
         funcs[i + imported_func_count].locals.push_back(t);
       }
@@ -312,9 +312,8 @@ void Reader::parse_datas(vec<Data> &datas) {
     u32 byte_count = read_LEB(32);
     ASSERT((int)byte_count >= 0, "Overflow will not kill me!\n");
     vec<byte> bs(byte_count);
-    std::copy(bytes.begin() + pos, bytes.begin() + pos + byte_count,
-              bs.begin());
-    skip(byte_count);
+    int p = skip(byte_count);
+    std::copy(bytes.begin() + p, bytes.begin() + pos, bs.begin());
     datas.back().init = bs;
   }
 }
@@ -333,10 +332,12 @@ void Reader::parse_module(Module &m) {
   word = read_u32();
   ASSERT(word == 1, "version is wrong\n");
   std::cout << "module version is " << word << std::endl;
-
-  while (pos < length) {
+  int imported_funcs = 0;
+  while (get_pos() < length) {
     u32 id = read_LEB(7);  // TODO: change that to read_byte
     u32 slen = read_LEB(32);
+    ASSERT(slen > 0, "Sections with 0 bytes are not allowed\n");
+    std::streamsize old_pos = get_pos();
 
     switch (id) {
       case 0:
@@ -379,6 +380,7 @@ void Reader::parse_module(Module &m) {
           }
         }
         warn("Parsing Imports complete\n");
+        imported_funcs = m.funcs.size();
         debugVec(m.imports);
         break;
       }
@@ -440,7 +442,7 @@ void Reader::parse_module(Module &m) {
       }
       case 10: {
         warn("Parsing Code(10) section (length: 0x%x)\n", slen);
-        parse_codes(m.funcs);
+        parse_codes(m.funcs, imported_funcs);
         warn("Parsing Code complete\n");
         break;
       }
@@ -462,16 +464,16 @@ void Reader::parse_module(Module &m) {
           std::cout << " has " << content.size() << " byte(s):" << std::hex
                     << std::endl;
           char old_fill = std::cout.fill('0');
-          for (int n = 0; n < content.size(); n += 20) {
+          for (unsigned n = 0; n < content.size(); n += 20) {
             std::cout << "  ";
-            for (int k = n; k < n + 20; k++)
+            for (unsigned k = n; k < n + 20; k++)
               if (k < content.size())
                 std::cout << std::setw(2)
                           << int(static_cast<unsigned char>(content[k]));
               else
                 std::cout << "  ";
             std::cout << "    ";
-            for (int k = n; k < n + 20; k++)
+            for (unsigned k = n; k < n + 20; k++)
               if (k < content.size())
                 std::cout << (std::isprint(content[k]) ? content[k] : '.');
               else
@@ -489,5 +491,8 @@ void Reader::parse_module(Module &m) {
         pos += slen;
         break;
     }
+    if (get_pos() != old_pos + slen) FATAL("section size mismatch\n");
   }
+  if (get_pos() < length) FATAL("junk after last section");
+  if (get_pos() > length) FATAL("unexpected end");
 }
