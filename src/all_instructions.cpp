@@ -9,7 +9,7 @@
 // can be generalized. Insted of doing this at runtime it would be better if
 // code was generated here and labeled for goto commands.
 // TODO: This should be implemented as a basic optimization.
-bool ByType(instr_type &type, Validator *validator) {
+bool ByType(const instr_type &type, Validator *validator) {
   vec<valtype> args;  //, ret;
   iloop(type.args) {
     if (type.args[i].index() == 1) {
@@ -27,10 +27,9 @@ bool ByType(instr_type &type, Validator *validator) {
   return true;
 }
 
-#define VALIDATE_BY_TYPE(i)                            \
-  bool i::validate(Validator *validator) {             \
-    instr_type theType = profiles[code()]->get_type(); \
-    return ByType(theType, validator);                 \
+#define VALIDATE_BY_TYPE(i)                                 \
+  bool i::validate(Validator *validator) {                  \
+    return ByType(profiles[code()]->get_type(), validator); \
   }
 
 // Unimplemented things
@@ -52,9 +51,9 @@ bool Block::validate(Validator *validator) {
   valtype type = gettype(blocktype);
   validator->AddLabel(blocktype);
   if (blocktype.has_value())
-    validator->push_ctrl(vec<valtype>({type}), vec<valtype>({type}));
+    validator->push_ctrl({type}, {type});
   else
-    validator->push_ctrl(vec<valtype>(), vec<valtype>());
+    validator->push_ctrl({}, {});
   std::cout << "ENTER BLOCK" << std::endl;
   // validate the instructions enclosed by the block
   iloop(instrs) {
@@ -65,20 +64,20 @@ bool Block::validate(Validator *validator) {
 
   validator->RemoveLabel(blocktype);
   // simulate END instr (remember that blocks eat up their END opcode)
-  auto results = validator->pop_ctrl();
-  validator->push_opds(results);
+  validator->push_opds(validator->pop_ctrl());
 
   return true;
 }
+
 // NOTE: this is not finished
 // TODO: finish this (:
 bool Loop::validate(Validator *validator) {
   valtype type = gettype(blocktype);
   validator->AddLabel(type::Result());
   if (blocktype.has_value())
-    validator->push_ctrl(vec<valtype>(), vec<valtype>({type}));
+    validator->push_ctrl({}, {type});
   else
-    validator->push_ctrl(vec<valtype>(), vec<valtype>());
+    validator->push_ctrl({}, {});
   std::cout << "ENTER LOOP" << std::endl;
   // validate the instructions enclosed by the loop
   iloop(instrs) {
@@ -89,8 +88,7 @@ bool Loop::validate(Validator *validator) {
 
   validator->RemoveLabel(type::Result());
   // simulate END instr (remember that loops eat up their END opcode)
-  auto results = validator->pop_ctrl();
-  validator->push_opds(results);
+  validator->push_opds(validator->pop_ctrl());
 
   return true;
 }
@@ -101,9 +99,9 @@ bool If::validate(Validator *validator) {
 
   validator->pop_opd(valtype::I32);
   if (blocktype.has_value())
-    validator->push_ctrl(vec<valtype>({type}), vec<valtype>({type}));
+    validator->push_ctrl({type}, {type});
   else
-    validator->push_ctrl(vec<valtype>(), vec<valtype>());
+    validator->push_ctrl({}, {});
 
   std::cout << "ENTER IF" << std::endl;
   // validate the instructions in if body
@@ -130,8 +128,7 @@ bool If::validate(Validator *validator) {
 
   validator->RemoveLabel(blocktype);
   // simulate END instr (remember that ifs eat up their END opcode)
-  auto results = validator->pop_ctrl();
-  validator->push_opds(results);
+  validator->push_opds(validator->pop_ctrl());
 
   return true;
 }
@@ -229,8 +226,7 @@ bool Br_Table::validate(Validator *validator) {
 }
 
 bool End::validate(Validator *validator) {
-  auto results = validator->pop_ctrl();
-  validator->push_opds(results);
+  validator->push_opds(validator->pop_ctrl());
   return true;
 }
 
@@ -395,27 +391,23 @@ bool GlobalSet::validate(Validator *validator) {
 bool Load::validate(Validator *validator) {
   CHECK_MEM()
   CHECK_ALIGN()
-  instr_type theType = profiles[code()]->get_type();
-  return ByType(theType, validator);
+  return ByType(profiles[code()]->get_type(), validator);
 }
 
 bool Store::validate(Validator *validator) {
   CHECK_MEM()
   CHECK_ALIGN()
-  instr_type theType = profiles[code()]->get_type();
-  return ByType(theType, validator);
+  return ByType(profiles[code()]->get_type(), validator);
 }
 
 bool MemorySize::validate(Validator *validator) {
   CHECK_MEM()
-  instr_type theType = profiles[code()]->get_type();
-  return ByType(theType, validator);
+  return ByType(profiles[code()]->get_type(), validator);
 }
 
 bool MemoryGrow::validate(Validator *validator) {
   CHECK_MEM()
-  instr_type theType = profiles[code()]->get_type();
-  return ByType(theType, validator);
+  return ByType(profiles[code()]->get_type(), validator);
 }
 
 VALIDATE_BY_TYPE(Const)

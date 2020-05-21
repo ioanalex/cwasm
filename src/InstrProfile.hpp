@@ -64,8 +64,7 @@ public:
   byte get_code() { return code; }
   instr_type get_type() { return type; }
   bool is_used() { return used; }
-  void use() { used = true;
-  }
+  void use() { used = true; }
   virtual InstrImpl *create(Reader *reader) const = 0;
 
   friend std::ostream &operator<<(std::ostream &, const InstrProfile &);

@@ -20,10 +20,12 @@ struct Context {
 
 // The operand values inserted in the operand stack
 enum valtype { I32, I64, F32, F64, Unknown };
+
 inline const char* val2str(valtype v) {
   static const char* valtype2str[]{"i32", "i64", "f32", "f64", "Unknown"};
   return valtype2str[v];
 }
+
 inline std::ostream& operator<<(std::ostream& os, const valtype& v) {
   return os << val2str(v);
 }
@@ -41,6 +43,7 @@ struct frame {
   u32 height;
   bool unreachable;
 };
+
 inline std::ostream& operator<<(std::ostream& os, const frame& f) {
   os << "h:" << f.height << " unr:" << f.unreachable << " labels"
      << " end_types" << std::endl;
@@ -52,12 +55,13 @@ inline std::ostream& operator<<(std::ostream& os, const frame& f) {
 class Validator {
 public:
   // constructor
-  Validator(){};
+  Validator() {}
 
 private:
   Context c;  // the validation context
+
 public:
-  const Context context() const { return c; }
+  const Context& context() const { return c; }
   void InitContext(Module&);
   void PrintContext();
   void UpdateContext(vec<type::Value>&, vec<type::Value>&);
@@ -69,6 +73,7 @@ private:
   vec<valtype> opds;  // the operand stack
   vec<frame> ctrls;   // the control stack
   // add all methods used to control the above structures
+
 public:
   // a helper function to print the operand and control stacks
   void PrintStacks();
@@ -89,6 +94,7 @@ public:
 
 public:
   bool validate_module(Module&);  // validates a module
+
 private:
   // add all methods used to validate the module
   // e.g. the Validate::funcs method could be included as

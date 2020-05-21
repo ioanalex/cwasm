@@ -56,8 +56,7 @@ public:
   bool validate(Validator *validator) {
     // std::cout << "(0x" << std::hex << code() << std::dec << ") "
     //           << profiles[code()].get_name() << std::endl;
-    bool b = impl->validate(validator);
-    return b;
+    return impl->validate(validator);
   }
 
 private:

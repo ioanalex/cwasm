@@ -25,7 +25,7 @@ int main(int argc, char *argv[]) {
   reader.parse_module(m);
   std::cout << m;
 
-  Validator validator = Validator();
+  Validator validator;
   validator.InitContext(m);
 
   // validate the module

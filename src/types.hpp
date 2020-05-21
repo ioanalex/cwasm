@@ -76,11 +76,11 @@ struct Func {
 
 inline std::ostream &operator<<(std::ostream &os, const Func &v) {
   os << "[";
-  for (const auto &arg: v.args) {
+  for (const auto &arg : v.args) {
     os << " " << arg;
   }
   os << " ] -> [";
-  for (const auto &res: v.result) {
+  for (const auto &res : v.result) {
     os << " " << res;
   }
   os << " ]";
