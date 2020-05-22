@@ -130,7 +130,7 @@ struct Extern {
   };
 };
 
-using Name = vec<byte>;
+using Name = std::string;
 };  // namespace type
 inline string name2str(const type::Name &v) {
   return string(v.begin(), v.end());

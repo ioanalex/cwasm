@@ -123,7 +123,70 @@ public:
     u32 namelen = read_LEB(32);
     int p = skip(namelen);
     type::Name name(bytes.begin() + p, bytes.begin() + pos);
+    if (!is_utf8(name.c_str())) {
+      FATAL("Malformed utf8 string\n");
+    }
     return name;
+  }
+
+  // helper function to check for utf8 encoded strings
+  // https://stackoverflow.com/questions/1031645/how-to-detect-utf-8-in-plain-c
+  bool is_utf8(const char *string) {
+    if (!string) return false;
+
+    const unsigned char *bytes = (const unsigned char *)string;
+    while (*bytes) {
+      if (  // ASCII
+            // use bytes[0] <= 0x7F to allow ASCII control characters
+          bytes[0] <= 0x7F) {
+        bytes += 1;
+        continue;
+      }
+
+      if ((  // non-overlong 2-byte
+              (0xC2 <= bytes[0] && bytes[0] <= 0xDF) &&
+              (0x80 <= bytes[1] && bytes[1] <= 0xBF))) {
+        bytes += 2;
+        continue;
+      }
+
+      if ((  // excluding overlongs
+              bytes[0] == 0xE0 && (0xA0 <= bytes[1] && bytes[1] <= 0xBF) &&
+              (0x80 <= bytes[2] && bytes[2] <= 0xBF)) ||
+          (  // straight 3-byte
+              ((0xE1 <= bytes[0] && bytes[0] <= 0xEC) || bytes[0] == 0xEE ||
+               bytes[0] == 0xEF) &&
+              (0x80 <= bytes[1] && bytes[1] <= 0xBF) &&
+              (0x80 <= bytes[2] && bytes[2] <= 0xBF)) ||
+          (  // excluding surrogates
+              bytes[0] == 0xED && (0x80 <= bytes[1] && bytes[1] <= 0x9F) &&
+              (0x80 <= bytes[2] && bytes[2] <= 0xBF))) {
+        bytes += 3;
+        continue;
+      }
+
+      if ((  // planes 1-3
+              bytes[0] == 0xF0 && (0x90 <= bytes[1] && bytes[1] <= 0xBF) &&
+              (0x80 <= bytes[2] && bytes[2] <= 0xBF) &&
+              (0x80 <= bytes[3] && bytes[3] <= 0xBF)) ||
+          (  // planes 4-15
+              (0xF1 <= bytes[0] && bytes[0] <= 0xF3) &&
+              (0x80 <= bytes[1] && bytes[1] <= 0xBF) &&
+              (0x80 <= bytes[2] && bytes[2] <= 0xBF) &&
+              (0x80 <= bytes[3] && bytes[3] <= 0xBF)) ||
+          (  // plane 16
+              bytes[0] == 0xF4 && (0x80 <= bytes[1] && bytes[1] <= 0x8F) &&
+              (0x80 <= bytes[2] && bytes[2] <= 0xBF) &&
+              (0x80 <= bytes[3] && bytes[3] <= 0xBF))) {
+        bytes += 4;
+        continue;
+      }
+      std::cout << "bytes[0] = " << std::hex << (int)bytes[0] << std::dec
+                << std::endl;
+      return false;
+    }
+
+    return true;
   }
 };
 
