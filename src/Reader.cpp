@@ -8,6 +8,8 @@
 #include "util.hpp"
 #include "values.hpp"
 
+int imported_funcs = 0, code_funcs = 0, given_code_funcs = 0;
+
 u32 Reader::parse_idx() { return read_LEB(32); }
 
 Value Reader::parse_value(type::Value vt) {
@@ -183,6 +185,7 @@ void Reader::parse_imports(vec<Import> &imports) {
 
 void Reader::parse_funcs(vec<Func> &funcs) {
   u32 func_count = read_LEB(32);
+  given_code_funcs = func_count;
   for (unsigned int i = 0; i < func_count; i++) {
     typeidx tid(parse_idx());
     funcs.emplace_back(Func(tid));
@@ -266,11 +269,12 @@ void Reader::parse_elems(vec<Elem> &elems) {
   }
 }
 
-void Reader::parse_codes(vec<Func> &funcs, int imported_func_count) {
+void Reader::parse_codes(vec<Func> &funcs) {
   u32 code_count = read_LEB(32);
-  debug("imported: %u    code for: %u    total: %lu\n", imported_func_count,
+  code_funcs = code_count;
+  debug("imported: %u    code for: %u    total: %lu\n", imported_funcs,
         code_count, funcs.size());
-  ASSERT(code_count == funcs.size() - imported_func_count,
+  ASSERT(code_count == funcs.size() - imported_funcs,
          "Mismatch in number of codes: %lu vs %u\n", funcs.size(), code_count);
 
   for (unsigned int i = 0; i < code_count; i++) {
@@ -283,19 +287,19 @@ void Reader::parse_codes(vec<Func> &funcs, int imported_func_count) {
       ASSERT((int)n >= 0, "Overflow will not kill me!\n");
       type::Value t(parse_valtype());
       for (unsigned int k = 0; k < n; k++) {
-        funcs[i + imported_func_count].locals.push_back(t);
+        funcs[i + imported_funcs].locals.push_back(t);
       }
     }
 
 #if DEBUG
-    for (unsigned int i = imported_func_count; i < funcs.size(); ++i) {
+    for (unsigned int i = imported_funcs; i < funcs.size(); ++i) {
       for (const auto &l : funcs[i].locals) {
         std::cout << l << std::endl;
       }
     }
 #endif
     debug("About to parse_expr\n");
-    parse_expr(funcs[i + imported_func_count].body);
+    parse_expr(funcs[i + imported_funcs].body);
     debug("OK parse_expr\n");
   }
 }
@@ -325,6 +329,8 @@ void Reader::parse_datas(vec<Data> &datas) {
 #define debugVec(some_vec)
 #endif
 
+unsigned int next_section = 1;
+
 void Reader::parse_module(Module &m) {
   u32 word = read_u32();
   ASSERT(word == 1836278016, "magic number is wrong\n");
@@ -332,11 +338,15 @@ void Reader::parse_module(Module &m) {
   word = read_u32();
   ASSERT(word == 1, "version is wrong\n");
   std::cout << "module version is " << word << std::endl;
-  int imported_funcs = 0;
   while (get_pos() < length) {
     u32 id = read_LEB(7);  // TODO: change that to read_byte
     u32 slen = read_LEB(32);
     ASSERT(slen > 0, "Sections with 0 bytes are not allowed\n");
+    if (id > 0) {
+      ASSERT(id >= next_section, "section is out of order\n");
+    }
+    next_section = id + 1;
+
     std::streamsize old_pos = get_pos();
 
     switch (id) {
@@ -445,7 +455,7 @@ void Reader::parse_module(Module &m) {
       }
       case 10: {
         warn("Parsing Code(10) section (length: 0x%x)\n", slen);
-        parse_codes(m.funcs, imported_funcs);
+        parse_codes(m.funcs);
         warn("Parsing Code complete\n");
         break;
       }
@@ -498,4 +508,6 @@ void Reader::parse_module(Module &m) {
   }
   if (get_pos() < length) FATAL("junk after last section\n");
   if (get_pos() > length) FATAL("unexpected end\n");
+  if (code_funcs != given_code_funcs)
+    FATAL("function and code section have inconsistent lengths\n");
 }

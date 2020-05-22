@@ -69,7 +69,7 @@ public:
   void parse_globals(vec<Global> &);
   void parse_exports(vec<Export> &);
   void parse_elems(vec<Elem> &);
-  void parse_codes(vec<Func> &, int);
+  void parse_codes(vec<Func> &);
   void parse_datas(vec<Data> &);
 
   // Methods for parsing other, more basic constructs
