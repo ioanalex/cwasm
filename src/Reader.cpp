@@ -340,10 +340,13 @@ void Reader::parse_module(Module &m) {
     std::streamsize old_pos = get_pos();
 
     switch (id) {
-      case 0:
-        // custom section, do nothing
-        skip(slen);
+      case 0: {
+        // custom section
+        // read the name and then skip the rest of the bytes
+        type::Name theName = read_name();
+        skip(slen - theName.size());
         break;
+      }
       case 1: {
         // parse the list of types (m -> types) and return it
         warn("Parsing Type(1) section (length: 0x%x)\n", slen);
