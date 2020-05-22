@@ -9,7 +9,8 @@ print_usage() {
     echo "      -f | --fail               run tests that should fail. This will"
     echo "                                not happen by default. Should be used"
     echo "                                when spec tests are enabled."
-    echo "      -v | --verbose            enable verbose output (set -v)"
+    echo "      -v | --verbose            enable verbose output. Use this option"
+    echo "                                to get failed tests list"
     echo ""
 }
 
@@ -96,7 +97,6 @@ while [[ $# -gt 0 ]]; do
         shift
         ;;
     "-v" | "--verbose")
-        set -v
         VERBOSE=1
         shift
         ;;

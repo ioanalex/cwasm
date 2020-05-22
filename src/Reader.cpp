@@ -496,6 +496,6 @@ void Reader::parse_module(Module &m) {
     }
     if (get_pos() != old_pos + slen) FATAL("section size mismatch\n");
   }
-  if (get_pos() < length) FATAL("junk after last section");
-  if (get_pos() > length) FATAL("unexpected end");
+  if (get_pos() < length) FATAL("junk after last section\n");
+  if (get_pos() > length) FATAL("unexpected end\n");
 }

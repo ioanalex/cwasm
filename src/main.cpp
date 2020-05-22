@@ -1,4 +1,6 @@
 #include <iostream>
+#include <stdexcept>
+#include <vector>
 
 #include "InstrProfile.hpp"
 #include "Reader.hpp"
@@ -20,9 +22,14 @@ int main(int argc, char *argv[]) {
   }
 
   std::cout << "running > " << argv[1] << std::endl;
+
   Reader reader(argv[1]);
   Module m;
-  reader.parse_module(m);
+  try {
+    reader.parse_module(m);
+  } catch (const std::out_of_range &oor) {
+    FATAL("out of range exception\n");
+  }
   std::cout << m;
 
   Validator validator;
