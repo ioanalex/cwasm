@@ -361,6 +361,8 @@ bool GlobalGet::validate(Validator *validator) {
     warn("The global is not defined\n");
     return false;
   }
+  // set is_cosnt_
+  if (!validator->context().globals.at(this->value).mut) set_const();
   // 2. get the type from context
   valtype type = gettype(validator->context().globals.at(this->value).value);
   // 3. push it to the operand stack

@@ -267,7 +267,7 @@ public:
 
 class GlobalGet : public Global {
 public:
-  SAME_CONSTR(GlobalGet, Global) { set_const(); }
+  SAME_CONSTR(GlobalGet, Global) {}
   void run() {}
   bool validate(Validator *);
 };

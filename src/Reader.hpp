@@ -123,7 +123,7 @@ public:
     u32 namelen = read_LEB(32);
     int p = skip(namelen);
     type::Name name(bytes.begin() + p, bytes.begin() + pos);
-    if (!is_utf8(name.c_str())) {
+    if (!is_utf8(name)) {
       FATAL("Malformed utf8 string\n");
     }
     return name;
@@ -131,14 +131,28 @@ public:
 
   // helper function to check for utf8 encoded strings
   // https://stackoverflow.com/questions/1031645/how-to-detect-utf-8-in-plain-c
-  bool is_utf8(const char *string) {
-    if (!string) return false;
+  bool is_utf8(std::string &the_string) {
+    unsigned index = 0;
+    std::cout << "checking utf8\n";
 
-    const unsigned char *bytes = (const unsigned char *)string;
-    while (*bytes) {
+    if (the_string.empty()) {
+      warn("the empty string is valid\n");
+      return true;
+    }
+
+    const char *c_string = the_string.c_str();
+    if (!c_string) {
+      warn("!c_string is true\n");
+      return false;
+    }
+
+    const unsigned char *bytes = (const unsigned char *)c_string;
+    while (index < the_string.size()) {
       if (  // ASCII
             // use bytes[0] <= 0x7F to allow ASCII control characters
           bytes[0] <= 0x7F) {
+        warn("ascii\n");
+        index += 1;
         bytes += 1;
         continue;
       }
@@ -146,6 +160,8 @@ public:
       if ((  // non-overlong 2-byte
               (0xC2 <= bytes[0] && bytes[0] <= 0xDF) &&
               (0x80 <= bytes[1] && bytes[1] <= 0xBF))) {
+        warn("2-byte\n");
+        index += 2;
         bytes += 2;
         continue;
       }
@@ -161,6 +177,8 @@ public:
           (  // excluding surrogates
               bytes[0] == 0xED && (0x80 <= bytes[1] && bytes[1] <= 0x9F) &&
               (0x80 <= bytes[2] && bytes[2] <= 0xBF))) {
+        warn("excluding\n");
+        index += 3;
         bytes += 3;
         continue;
       }
@@ -178,6 +196,8 @@ public:
               bytes[0] == 0xF4 && (0x80 <= bytes[1] && bytes[1] <= 0x8F) &&
               (0x80 <= bytes[2] && bytes[2] <= 0xBF) &&
               (0x80 <= bytes[3] && bytes[3] <= 0xBF))) {
+        warn("planes\n");
+        index += 4;
         bytes += 4;
         continue;
       }
@@ -185,7 +205,6 @@ public:
                 << std::endl;
       return false;
     }
-
     return true;
   }
 };
