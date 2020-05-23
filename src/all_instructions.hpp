@@ -341,7 +341,7 @@ class Const : public ImmediateImpl<Value> {
 public:
   Const(Reader *reader, type::Value type) : ImmediateImpl<Value>(reader) {
     set_const();
-    Value v = reader->parse_value(type);
+    Value v = reader->parse_value(type, true);
     setImmediate(v);
   }
   void run() {}

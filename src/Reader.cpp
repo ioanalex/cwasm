@@ -12,14 +12,14 @@ int imported_funcs = 0, code_funcs = 0, given_code_funcs = 0;
 
 u32 Reader::parse_idx() { return read_LEB(32); }
 
-Value Reader::parse_value(type::Value vt) {
+Value Reader::parse_value(type::Value vt, bool sign = false) {
   Value v;
   switch (vt) {
     case type::Value::i32:
-      v = from_i32(read_LEB(32));
+      v = from_i32(read_LEB(32, sign));
       break;
     case type::Value::i64:
-      v = from_i64(read_LEB(64));
+      v = from_i64(read_LEB(64, sign));
       break;
     case type::Value::f32: {
       f32 f;

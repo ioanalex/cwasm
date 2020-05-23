@@ -83,7 +83,7 @@ public:
   type::Global parse_globaltype();
   type::Block parse_blocktype();
   Memarg parse_memarg();
-  Value parse_value(type::Value);
+  Value parse_value(type::Value, bool);
   // methods that actually read from the binary file
   u32 read_u32() {
     u32 u = *reinterpret_cast<u32 *>(&bytes[pos]);
@@ -94,25 +94,46 @@ public:
   byte peek_byte(int offset = 0) const { return bytes.at(pos + offset); }
   byte read_byte() { return bytes.at(pos++); }
 
-  u64 read_LEB(u32 maxbits, bool sign = false) {
+  u64 read_LEB(unsigned maxbits, bool sign = false) {
+    std::cout << ((sign) ? "signed" : "unsigned") << std::endl;
+    const unsigned total_bytes = (maxbits + 7 - 1) / 7;
+    u32 received_bytes = 0;
+
     u64 result = 0;
     u32 shift = 0;
-    u32 bcnt = 0;
-    u32 startpos = pos;
-    u64 byte;
 
+    u64 input;
     while (true) {
-      byte = bytes.at(pos++);
-      result |= ((byte & 0x7f) << shift);
-      shift += 7;
-      if ((byte & 0x80) == 0) break;
-      bcnt += 1;
-      if (bcnt > (maxbits + 7 - 1) / 7) {
-        std::cerr << "Unsigned LEB at byte " << startpos << "overflow"
-                  << std::endl;
+      received_bytes += 1;
+      if (received_bytes > total_bytes) {
+        FATAL("leb128 overflow\n");
       }
+      input = read_byte();
+      std::cout << "input = " << std::hex << (int)input << std::dec
+                << std::endl;
+      result |= ((input & 0x7f) << shift);
+      shift += 7;
+      if ((input & 0x80) == 0) break;
     }
-    if (sign && (shift < maxbits) && (byte & 0x40)) {
+
+    // checking for unused bits
+    if (received_bytes == total_bytes) {
+      unsigned zero_bits = total_bytes * 7 - maxbits;
+      byte check = 0xff >> (zero_bits + 1);
+      std::cout << "check = " << std::hex << (int)check << std::dec
+                << std::endl;
+      std::cout << "input = " << std::hex << (int)input << std::dec
+                << std::endl;
+      if (!sign && input > check) FATAL("integer too large\n");
+      check = -check;
+      std::cout << "check = " << std::hex << (int)check << std::dec
+                << std::endl;
+      std::cout << "input = " << std::hex << (int)input << std::dec
+                << std::endl;
+      if (sign && input > check) FATAL("integer too large\n");
+    }
+
+    if (sign && (shift < maxbits) && (input & 0x40)) {
       // Sign extend
       result |= -(1 << shift);
     }
