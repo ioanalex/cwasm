@@ -392,6 +392,9 @@ void Reader::parse_module(Module &m) {
             }
           }
         }
+        // Remember how many globals were imported
+        m.imported_globals = m.globals.size();
+
         warn("Parsing Imports complete\n");
         imported_funcs = m.funcs.size();
         debugVec(m.imports);

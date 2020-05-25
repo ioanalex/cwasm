@@ -265,6 +265,7 @@ struct Module {
   vec<Func> funcs;
   vec<Table> tables;
   vec<Memory> mems;
+  int imported_globals = 0;
   vec<Global> globals;
   vec<Elem> elem;
   vec<Data> data;

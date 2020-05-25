@@ -12,6 +12,7 @@ struct Context {
   vec<type::Func> funcs;
   vec<type::Table> tables;
   vec<type::Memory> mems;
+  int imported_globals = 0;
   vec<type::Global> globals;
   vec<type::Value> locals;
   vec<type::Result> labels;

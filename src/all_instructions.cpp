@@ -362,7 +362,9 @@ bool GlobalGet::validate(Validator *validator) {
     return false;
   }
   // set is_cosnt_
-  if (!validator->context().globals.at(this->value).mut) set_const();
+  if (!validator->context().globals.at(this->value).mut &&
+      this->value < validator->context().imported_globals)
+    set_const();
   // 2. get the type from context
   valtype type = gettype(validator->context().globals.at(this->value).value);
   // 3. push it to the operand stack

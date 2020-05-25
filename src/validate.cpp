@@ -31,6 +31,7 @@ void Validator::InitContext(Module &mod) {
     c.mems[i] = mod.mems[i].type;
   }
 
+  c.imported_globals = mod.imported_globals;
   c.globals.resize(mod.globals.size());
   for (unsigned i = 0; i < mod.globals.size(); ++i) {
     c.globals[i] = mod.globals[i].type;
