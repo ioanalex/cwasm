@@ -101,9 +101,10 @@ bool If::validate(Validator *validator) {
   validator->AddLabel(blocktype);
 
   validator->pop_opd(valtype::I32);
-  if (blocktype.has_value())
+  if (blocktype.has_value()) {
+    if (!has_else) return false;
     validator->push_ctrl({type}, {type});
-  else
+  } else
     validator->push_ctrl({}, {});
 
   std::cout << "ENTER IF" << std::endl;
@@ -363,7 +364,7 @@ bool GlobalGet::validate(Validator *validator) {
   }
   // set is_cosnt_
   if (!validator->context().globals.at(this->value).mut &&
-      this->value < validator->context().imported_globals)
+      this->value < (unsigned)(validator->context().imported_globals))
     set_const();
   // 2. get the type from context
   valtype type = gettype(validator->context().globals.at(this->value).value);
